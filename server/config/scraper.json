@@ -9,6 +9,10 @@
     {
       "name": "House of Seeds",
       "url": "https://house-of-seeds.de/products.json"
+    },
+    {
+      "name": "Hans Brainfood",
+      "url": "https://hansbrainfood.de/products.json"
     }
   ]
 }

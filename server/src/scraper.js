@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { HouseOfSeedsScraper } from './scrapers/HouseOfSeedsScraper.js';
 import { ZamnesiaScraper } from './scrapers/ZamnesiaScraper.js';
+import { HansBrainfoodScraper } from './scrapers/HansBrainfoodScraper.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -47,7 +48,7 @@ export function logMessage(type, message) {
 }
 
 // Background scraper runner
-export async function triggerScrape() {
+export async function triggerScrape(targetShopName = null) {
   if (scraperStatus.isScanning) {
     logMessage('warning', 'Scraper already running. Call ignored.');
     return;
@@ -64,14 +65,15 @@ export async function triggerScrape() {
   } catch {}
   
   logMessage('info', '===============================================');
-  logMessage('info', 'Starting complete background scraping task...');
+  logMessage('info', targetShopName ? `Starting background scraping task for: ${targetShopName}...` : 'Starting complete background scraping task...');
   logMessage('info', '===============================================');
   
   try {
     const config = readConfig();
     const shopsToScrape = config.shops || [
       { name: 'Zamnesia', url: null },
-      { name: 'House of Seeds', url: null }
+      { name: 'House of Seeds', url: null },
+      { name: 'Hans Brainfood', url: null }
     ];
 
     const getShopConfig = (name) => {
@@ -83,22 +85,41 @@ export async function triggerScrape() {
       });
     };
 
+    const shouldScrape = (name) => {
+      return !targetShopName || targetShopName.toLowerCase() === name.toLowerCase();
+    };
+
     const hosConfig = getShopConfig('House of Seeds');
-    if (hosConfig) {
+    if (hosConfig && shouldScrape('House of Seeds')) {
       const targetUrl = typeof hosConfig === 'string' ? null : hosConfig.url;
       const hosScraper = new HouseOfSeedsScraper(logMessage);
       await hosScraper.scrape(scraperStatus, targetUrl);
+    } else if (hosConfig) {
+      logMessage('info', 'Skipping House of Seeds (not requested for this run).');
     } else {
       logMessage('info', 'Skipping House of Seeds (not enabled in config).');
     }
 
     const zamnConfig = getShopConfig('Zamnesia');
-    if (zamnConfig) {
+    if (zamnConfig && shouldScrape('Zamnesia')) {
       const targetUrl = typeof zamnConfig === 'string' ? null : zamnConfig.url;
       const zamnScraper = new ZamnesiaScraper(logMessage);
       await zamnScraper.scrape(scraperStatus, targetUrl);
+    } else if (zamnConfig) {
+      logMessage('info', 'Skipping Zamnesia (not requested for this run).');
     } else {
       logMessage('info', 'Skipping Zamnesia (not enabled in config).');
+    }
+
+    const hansConfig = getShopConfig('Hans Brainfood');
+    if (hansConfig && shouldScrape('Hans Brainfood')) {
+      const targetUrl = typeof hansConfig === 'string' ? null : hansConfig.url;
+      const hansScraper = new HansBrainfoodScraper(logMessage);
+      await hansScraper.scrape(scraperStatus, targetUrl);
+    } else if (hansConfig) {
+      logMessage('info', 'Skipping Hans Brainfood (not requested for this run).');
+    } else {
+      logMessage('info', 'Skipping Hans Brainfood (not enabled in config).');
     }
 
     logMessage('success', 'Scraper execution finished successfully!');
