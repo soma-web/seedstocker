@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { db } from '../db.js';
-import { strains, scrapedOffers } from '../schema.js';
-import { eq, and } from 'drizzle-orm';
+import { strains, scrapedOffers, priceHistory } from '../schema.js';
+import { eq, and, desc } from 'drizzle-orm';
 import crypto from 'node:crypto';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -56,6 +56,7 @@ export class BaseScraper {
     if (lower.includes('sweet seed')) return 'Sweet Seeds';
     if (lower.includes('anesia')) return 'Anesia Seeds';
     if (lower.includes('zamnesia')) return 'Zamnesia Seeds';
+    if (lower.includes('bud voyage') || lower.includes('budvoyage')) return 'Bud Voyage';
     
     return b;
   }
@@ -65,12 +66,6 @@ export class BaseScraper {
     
     // Strip parenthesized breeder text from titles
     name = name.replace(/\(.*?\)/g, '');
-    
-    if (breeder) {
-      const breederEscaped = breeder.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-      const breederRe = new RegExp(`^${breederEscaped}\\s*`, 'i');
-      name = name.replace(breederRe, '');
-    }
     
     const stripKeywords = [
       'feminisiert', 'feminised', 'feminized', 'feminize', 'fem',
@@ -90,7 +85,73 @@ export class BaseScraper {
     name = name.replace(/^[\s\-_,.]+/, '').replace(/[\s\-_,.()]+$/, '');
     name = name.replace(/\s+/g, ' ');
     
+    if (breeder) {
+      const breederEscaped = breeder.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      const spaceVariants = [breederEscaped];
+      if (breeder.includes(' ')) {
+        const noSpace = breeder.replace(/\s+/g, '');
+        spaceVariants.push(noSpace.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'));
+      }
+      
+      const breederAliases = {
+        'Royal Queen Seeds': ['RQS'],
+        'Dutch Passion': ['DP'],
+        'Greenhouse Seeds': ['GHS'],
+        'Sensi Seeds': ['Sensi'],
+        'Sweet Seeds': ['Sweet'],
+        'Anesia Seeds': ['Anesia'],
+        'Zamnesia Seeds': ['Zamnesia'],
+        'Bud Voyage': ['BudVoyage']
+      };
+      
+      const aliases = breederAliases[breeder] || [];
+      for (const alias of aliases) {
+        spaceVariants.push(alias.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'));
+      }
+      
+      for (const variant of spaceVariants) {
+        // Strip at start of string
+        const startRe = new RegExp(`^${variant}\\s*`, 'i');
+        name = name.replace(startRe, '');
+        
+        // Strip with connecting prefixes like "von" or "by"
+        const prefixRe = new RegExp(`\\b(von|by)\\s+${variant}\\b`, 'i');
+        name = name.replace(prefixRe, '');
+        
+        // Strip at end of string
+        const endRe = new RegExp(`\\s*${variant}\\b`, 'i');
+        name = name.replace(endRe, '');
+      }
+    }
+    
+    name = name.replace(/^[\s\-_,.]+/, '').replace(/[\s\-_,.()]+$/, '');
+    name = name.replace(/\s+/g, ' ');
+    
     return name.trim();
+  }
+
+  isInvalidStrainName(title) {
+    if (!title) return true;
+    const lower = title.trim().toLowerCase();
+    
+    // Ignore any strains containing "pack"/"packs" or "mystery" (mix packs / bundles)
+    if (/\bpacks?\b/i.test(lower) || lower.includes('mystery')) {
+      return true;
+    }
+
+    const invalidKeywords = [
+      'bestseller',
+      'collection',
+      'mix pack',
+      'mix-pack',
+      'mixpack',
+      'gift card',
+      'gutschein',
+      'bundle',
+      'wood display',
+      'bodendisplay'
+    ];
+    return invalidKeywords.some(kw => lower.includes(kw));
   }
 
   async upsertStrain({ name, breeder, type, seedType }) {
@@ -154,6 +215,32 @@ export class BaseScraper {
         seeds,
         price,
         availability,
+        fetchedAt: new Date().toISOString()
+      });
+    }
+
+    // Check if price has changed from the latest recorded history entry
+    const [latestHistory] = await db.select()
+      .from(priceHistory)
+      .where(
+        and(
+          eq(priceHistory.strainId, strainId),
+          eq(priceHistory.shop, this.shopName),
+          eq(priceHistory.seeds, seeds)
+        )
+      )
+      .orderBy(desc(priceHistory.fetchedAt))
+      .limit(1);
+
+    const shouldInsertHistory = !latestHistory || latestHistory.price !== price;
+
+    if (shouldInsertHistory) {
+      await db.insert(priceHistory).values({
+        id: crypto.randomUUID(),
+        strainId,
+        shop: this.shopName,
+        seeds,
+        price,
         fetchedAt: new Date().toISOString()
       });
     }

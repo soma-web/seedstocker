@@ -8,6 +8,7 @@ import { sqlite } from './db.js';
 import { triggerScrape, scraperStatus, logMessage } from './scraper.js';
 import { HouseOfSeedsScraper } from './scrapers/HouseOfSeedsScraper.js';
 import { ZamnesiaScraper } from './scrapers/ZamnesiaScraper.js';
+import { HansBrainfoodScraper } from './scrapers/HansBrainfoodScraper.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -36,8 +37,18 @@ sqlite.exec(`
     fetched_at TEXT NOT NULL,
     FOREIGN KEY (strain_id) REFERENCES strains(id) ON DELETE CASCADE
   );
+  CREATE TABLE IF NOT EXISTS price_history (
+    id TEXT PRIMARY KEY,
+    strain_id TEXT NOT NULL,
+    shop TEXT NOT NULL,
+    seeds INTEGER NOT NULL,
+    price REAL NOT NULL,
+    fetched_at TEXT NOT NULL,
+    FOREIGN KEY (strain_id) REFERENCES strains(id) ON DELETE CASCADE
+  );
   CREATE INDEX IF NOT EXISTS idx_strains_name_breeder ON strains(name, breeder);
   CREATE INDEX IF NOT EXISTS idx_scraped_offers_strain ON scraped_offers(strain_id);
+  CREATE INDEX IF NOT EXISTS idx_price_history_strain ON price_history(strain_id);
 `);
 try {
   sqlite.exec("ALTER TABLE scraped_offers ADD COLUMN availability TEXT NOT NULL DEFAULT 'available'");
@@ -180,6 +191,20 @@ app.get('/api/strains', async (req, reply) => {
   }
 });
 
+app.get('/api/strains/:id/price-history', async (req, reply) => {
+  try {
+    const { id } = req.params;
+    const rows = sqlite.prepare(`
+      SELECT * FROM price_history
+      WHERE strain_id = ?
+      ORDER BY fetched_at DESC
+    `).all(id);
+    return rows;
+  } catch (err) {
+    reply.status(500).send({ error: err.message });
+  }
+});
+
 app.get('/api/breeders', async (req, reply) => {
   try {
     const rows = sqlite.prepare(`
@@ -199,8 +224,10 @@ app.post('/api/scrape', async (req, reply) => {
     return reply.status(409).send({ error: 'Scraper task already running' });
   }
   
+  const { shop } = req.body || {};
+  
   // Fire and forget background scrape
-  triggerScrape().catch(err => {
+  triggerScrape(shop).catch(err => {
     logMessage('error', `Unhandled background scrape error: ${err.message}`);
   });
   
@@ -239,7 +266,8 @@ app.get('/api/db/stats', async (req, reply) => {
 
     const defaultShops = {
       'Zamnesia': { strainsCount: 0, offersCount: 0 },
-      'House of Seeds': { strainsCount: 0, offersCount: 0 }
+      'House of Seeds': { strainsCount: 0, offersCount: 0 },
+      'Hans Brainfood': { strainsCount: 0, offersCount: 0 }
     };
     
     shopStats.forEach(s => {
@@ -272,9 +300,30 @@ app.post('/api/db/reset', async (req, reply) => {
     sqlite.exec(`
       DELETE FROM strains;
       DELETE FROM scraped_offers;
+      DELETE FROM price_history;
       VACUUM;
     `);
     return { success: true, message: 'Database reset and vacuumed successfully.' };
+  } catch (err) {
+    reply.status(500).send({ error: err.message });
+  }
+});
+
+app.post('/api/db/clear-shop', async (req, reply) => {
+  try {
+    const { shop } = req.body || {};
+    if (!shop) {
+      return reply.status(400).send({ error: 'No shop name provided.' });
+    }
+
+    sqlite.transaction(() => {
+      sqlite.prepare('DELETE FROM scraped_offers WHERE shop = ?').run(shop);
+      sqlite.prepare('DELETE FROM price_history WHERE shop = ?').run(shop);
+      sqlite.prepare('DELETE FROM strains WHERE id NOT IN (SELECT DISTINCT strain_id FROM scraped_offers)').run();
+    })();
+
+    logMessage('success', `Cleared all database entries for shop: ${shop}`);
+    return { success: true, message: `All entries for ${shop} cleared.` };
   } catch (err) {
     reply.status(500).send({ error: err.message });
   }
@@ -314,8 +363,10 @@ app.post('/api/scrape/single', async (req, reply) => {
       scraper = new ZamnesiaScraper(logMessage);
     } else if (url.includes('house-of-seeds.de')) {
       scraper = new HouseOfSeedsScraper(logMessage);
+    } else if (url.includes('hansbrainfood.de')) {
+      scraper = new HansBrainfoodScraper(logMessage);
     } else {
-      return reply.status(400).send({ error: 'Unsupported URL. Only Zamnesia and House of Seeds product links are supported.' });
+      return reply.status(400).send({ error: 'Unsupported URL. Only Zamnesia, House of Seeds, and Hans Brainfood product links are supported.' });
     }
     
     logMessage('info', `On-demand single page scrape triggered for: ${url}`);

@@ -189,6 +189,11 @@ export class ZamnesiaScraper extends BaseScraper {
         continue;
       }
       const rawTitle = h1Match[1].trim();
+      if (this.isInvalidStrainName(rawTitle)) {
+        this.log('info', `Skipping invalid/collection strain: ${rawTitle}`);
+        await this.sleep(500);
+        continue;
+      }
       scraperStatus.currentProduct = rawTitle;
       
       let rawBreeder = null;
@@ -332,6 +337,9 @@ export class ZamnesiaScraper extends BaseScraper {
       throw new Error('Could not parse strain title from Zamnesia page.');
     }
     const rawTitle = h1Match[1].trim();
+    if (this.isInvalidStrainName(rawTitle)) {
+      throw new Error(`Skipping invalid/collection strain: ${rawTitle}`);
+    }
     
     let type = 'photoperiodic';
     if (rawTitle.toLowerCase().includes('auto') || html.toLowerCase().includes('autoflowering') || html.toLowerCase().includes('automatisch')) {

@@ -21,3 +21,12 @@ export const scrapedOffers = sqliteTable('scraped_offers', {
   availability: text('availability').notNull().default('available'), // 'available' | 'orderable' | 'out_of_stock'
   fetchedAt: text('fetched_at').notNull()
 });
+
+export const priceHistory = sqliteTable('price_history', {
+  id: text('id').primaryKey(),
+  strainId: text('strain_id').notNull().references(() => strains.id, { onDelete: 'cascade' }),
+  shop: text('shop').notNull(),
+  seeds: integer('seeds').notNull(),
+  price: real('price').notNull(),
+  fetchedAt: text('fetched_at').notNull()
+});

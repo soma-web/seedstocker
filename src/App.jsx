@@ -13,7 +13,8 @@ import {
   CheckCircle2,
   TrendingDown,
   X,
-  Database
+  Database,
+  Trash2
 } from 'lucide-react';
 
 const API_BASE_URL = 'http://localhost:3002';
@@ -44,6 +45,12 @@ export default function App() {
   const [singleScrapeResult, setSingleScrapeResult] = useState(null);
   const [singleScrapeError, setSingleScrapeError] = useState(null);
   const [runningSingleScrape, setRunningSingleScrape] = useState(false);
+  
+  const [isPriceHistoryOpen, setIsPriceHistoryOpen] = useState(false);
+  const [priceHistoryData, setPriceHistoryData] = useState([]);
+  const [priceHistoryMeta, setPriceHistoryMeta] = useState({ name: '', breeder: '' });
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [selectedChartSize, setSelectedChartSize] = useState(3);
   
   const [scraper, setScraper] = useState({
     isScanning: false,
@@ -180,9 +187,13 @@ export default function App() {
     }
   }, [scraper.logs]);
 
-  const handleStartScrape = async () => {
+  const handleStartScrape = async (shopName = null) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/scrape`, { method: 'POST' });
+      const res = await fetch(`${API_BASE_URL}/api/scrape`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shop: shopName })
+      });
       if (res.ok) {
         setScraper(prev => ({ ...prev, isScanning: true, logs: [] }));
         setIsScraperOpen(true);
@@ -233,6 +244,47 @@ export default function App() {
       alert(`Failed to reset database: ${err.message}`);
     } finally {
       setResettingDb(false);
+    }
+  };
+
+  const handleClearShop = async (shopName) => {
+    if (!window.confirm(`Are you sure you want to delete all entries and offers tracked for "${shopName}"?`)) {
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/db/clear-shop`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shop: shopName })
+      });
+      if (res.ok) {
+        alert(`Successfully cleared all entries for ${shopName}.`);
+        fetchDbStats();
+        fetchData();
+      }
+    } catch (err) {
+      alert(`Failed to clear shop: ${err.message}`);
+    }
+  };
+
+  const handleOpenPriceHistory = async (strainId, name, breeder) => {
+    setPriceHistoryMeta({ name, breeder });
+    setIsPriceHistoryOpen(true);
+    setLoadingHistory(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/strains/${strainId}/price-history`);
+      if (res.ok) {
+        const data = await res.json();
+        setPriceHistoryData(data);
+        const sizes = Array.from(new Set(data.map(item => item.seeds))).sort((a, b) => Number(a) - Number(b));
+        if (sizes.length > 0) {
+          setSelectedChartSize(Number(sizes[0]));
+        }
+      }
+    } catch (err) {
+      console.error('Failed fetching price history:', err);
+    } finally {
+      setLoadingHistory(false);
     }
   };
 
@@ -308,6 +360,7 @@ export default function App() {
 
   const getShopLogoColor = (shop) => {
     if (shop === 'Zamnesia') return 'text-orange-400 bg-orange-500/10 border-orange-500/20';
+    if (shop === 'Hans Brainfood') return 'text-lime-400 bg-lime-500/10 border-lime-500/20';
     return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
   };
 
@@ -394,7 +447,7 @@ export default function App() {
             </button>
 
             <button
-              onClick={handleStartScrape}
+              onClick={() => handleStartScrape()}
               disabled={scraper.isScanning}
               className={`flex items-center gap-2 px-5 h-11 rounded-xl text-sm font-semibold shadow-lg transition-all ${
                 scraper.isScanning
@@ -409,80 +462,328 @@ export default function App() {
         </div>
       </header>
 
-      {/* Scraper Control & Log Console Panel */}
+      {/* Scraper Control & Log Console Modal */}
       {isScraperOpen && (
-        <div className="border-b border-slate-900 bg-slate-950/60 backdrop-blur-md">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="glass-panel rounded-2xl p-6 relative overflow-hidden">
-              
-              {/* Scraper Header Status */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-slate-900 pb-5">
-                <div>
-                  <h3 className="font-semibold text-slate-200 flex items-center gap-2 text-base">
-                    <Terminal className="w-4 h-4 text-emerald-400" />
-                    Live System Scrape Logs
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Crawl progress, shop parsing details, and price mappings.
-                  </p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+          <div className="w-full max-w-3xl glass-panel rounded-2xl p-6 relative overflow-hidden shadow-2xl border border-slate-800 animate-fade-in">
+            
+            {/* Close Button */}
+            <button
+              onClick={() => setIsScraperOpen(false)}
+              className="absolute top-4 right-4 text-slate-500 hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-900"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Scraper Header Status */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-slate-900 pb-5">
+              <div>
+                <h3 className="font-bold text-slate-100 flex items-center gap-2 text-base">
+                  <Terminal className="w-5 h-5 text-emerald-400" />
+                  Live System Scrape Logs
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Crawl progress, shop parsing details, and price mappings.
+                </p>
+              </div>
+              {scraper.isScanning ? (
+                <div className="flex flex-wrap items-center gap-4 text-xs">
+                  <div className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-900 text-slate-300">
+                    Shop: <span className="text-emerald-400 font-semibold">{scraper.currentShop || 'Queued'}</span>
+                  </div>
+                  <div className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-900 text-slate-300 max-w-[200px] truncate">
+                    Strain: <span className="text-teal-400 font-semibold">{scraper.currentProduct || 'Initializing'}</span>
+                  </div>
+                  <div className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-900 text-slate-300">
+                    Offers: <span className="text-emerald-400 font-bold">{scraper.productsScraped}</span>
+                  </div>
                 </div>
-                {scraper.isScanning ? (
-                  <div className="flex flex-wrap items-center gap-4 text-xs">
-                    <div className="px-3 py-1.5 rounded-lg bg-slate-900/60 border border-slate-800 text-slate-300">
-                      Shop: <span className="text-emerald-400 font-medium">{scraper.currentShop || 'Queued'}</span>
-                    </div>
-                    <div className="px-3 py-1.5 rounded-lg bg-slate-900/60 border border-slate-800 text-slate-300 max-w-xs truncate">
-                      Strain: <span className="text-teal-400 font-medium">{scraper.currentProduct || 'Initializing'}</span>
-                    </div>
-                    <div className="px-3 py-1.5 rounded-lg bg-slate-900/60 border border-slate-800 text-slate-300">
-                      Scraped Offers: <span className="text-emerald-400 font-bold">{scraper.productsScraped}</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-xs text-slate-400">
-                    {scraper.endTime ? (
-                      <span className="flex items-center gap-1.5 text-emerald-400 bg-emerald-500/5 border border-emerald-500/10 px-3 py-1.5 rounded-lg">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        Last completed: {new Date(scraper.endTime).toLocaleString()} ({scraper.productsScraped} offers)
-                      </span>
-                    ) : (
-                      'System idle. Click Scan Stores to begin.'
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Logs Monospace Console Box */}
-              <div 
-                ref={logTerminalRef}
-                className="h-64 bg-slate-950 border border-slate-900 rounded-xl p-4 overflow-y-auto font-mono-logs text-xs leading-relaxed text-slate-400 select-text"
-              >
-                {scraper.logs.length === 0 ? (
-                  <div className="text-slate-600 italic flex items-center justify-center h-full gap-2">
-                    <Info className="w-4 h-4" />
-                    No scanner logs currently in memory. Trigger a scan to start recording logs.
-                  </div>
-                ) : (
-                  scraper.logs.map((log, index) => (
-                    <div 
-                      key={index} 
-                      className={`py-0.5 border-l-2 pl-3 mb-1 ${
-                        log.type === 'error' ? 'border-red-500 text-red-400' :
-                        log.type === 'warning' ? 'border-yellow-500 text-yellow-300' :
-                        log.type === 'success' ? 'border-emerald-500 text-emerald-300' :
-                        'border-slate-800 text-slate-400'
-                      }`}
-                    >
-                      <span className="text-slate-600 mr-2 text-[10px]">
-                        {new Date(log.timestamp).toLocaleTimeString()}
-                      </span>
-                      <span>{log.message}</span>
-                    </div>
-                  ))
-                )}
-              </div>
-
+              ) : (
+                <div className="text-xs text-slate-400">
+                  {scraper.endTime ? (
+                    <span className="flex items-center gap-1.5 text-emerald-400 bg-emerald-500/5 border border-emerald-500/10 px-3 py-1.5 rounded-lg font-medium">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      Scrape completed ({scraper.productsScraped} offers)
+                    </span>
+                  ) : (
+                    'Initializing scraper...'
+                  )}
+                </div>
+              )}
             </div>
+
+            {/* Logs Monospace Console Box */}
+            <div 
+              ref={logTerminalRef}
+              className="h-96 bg-slate-950 border border-slate-900 rounded-xl p-4 overflow-y-auto font-mono text-xs leading-relaxed text-slate-300 select-text"
+            >
+              {scraper.logs.length === 0 ? (
+                <div className="text-slate-600 italic flex items-center justify-center h-full gap-2">
+                  <Info className="w-4 h-4" />
+                  No scanner logs currently in memory.
+                </div>
+              ) : (
+                scraper.logs.map((log, index) => (
+                  <div 
+                    key={index} 
+                    className={`py-0.5 border-l-2 pl-3 mb-1 ${
+                      log.type === 'error' ? 'border-red-500 text-red-400 bg-red-500/5' :
+                      log.type === 'warning' ? 'border-yellow-500 text-yellow-300 bg-yellow-500/5' :
+                      log.type === 'success' ? 'border-emerald-500 text-emerald-300 bg-emerald-500/5' :
+                      'border-slate-800 text-slate-400'
+                    }`}
+                  >
+                    <span className="text-slate-600 mr-2 text-[10px]">
+                      {new Date(log.timestamp).toLocaleTimeString()}
+                    </span>
+                    <span>{log.message}</span>
+                  </div>
+                ))
+              )}
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* Price History Modal */}
+      {isPriceHistoryOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-2xl glass-panel rounded-2xl p-6 relative overflow-hidden shadow-2xl border border-slate-800 animate-scale-up">
+            
+            {/* Close Button */}
+            <button
+              onClick={() => setIsPriceHistoryOpen(false)}
+              className="absolute top-4 right-4 text-slate-500 hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-900"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Modal Header */}
+            <div className="mb-6 border-b border-slate-900 pb-5">
+              <h3 className="font-bold text-slate-100 flex items-center gap-2 text-base">
+                <TrendingDown className="w-5 h-5 text-emerald-400" />
+                Price History: {priceHistoryMeta.name}
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Breeder: <span className="text-emerald-400 font-semibold">{priceHistoryMeta.breeder || 'Unknown'}</span>
+              </p>
+            </div>
+
+            {/* Modal Body */}
+            {loadingHistory ? (
+              <div className="flex flex-col items-center justify-center py-20 gap-3">
+                <RotateCw className="w-8 h-8 text-emerald-400 animate-spin" />
+                <p className="text-xs text-slate-500">Retrieving price timeline...</p>
+              </div>
+            ) : priceHistoryData.length === 0 ? (
+              <div className="bg-slate-950 border border-slate-900 rounded-xl p-8 text-center text-xs text-slate-500">
+                <Info className="w-6 h-6 text-slate-600 mx-auto mb-2" />
+                No historical price records found for this strain. Price points are recorded when rescrapes detect a price shift.
+              </div>
+            ) : (() => {
+              const packSizes = Array.from(new Set(priceHistoryData.map(item => item.seeds))).sort((a, b) => Number(a) - Number(b));
+              const activeSize = packSizes.includes(selectedChartSize) ? selectedChartSize : (packSizes[0] || 3);
+              const chartFilteredData = priceHistoryData.filter(item => Number(item.seeds) === activeSize);
+              
+              const allPrices = chartFilteredData.map(d => d.price);
+              const maxPrice = allPrices.length > 0 ? Math.max(...allPrices) : 100;
+              const minPrice = allPrices.length > 0 ? Math.min(...allPrices) : 0;
+              const priceRange = maxPrice - minPrice;
+              const yMin = minPrice - (priceRange * 0.15 || 2);
+              const yMax = maxPrice + (priceRange * 0.15 || 2);
+              
+              const allDates = chartFilteredData.map(d => new Date(d.fetchedAt).getTime());
+              const maxDate = allDates.length > 0 ? Math.max(...allDates) : Date.now();
+              const minDate = allDates.length > 0 ? Math.min(...allDates) : Date.now() - 86400000;
+              const dateRange = maxDate - minDate;
+
+              const getSvgX = (dateStr) => {
+                if (dateRange === 0) return 300;
+                const val = new Date(dateStr).getTime();
+                return 50 + ((val - minDate) / dateRange) * 480;
+              };
+
+              const getSvgY = (priceVal) => {
+                const spread = yMax - yMin;
+                if (spread === 0) return 80;
+                return 130 - ((priceVal - yMin) / spread) * 100;
+              };
+
+              const shopsInData = Array.from(new Set(chartFilteredData.map(d => d.shop)));
+              const shopLines = shopsInData.map(shopName => {
+                const pts = chartFilteredData
+                  .filter(d => d.shop === shopName)
+                  .sort((a, b) => new Date(a.fetchedAt) - new Date(b.fetchedAt));
+                return { shop: shopName, points: pts };
+              });
+
+              const colorMap = {
+                'Zamnesia': { stroke: '#10b981' },
+                'House of Seeds': { stroke: '#0ea5e9' },
+                'Hans Brainfood': { stroke: '#a855f7' }
+              };
+              const defaultColors = { stroke: '#94a3b8' };
+
+              return (
+                <div className="space-y-5">
+                  {/* Pack Size Pills Selection */}
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Select Pack Size</span>
+                    <div className="flex gap-1.5 bg-slate-950 p-1 rounded-lg border border-slate-900">
+                      {packSizes.map(size => (
+                        <button
+                          key={size}
+                          onClick={() => setSelectedChartSize(Number(size))}
+                          className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${
+                            activeSize === Number(size)
+                              ? 'bg-emerald-500 text-slate-950'
+                              : 'text-slate-400 hover:text-slate-200'
+                          }`}
+                        >
+                          {size} Seeds
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* SVG Price Trend Line Chart */}
+                  {chartFilteredData.length > 0 && (
+                    <div className="bg-slate-950/60 border border-slate-900 rounded-xl p-4">
+                      <div className="flex items-center justify-between mb-3 border-b border-slate-900/60 pb-2">
+                        <span className="text-[10px] text-slate-400 font-bold">Price Trend (EUR)</span>
+                        <div className="flex gap-3 text-[10px]">
+                          {shopsInData.map(shop => {
+                            const colors = colorMap[shop] || defaultColors;
+                            return (
+                              <div key={shop} className="flex items-center gap-1">
+                                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: colors.stroke }} />
+                                <span className="text-slate-500 font-medium">{shop}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div className="h-40 w-full">
+                        <svg className="w-full h-full overflow-visible" viewBox="0 0 600 160">
+                          {/* Horizontal Grid lines */}
+                          <line x1="50" y1="30" x2="550" y2="30" stroke="#1e293b" strokeDasharray="3,3" />
+                          <line x1="50" y1="80" x2="550" y2="80" stroke="#1e293b" strokeDasharray="3,3" strokeOpacity="0.5" />
+                          <line x1="50" y1="130" x2="550" y2="130" stroke="#1e293b" strokeDasharray="3,3" />
+
+                          {/* Grid Labels */}
+                          <text x="10" y="34" className="fill-slate-600 text-[9px] font-mono font-bold">€{yMax.toFixed(2)}</text>
+                          <text x="10" y="134" className="fill-slate-600 text-[9px] font-mono font-bold">€{yMin.toFixed(2)}</text>
+
+                          {/* Draw Lines */}
+                          {shopLines.map(line => {
+                            const colors = colorMap[line.shop] || defaultColors;
+                            if (line.points.length < 2) return null;
+                            const pathD = line.points.map((p, idx) => {
+                              const x = getSvgX(p.fetchedAt);
+                              const y = getSvgY(p.price);
+                              return `${idx === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
+                            }).join(' ');
+
+                            return (
+                              <path
+                                key={line.shop}
+                                d={pathD}
+                                fill="none"
+                                stroke={colors.stroke}
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            );
+                          })}
+
+                          {/* Draw Points */}
+                          {shopLines.map(line => {
+                            const colors = colorMap[line.shop] || defaultColors;
+                            return line.points.map(p => {
+                              const x = getSvgX(p.fetchedAt);
+                              const y = getSvgY(p.price);
+                              return (
+                                <g key={p.id} className="group">
+                                  <circle
+                                    cx={x}
+                                    cy={y}
+                                    r="4"
+                                    fill="#020617"
+                                    stroke={colors.stroke}
+                                    strokeWidth="2"
+                                    className="transition-all duration-100 cursor-pointer hover:r-6"
+                                  />
+                                  {/* Tooltip Overlay */}
+                                  <text
+                                    x={x}
+                                    y={y - 12}
+                                    textAnchor="middle"
+                                    className="opacity-0 group-hover:opacity-100 fill-emerald-400 text-[9px] font-bold font-mono transition-opacity duration-100 pointer-events-none"
+                                  >
+                                    €{p.price.toFixed(2)}
+                                  </text>
+                                </g>
+                              );
+                            });
+                          })}
+                        </svg>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Chronological Table View */}
+                  <div className="overflow-x-auto max-h-56 rounded-xl border border-slate-900 bg-slate-950/40">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="bg-slate-950 border-b border-slate-900 text-slate-400 font-semibold">
+                          <th className="p-3">Date</th>
+                          <th className="p-3">Shop</th>
+                          <th className="p-3">Pack Size</th>
+                          <th className="p-3">Price</th>
+                          <th className="p-3 text-right">Trend / Change</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-900/60 text-slate-300">
+                        {priceHistoryData.map((item, index) => {
+                          const sameGroup = priceHistoryData.slice(index + 1);
+                          const previous = sameGroup.find(x => x.shop === item.shop && x.seeds === item.seeds);
+                          
+                          let diffIndicator = null;
+                          if (previous) {
+                            const diff = item.price - previous.price;
+                            if (diff > 0) {
+                              diffIndicator = <span className="text-red-400 font-bold">↑ +€{diff.toFixed(2)}</span>;
+                            } else if (diff < 0) {
+                              diffIndicator = <span className="text-emerald-400 font-bold">↓ -€{Math.abs(diff).toFixed(2)}</span>;
+                            } else {
+                              diffIndicator = <span className="text-slate-500">—</span>;
+                            }
+                          } else {
+                            diffIndicator = <span className="text-slate-500 italic text-[10px]">First tracked</span>;
+                          }
+
+                          return (
+                            <tr key={item.id} className="hover:bg-slate-900/20">
+                              <td className="p-3 font-mono text-[10px] text-slate-500">
+                                {new Date(item.fetchedAt).toLocaleString()}
+                              </td>
+                              <td className="p-3 font-bold text-slate-200">{item.shop}</td>
+                              <td className="p-3">{item.seeds} Seeds</td>
+                              <td className="p-3 text-emerald-400 font-semibold">€{item.price.toFixed(2)}</td>
+                              <td className="p-3 text-right">{diffIndicator}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              );
+            })()}
+
           </div>
         </div>
       )}
@@ -559,6 +860,7 @@ export default function App() {
                 <option value="">All Shops</option>
                 <option value="Zamnesia">Zamnesia</option>
                 <option value="House of Seeds">House of Seeds</option>
+                <option value="Hans Brainfood">Hans Brainfood</option>
               </select>
             </div>
 
@@ -669,8 +971,16 @@ export default function App() {
                         <h2 className="text-lg font-bold text-slate-100 tracking-tight">
                           {strain.name}
                         </h2>
-                        <p className="text-xs text-slate-400 font-medium mt-0.5">
+                        <p className="text-xs text-slate-400 font-medium mt-0.5 flex items-center flex-wrap gap-2">
                           by <span className="text-emerald-400 font-semibold">{strain.breeder || 'Unknown Breeder'}</span>
+                          <button
+                            onClick={() => handleOpenPriceHistory(strain.id, strain.name, strain.breeder)}
+                            className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 hover:text-emerald-400 transition-colors bg-slate-900/60 border border-slate-900 hover:border-emerald-500/20 px-2 py-0.5 rounded"
+                            title="View price history chart & details"
+                          >
+                            <TrendingDown className="w-3.5 h-3.5" />
+                            History
+                          </button>
                         </p>
                       </div>
 
@@ -875,14 +1185,38 @@ export default function App() {
                     <span className="block text-[10px] text-slate-500 uppercase tracking-wider mb-2.5 font-semibold">Currently Scraped Shops</span>
                     <div className="space-y-2">
                       {dbStats.shopStats && dbStats.shopStats.map(s => (
-                        <div key={s.shop} className="bg-slate-950/60 border border-slate-900 rounded-xl p-3 flex justify-between items-center">
-                          <div>
-                            <span className="block text-xs font-bold text-slate-200">{s.shop}</span>
-                            <span className="block text-[9px] text-slate-500 mt-0.5">Tracking pricing offers across packages</span>
+                        <div key={s.shop} className="bg-slate-950/60 border border-slate-900 rounded-xl p-3 flex justify-between items-center gap-3">
+                          <div className="flex-1 min-w-0">
+                            <span className="block text-xs font-bold text-slate-200 truncate">{s.shop}</span>
+                            <span className="block text-[9px] text-slate-500 mt-0.5 truncate">
+                              {s.strainsCount} strains • {s.offersCount} offers
+                            </span>
                           </div>
-                          <div className="text-right">
-                            <span className="block text-xs text-slate-300 font-semibold">{s.strainsCount} strains</span>
-                            <span className="block text-[9px] text-emerald-400 font-medium">{s.offersCount} offers</span>
+                          <div className="flex gap-2 shrink-0">
+                            <button
+                              onClick={() => handleStartScrape(s.shop)}
+                              disabled={scraper.isScanning}
+                              className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all flex items-center gap-1 ${
+                                scraper.isScanning
+                                  ? 'bg-slate-950 text-slate-600 border-slate-950 cursor-not-allowed'
+                                  : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 hover:text-emerald-300'
+                              }`}
+                            >
+                              <RotateCw className={`w-3.5 h-3.5 ${scraper.isScanning && scraper.currentShop === s.shop ? 'animate-spin' : ''}`} />
+                              Scrape
+                            </button>
+                            <button
+                              onClick={() => handleClearShop(s.shop)}
+                              disabled={scraper.isScanning}
+                              className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all flex items-center gap-1 ${
+                                scraper.isScanning
+                                  ? 'bg-slate-950 text-slate-600 border-slate-950 cursor-not-allowed'
+                                  : 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20 hover:text-red-300'
+                              }`}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              Clear
+                            </button>
                           </div>
                         </div>
                       ))}
