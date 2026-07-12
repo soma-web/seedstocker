@@ -1,0 +1,14 @@
+{
+  "maxItemsPerShop": 100,
+  "debug": true,
+  "shops": [
+    {
+      "name": "Zamnesia",
+      "url": "https://www.zamnesia.de/35-cannabissamen/295-feminisiert-hanfsamen, https://www.zamnesia.de/35-cannabissamen/294-autoflowering-hanfsamen, https://www.zamnesia.de/35-cannabissamen/296-regulare-hanfsamen, https://www.zamnesia.de/35-cannabissamen/634-f1-samen"
+    },
+    {
+      "name": "House of Seeds",
+      "url": "https://house-of-seeds.de/products.json"
+    }
+  ]
+}
