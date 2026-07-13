@@ -35,6 +35,7 @@ function getShopUrlFromConfig(shopName) {
   // Fallbacks if config is missing or unreadable
   if (shopName === 'House of Seeds') return 'https://house-of-seeds.de/products.json';
   if (shopName === 'Hans Brainfood') return 'https://hansbrainfood.de/products.json';
+  if (shopName === 'Gas Station Co. Seeds') return 'https://gasstationcoseeds.de/products.json';
   if (shopName === 'Zamnesia') return 'https://www.zamnesia.de/35-cannabissamen/295-feminisiert-hanfsamen, https://www.zamnesia.de/35-cannabissamen/294-autoflowering-hanfsamen';
   return null;
 }
@@ -88,6 +89,9 @@ export async function startSanityCheck(shopName) {
       } else if (shopName === 'Hans Brainfood') {
         const { HansBrainfoodScraper } = await import('./scrapers/HansBrainfoodScraper.js');
         scraper = new HansBrainfoodScraper((level, msg) => addLog(level, msg));
+      } else if (shopName === 'Gas Station Co. Seeds') {
+        const { GasStationCoScraper } = await import('./scrapers/GasStationCoScraper.js');
+        scraper = new GasStationCoScraper((level, msg) => addLog(level, msg));
       } else if (shopName === 'Zamnesia') {
         const { ZamnesiaScraper } = await import('./scrapers/ZamnesiaScraper.js');
         scraper = new ZamnesiaScraper((level, msg) => addLog(level, msg));
@@ -104,7 +108,7 @@ export async function startSanityCheck(shopName) {
       let urls = [];
       addLog('info', 'Gathering shop product catalog URL list...');
       
-      if (shopName === 'House of Seeds' || shopName === 'Hans Brainfood') {
+      if (shopName === 'House of Seeds' || shopName === 'Hans Brainfood' || shopName === 'Gas Station Co. Seeds') {
         const baseUrl = configuredUrl.replace(/\/products\.json$/, '').replace(/\/$/, '');
         const res = await fetch(`${baseUrl}/products.json?limit=250`);
         if (!res.ok) throw new Error(`Failed to fetch shop products.json: status ${res.status}`);

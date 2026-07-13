@@ -13,6 +13,10 @@
     {
       "name": "Hans Brainfood",
       "url": "https://hansbrainfood.de/products.json"
+    },
+    {
+      "name": "Gas Station Co. Seeds",
+      "url": "https://gasstationcoseeds.de/products.json"
     }
   ]
 }
