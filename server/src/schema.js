@@ -6,6 +6,12 @@ export const strains = sqliteTable('strains', {
   breeder: text('breeder'),
   type: text('type'), // 'photoperiodic' | 'autoflower'
   seedType: text('seed_type'), // 'feminized' | 'regular'
+  thc: text('thc'),
+  cbd: text('cbd'),
+  strainType: text('strain_type'),
+  floweringTime: text('flowering_time'),
+  floweringMin: integer('flowering_min'),
+  floweringMax: integer('flowering_max'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull()
 });

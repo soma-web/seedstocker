@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "node --watch src/index.js",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "test:encoding": "node src/test-encoding.js",
+    "test:normalization": "node src/test-normalization.js",
+    "test": "node src/test-encoding.js && node src/test-normalization.js"
   },
   "dependencies": {
     "@fastify/cors": "^10.0.1",

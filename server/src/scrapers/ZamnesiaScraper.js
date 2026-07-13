@@ -292,9 +292,19 @@ export class ZamnesiaScraper extends BaseScraper {
         continue;
       }
       
+      const thcRaw = this.extractSpec(html, 'THC');
+      const cbdRaw = this.extractSpec(html, 'CBD');
+      const geneticsRaw = this.extractSpec(html, '(?:Genetik|Genetics)');
+      const floweringRaw = this.extractSpec(html, '(?:Bl&uuml;tezeit|Blutezeit|Flowering\\s+Time)\\s*');
+
+      const thc = this.cleanThc(thcRaw);
+      const cbd = this.cleanCbd(cbdRaw);
+      const floweringTime = this.cleanFloweringTime(floweringRaw);
+      const strainType = this.normalizeStrainType(geneticsRaw);
+
       let strainId;
       try {
-        strainId = await this.upsertStrain({ name, breeder, type, seedType });
+        strainId = await this.upsertStrain({ name, breeder, type, seedType, thc, cbd, strainType, floweringTime });
       } catch (dbErr) {
         this.log('error', `Database error for Zamnesia strain ${name}: ${dbErr.message}`);
         await this.sleep(500);
@@ -444,7 +454,17 @@ export class ZamnesiaScraper extends BaseScraper {
       throw new Error(`No combinations/pricing offers found on page.`);
     }
     
-    const strainId = await this.upsertStrain({ name, breeder, type, seedType });
+    const thcRaw = this.extractSpec(html, 'THC');
+    const cbdRaw = this.extractSpec(html, 'CBD');
+    const geneticsRaw = this.extractSpec(html, '(?:Genetik|Genetics)');
+    const floweringRaw = this.extractSpec(html, '(?:Bl&uuml;tezeit|Blutezeit|Flowering\\s+Time)\\s*');
+
+    const thc = this.cleanThc(thcRaw);
+    const cbd = this.cleanCbd(cbdRaw);
+    const floweringTime = this.cleanFloweringTime(floweringRaw);
+    const strainType = this.normalizeStrainType(geneticsRaw);
+
+    const strainId = await this.upsertStrain({ name, breeder, type, seedType, thc, cbd, strainType, floweringTime });
     
     let offersCreated = 0;
     for (const combo of psCombinations) {

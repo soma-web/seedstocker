@@ -80,7 +80,7 @@ function PriceHistorySection({ strainId }) {
   if (loading) return (
     <div className="flex items-center justify-center py-12 gap-3">
       <RotateCw className="w-5 h-5 text-emerald-400 animate-spin" />
-      <span className="text-sm text-slate-500">Loading price historyâ€¦</span>
+      <span className="text-sm text-slate-500">Loading price history…</span>
     </div>
   );
 
@@ -243,7 +243,7 @@ export default function StrainDetailPage({ strainId, onBack, onNavigate }) {
   if (loading) return (
     <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-4">
       <RotateCw className="w-10 h-10 text-emerald-400 animate-spin" />
-      <p className="text-slate-400 text-sm">Loading strain detailsâ€¦</p>
+      <p className="text-slate-400 text-sm">Loading strain details…</p>
     </div>
   );
 
@@ -341,10 +341,10 @@ export default function StrainDetailPage({ strainId, onBack, onNavigate }) {
                   ? 'bg-purple-500/20 text-purple-300 border-purple-500/30'
                   : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
               }`}>
-                {isAuto ? 'âš¡ Autoflower' : 'ðŸ“· Photoperiodic'}
+                {isAuto ? '⚡ Autoflower' : '🌱 Photoperiodic'}
               </span>
               <span className="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border bg-slate-900/70 text-slate-300 border-slate-700">
-                {strain.seedType === 'feminized' ? 'â™€ Feminized' : 'âš¥ Regular'}
+                {strain.seedType === 'feminized' ? '♀ Feminized' : 'Regular'}
               </span>
             </div>
 
@@ -424,8 +424,12 @@ export default function StrainDetailPage({ strainId, onBack, onNavigate }) {
             {[
               { label: 'Strain Type', value: isAuto ? 'Autoflower' : 'Photoperiodic', color: isAuto ? 'text-purple-400' : 'text-emerald-400' },
               { label: 'Seed Type',   value: strain.seedType === 'feminized' ? 'Feminized' : 'Regular', color: 'text-teal-400' },
+              { label: 'Genetics',    value: strain.strainType ? strain.strainType.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('-') : 'Not available', color: 'text-sky-400' },
+              { label: 'THC',         value: strain.thc || 'Not available', color: 'text-rose-400' },
+              { label: 'CBD',         value: strain.cbd || 'Not available', color: 'text-indigo-400' },
+              { label: 'Flowering',   value: strain.floweringMin && strain.floweringMax ? (strain.floweringMin === strain.floweringMax ? `${strain.floweringMin} weeks` : `${strain.floweringMin}–${strain.floweringMax} weeks`) : (strain.floweringTime ? `${strain.floweringTime} weeks` : 'Not available'), color: 'text-lime-400' },
               { label: 'Breeder',     value: strain.breeder || 'Unknown', color: 'text-slate-200' },
-              { label: 'Pack Sizes',  value: packs.length > 0 ? packs.join(', ') + ' Seeds' : 'â€”', color: 'text-amber-400' },
+              { label: 'Pack Sizes',  value: packs.length > 0 ? packs.join(', ') + ' Seeds' : 'Not available', color: 'text-amber-400' },
             ].map(attr => (
               <div key={attr.label} className="bg-slate-950/60 border border-slate-900 rounded-xl p-4">
                 <span className="block text-[9px] uppercase tracking-widest font-bold text-slate-600 mb-1.5">{attr.label}</span>
