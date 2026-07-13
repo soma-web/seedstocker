@@ -217,6 +217,20 @@ export class BaseScraper {
     if (!val) return null;
     const str = val.trim().toLowerCase();
     
+    const numbers = [];
+    const numberRegex = /(\d+(?:\.\d+)?)/g;
+    let match;
+    while ((match = numberRegex.exec(str)) !== null) {
+      numbers.push(parseFloat(match[1]));
+    }
+    if (numbers.length >= 2) {
+      const avg = Math.round(numbers.reduce((a, b) => a + b, 0) / numbers.length);
+      return avg + '%';
+    }
+    if (numbers.length === 1) {
+      return numbers[0] + '%';
+    }
+
     if (str.includes('gering') || str.includes('low') || str.includes('mild')) {
       return '2%';
     }
@@ -229,8 +243,6 @@ export class BaseScraper {
 
     const m = val.match(/(\d+(?:\.\d+)?\s*%\s*(?:-\s*\d+(?:\.\d+)?\s*%)?|\d+\s*-\s*\d+\s*%|\d+\s*%)/);
     if (m) return m[1].replace(/\s+/g, '').trim();
-    const num = val.match(/(\d+(?:\.\d+)?)/);
-    if (num) return num[1] + '%';
     return val.trim();
   }
 
@@ -238,16 +250,6 @@ export class BaseScraper {
     if (!val) return null;
     const str = val.trim().toLowerCase();
     
-    if (str.includes('gering') || str.includes('low') || str.includes('mild')) {
-      return '1%';
-    }
-    if (str.includes('mittel') || str.includes('medium') || str.includes('moderate')) {
-      return '7%';
-    }
-    if (str.includes('hoch') || str.includes('high') || str.includes('strong')) {
-      return '11%';
-    }
-
     const numbers = [];
     const numberRegex = /(\d+(?:\.\d+)?)/g;
     let match;
@@ -258,16 +260,46 @@ export class BaseScraper {
       const maxVal = Math.max(...numbers);
       return maxVal + '%';
     }
+    if (numbers.length === 1) {
+      return numbers[0] + '%';
+    }
+
+    if (str.includes('gering') || str.includes('low') || str.includes('mild')) {
+      return '1%';
+    }
+    if (str.includes('mittel') || str.includes('medium') || str.includes('moderate')) {
+      return '7%';
+    }
+    if (str.includes('hoch') || str.includes('high') || str.includes('strong')) {
+      return '11%';
+    }
 
     const m = val.match(/(\d+(?:\.\d+)?\s*%\s*(?:-\s*\d+(?:\.\d+)?\s*%)?|\d+\s*-\s*\d+\s*%|\d+\s*%)/);
     if (m) return m[1].replace(/\s+/g, '').trim();
-    const num = val.match(/(\d+(?:\.\d+)?)/);
-    if (num) return num[1] + '%';
     return val.trim();
   }
 
   cleanFloweringTime(val) {
     if (!val) return null;
+    const str = val.trim().toLowerCase();
+    
+    if (str.includes('tage') || str.includes('days')) {
+      const numbers = [];
+      const numberRegex = /(\d+)/g;
+      let match;
+      while ((match = numberRegex.exec(str)) !== null) {
+        numbers.push(parseInt(match[1], 10));
+      }
+      if (numbers.length === 1) {
+        return Math.round(numbers[0] / 7).toString();
+      }
+      if (numbers.length >= 2) {
+        const minW = Math.round(Math.min(...numbers) / 7);
+        const maxW = Math.round(Math.max(...numbers) / 7);
+        return minW === maxW ? minW.toString() : `${minW}-${maxW}`;
+      }
+    }
+    
     const m = val.match(/(\d+\s*-\s*\d+|\d+\s*–\s*\d+|\d+)/);
     if (m) {
       return m[1].replace(/\s+/g, '').trim();
@@ -337,26 +369,46 @@ export class BaseScraper {
     let strainType = null;
 
     if (bodyHtml) {
-      const liMatches = bodyHtml.match(/<li[^>]*>([\s\S]*?)<\/li>/gi) || [];
-      liMatches.forEach(li => {
-        const liText = li.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-        if (/THC-Gehalt/i.test(liText) || /THC:/i.test(liText)) {
-          const match = liText.match(/(?:THC-Gehalt|THC):?\s*(?:ca\.)?\s*([^.\n]+)/i);
-          if (match) thc = match[1].trim();
+      // Support icons-row-item structure (used in House of Seeds and other themes)
+      const iconsRowRe = /<h3[^>]*class=["']icons-row-item__title["'][^>]*>([\s\S]*?)<\/h3>[\s\S]*?<div[^>]*class=["']icons-row-item(?:__text)?["'][^>]*>[\s\S]*?<p>([\s\S]*?)<\/p>/gi;
+      let match;
+      let foundIconsRow = false;
+      while ((match = iconsRowRe.exec(bodyHtml)) !== null) {
+        foundIconsRow = true;
+        const title = match[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+        const valueText = match[2].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+        
+        if (title.includes('blütezeit') || title.includes('blütendauer') || title.includes('flowering')) {
+          flowering = valueText;
+        } else if (title.includes('potenz') || title.includes('thc')) {
+          thc = valueText;
+        } else if (title.includes('sativa / indica') || title.includes('genetics') || title.includes('art') || title.includes('typ') || title.includes('abstammung')) {
+          strainType = valueText;
         }
-        if (/CBD/i.test(liText)) {
-          const match = liText.match(/(?:CBD-Gehalt|CBD):?\s*(?:ca\.)?\s*([^.\n]+)/i);
-          if (match) cbd = match[1].trim();
-        }
-        if (/Blütephase|Blütezeit|Blütendauer|Flowering/i.test(liText)) {
-          const match = liText.match(/(?:Blütephase|Blütezeit|Blütendauer|Flowering|Flowering\s+Time):?\s*([^.\n]+)/i);
-          if (match) flowering = match[1].trim();
-        }
-        if (/Art:|Typ:|Type:/i.test(liText)) {
-          const match = liText.match(/(?:Art|Typ|Type):?\s*([^.\n]+)/i);
-          if (match) strainType = match[1].trim();
-        }
-      });
+      }
+
+      if (!foundIconsRow) {
+        const liMatches = bodyHtml.match(/<li[^>]*>([\s\S]*?)<\/li>/gi) || [];
+        liMatches.forEach(li => {
+          const liText = li.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+          if (/THC-Gehalt/i.test(liText) || /THC:/i.test(liText)) {
+            const match = liText.match(/(?:THC-Gehalt|THC):?\s*(?:ca\.)?\s*([^.\n]+)/i);
+            if (match) thc = match[1].trim();
+          }
+          if (/CBD/i.test(liText)) {
+            const match = liText.match(/(?:CBD-Gehalt|CBD):?\s*(?:ca\.)?\s*([^.\n]+)/i);
+            if (match) cbd = match[1].trim();
+          }
+          if (/Blütephase|Blütezeit|Blütendauer|Flowering/i.test(liText)) {
+            const match = liText.match(/(?:Blütephase|Blütezeit|Blütendauer|Flowering|Flowering\s+Time):?\s*([^.\n]+)/i);
+            if (match) flowering = match[1].trim();
+          }
+          if (/Art:|Typ:|Type:/i.test(liText)) {
+            const match = liText.match(/(?:Art|Typ|Type):?\s*([^.\n]+)/i);
+            if (match) strainType = match[1].trim();
+          }
+        });
+      }
     }
 
     // Fallbacks using plain text regex if not found in list items

@@ -9,6 +9,7 @@ import { triggerScrape, scraperStatus, logMessage } from './scraper.js';
 import { HouseOfSeedsScraper } from './scrapers/HouseOfSeedsScraper.js';
 import { ZamnesiaScraper } from './scrapers/ZamnesiaScraper.js';
 import { HansBrainfoodScraper } from './scrapers/HansBrainfoodScraper.js';
+import { startSanityCheck, sanityCheckStatus } from './sanity-check.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -452,6 +453,24 @@ app.post('/api/scrape/single', async (req, reply) => {
     logMessage('error', `Single page scrape failed: ${err.message}`);
     reply.status(500).send({ error: err.message });
   }
+});
+
+app.post('/api/scrape/sanity-check', async (req, reply) => {
+  try {
+    const { shop } = req.body || {};
+    if (!shop) {
+      return reply.status(400).send({ error: 'No shop name provided.' });
+    }
+    
+    await startSanityCheck(shop);
+    return { success: true, message: `Sanity check started for ${shop}` };
+  } catch (err) {
+    reply.status(400).send({ error: err.message });
+  }
+});
+
+app.get('/api/scrape/sanity-check/status', async (req, reply) => {
+  return sanityCheckStatus;
 });
 
 // Fallback to index.html for React SPA router (for production build fallback)
