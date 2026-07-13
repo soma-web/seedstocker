@@ -68,10 +68,10 @@ export class BaseScraper {
     name = name.replace(/\(.*?\)/g, '');
     
     const stripKeywords = [
-      'feminisiert', 'feminised', 'feminized', 'feminize', 'fem',
+      'feminisiert', 'feminisierte', 'feminised', 'feminized', 'feminize', 'fem',
       'autoflowering', 'autoflower', 'automatic', 'auto',
       'regulär', 'regular', 'reg',
-      'hanfsamen', 'cannabis seeds', 'cannabissamen', 'seeds', 'samen',
+      'hanfsamen',       'cannabis', 'cannabis seeds', 'cannabissamen', 'seeds', 'samen',
       'f1 hybrid', 'f1'
     ];
     

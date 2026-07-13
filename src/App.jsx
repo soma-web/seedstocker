@@ -482,6 +482,7 @@ export default function App() {
   const getShopLogoColor = (shop) => {
     if (shop === 'Zamnesia') return 'text-orange-400 bg-orange-500/10 border-orange-500/20';
     if (shop === 'Hans Brainfood') return 'text-lime-400 bg-lime-500/10 border-lime-500/20';
+    if (shop === 'Gas Station Co. Seeds') return 'text-red-400 bg-red-500/10 border-red-500/20';
     return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
   };
 
@@ -1206,6 +1207,7 @@ export default function App() {
                 <option value="Zamnesia">Zamnesia</option>
                 <option value="House of Seeds">House of Seeds</option>
                 <option value="Hans Brainfood">Hans Brainfood</option>
+                <option value="Gas Station Co. Seeds">Gas Station Co. Seeds</option>
               </select>
             </div>
 
