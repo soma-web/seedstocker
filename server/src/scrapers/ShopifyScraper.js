@@ -100,9 +100,19 @@ export class ShopifyScraper extends BaseScraper {
           seedType = 'regular';
         }
         
+        const specs = this.parseShopifySpecs(p.body_html, p.tags || []);
         let strainId;
         try {
-          strainId = await this.upsertStrain({ name, breeder, type, seedType });
+          strainId = await this.upsertStrain({
+            name,
+            breeder,
+            type,
+            seedType,
+            thc: specs.thc,
+            cbd: specs.cbd,
+            strainType: specs.strainType,
+            floweringTime: specs.floweringTime
+          });
         } catch (dbErr) {
           this.log('error', `Database error for strain ${name}: ${dbErr.message}`);
           continue;
@@ -183,6 +193,20 @@ export class ShopifyScraper extends BaseScraper {
     }
 
     if (!productSchema) {
+      const jsonScriptsRe = /<script[^>]*type=["']application\/json["'][^>]*>([\s\S]*?)<\/script>/gi;
+      let m;
+      while ((m = jsonScriptsRe.exec(html)) !== null) {
+        try {
+          const parsed = JSON.parse(m[1]);
+          if (parsed && parsed.id && (parsed.title || parsed.name) && parsed.variants) {
+            productSchema = parsed;
+            break;
+          }
+        } catch {}
+      }
+    }
+
+    if (!productSchema) {
       this.log('error', `Could not parse Shopify product schema on single page: ${url}`);
       return null;
     }
@@ -207,7 +231,27 @@ export class ShopifyScraper extends BaseScraper {
       seedType = 'regular';
     }
 
-    const strainId = await this.upsertStrain({ name, breeder, type, seedType });
+    const description = productSchema.description || productSchema.body_html || '';
+    let tags = productSchema.tags || [];
+    if (!Array.isArray(tags) || tags.length === 0) {
+      const tagsRe = /"tags"\s*:\s*(\[[^\]]*\])/i;
+      const m = html.match(tagsRe);
+      if (m) {
+        try { tags = JSON.parse(m[1]); } catch {}
+      }
+    }
+    const specs = this.parseShopifySpecs(description, tags);
+
+    const strainId = await this.upsertStrain({
+      name,
+      breeder,
+      type,
+      seedType,
+      thc: specs.thc,
+      cbd: specs.cbd,
+      strainType: specs.strainType,
+      floweringTime: specs.floweringTime
+    });
     let offersCreated = 0;
 
     const offersList = productSchema.offers?.offers || productSchema.offers || [];

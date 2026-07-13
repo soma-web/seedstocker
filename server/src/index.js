@@ -22,6 +22,12 @@ sqlite.exec(`
     breeder TEXT,
     type TEXT,
     seed_type TEXT,
+    thc TEXT,
+    cbd TEXT,
+    strain_type TEXT,
+    flowering_time TEXT,
+    flowering_min INTEGER,
+    flowering_max INTEGER,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
   );
@@ -55,6 +61,24 @@ try {
 } catch (err) {
   // Column already exists or table doesn't exist yet, safe to ignore
 }
+try {
+  sqlite.exec("ALTER TABLE strains ADD COLUMN thc TEXT");
+} catch (err) {}
+try {
+  sqlite.exec("ALTER TABLE strains ADD COLUMN cbd TEXT");
+} catch (err) {}
+try {
+  sqlite.exec("ALTER TABLE strains ADD COLUMN strain_type TEXT");
+} catch (err) {}
+try {
+  sqlite.exec("ALTER TABLE strains ADD COLUMN flowering_time TEXT");
+} catch (err) {}
+try {
+  sqlite.exec("ALTER TABLE strains ADD COLUMN flowering_min INTEGER");
+} catch (err) {}
+try {
+  sqlite.exec("ALTER TABLE strains ADD COLUMN flowering_max INTEGER");
+} catch (err) {}
 logMessage('success', 'Database tables are ready.');
 
 const configPath = path.resolve(__dirname, '../config/scraper.json');
@@ -125,6 +149,8 @@ app.get('/api/strains', async (req, reply) => {
   let sql = `
     SELECT 
       s.id AS strainId, s.name AS strainName, s.breeder, s.type, s.seed_type AS seedType,
+      s.thc, s.cbd, s.strain_type AS strainType, s.flowering_time AS floweringTime,
+      s.flowering_min AS floweringMin, s.flowering_max AS floweringMax,
       o.id AS offerId, o.shop, o.url, o.seeds, o.price, o.currency, o.availability, o.fetched_at AS fetchedAt
     FROM strains s
     LEFT JOIN scraped_offers o ON s.id = o.strain_id
@@ -168,6 +194,12 @@ app.get('/api/strains', async (req, reply) => {
           breeder: r.breeder,
           type: r.type,
           seedType: r.seedType,
+          thc: r.thc,
+          cbd: r.cbd,
+          strainType: r.strainType,
+          floweringTime: r.floweringTime,
+          floweringMin: r.floweringMin,
+          floweringMax: r.floweringMax,
           offers: []
         });
       }
@@ -217,6 +249,12 @@ app.get('/api/strains/:id/detail', async (req, reply) => {
       breeder: strain.breeder,
       type: strain.type,
       seedType: strain.seed_type,
+      thc: strain.thc,
+      cbd: strain.cbd,
+      strainType: strain.strain_type,
+      floweringTime: strain.flowering_time,
+      floweringMin: strain.flowering_min,
+      floweringMax: strain.flowering_max,
       createdAt: strain.created_at,
       updatedAt: strain.updated_at,
       offers,
