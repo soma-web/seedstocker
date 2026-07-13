@@ -33,7 +33,7 @@ function runNormalizationTests() {
   // Standard percentages should pass through or be cleaned
   assert.strictEqual(scraper.cleanThc('22%'), '22%');
   assert.strictEqual(scraper.cleanThc('ca. 18 %'), '18%');
-  assert.strictEqual(scraper.cleanThc('16 - 18%'), '16-18%');
+  assert.strictEqual(scraper.cleanThc('16 - 18%'), '17%');
   assert.strictEqual(scraper.cleanThc('15'), '15%');
 
   // --- CBD Tests ---
@@ -66,6 +66,15 @@ function runNormalizationTests() {
   assert.deepStrictEqual(scraper.parseFloweringRange('Flowering 8–9 weeks'), { min: 8, max: 9 });
   assert.deepStrictEqual(scraper.parseFloweringRange('8 - 10 weeks'), { min: 8, max: 10 });
   assert.deepStrictEqual(scraper.parseFloweringRange(null), { min: null, max: null });
+
+  // --- HOS Days to Weeks Tests ---
+  assert.strictEqual(scraper.cleanFloweringTime('Mittel (56–65 Tage)'), '8-9');
+  assert.strictEqual(scraper.cleanFloweringTime('56 Tage'), '8');
+
+  // --- THC Average Range Tests ---
+  assert.strictEqual(scraper.cleanThc('15–25% THC'), '20%');
+  assert.strictEqual(scraper.cleanThc('18-22%'), '20%');
+  assert.strictEqual(scraper.cleanThc('12-16%'), '14%');
 
   console.log('All normalization unit tests PASSED successfully!');
 }

@@ -175,7 +175,10 @@ export class ShopifyScraper extends BaseScraper {
     while ((match = productSchemaRegex.exec(html)) !== null) {
       try {
         const parsed = JSON.parse(match[1]);
-        if (parsed['@type'] === 'Product' || parsed['@context']?.includes('schema.org')) {
+        if (parsed['@type'] === 'Product' || parsed['@type'] === 'ProductGroup') {
+          productSchema = parsed;
+          break;
+        } else if (parsed['@context']?.includes('schema.org') && parsed.name && (parsed.offers || parsed.variants || parsed.hasVariant || parsed.brand)) {
           productSchema = parsed;
           break;
         }
@@ -240,7 +243,7 @@ export class ShopifyScraper extends BaseScraper {
         try { tags = JSON.parse(m[1]); } catch {}
       }
     }
-    const specs = this.parseShopifySpecs(description, tags);
+    const specs = this.parseShopifySpecs(html, tags);
 
     const strainId = await this.upsertStrain({
       name,
@@ -254,7 +257,15 @@ export class ShopifyScraper extends BaseScraper {
     });
     let offersCreated = 0;
 
-    const offersList = productSchema.offers?.offers || productSchema.offers || [];
+    let offersList = productSchema.offers?.offers || productSchema.offers || [];
+    if (productSchema['@type'] === 'ProductGroup' && Array.isArray(productSchema.hasVariant)) {
+      offersList = productSchema.hasVariant.map(v => ({
+        name: v.name,
+        price: v.offers?.price,
+        availability: v.offers?.availability,
+        url: v.offers?.url
+      }));
+    }
     const variants = productSchema.variants || [];
 
     if (Array.isArray(offersList) && offersList.length > 0) {
@@ -267,7 +278,7 @@ export class ShopifyScraper extends BaseScraper {
         await this.insertOffer({
           strainId,
           shop: this.shopName,
-          url,
+          url: o.url || url,
           seeds,
           price,
           availability

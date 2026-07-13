@@ -14,7 +14,8 @@ import {
   TrendingDown,
   X,
   Database,
-  Trash2
+  Trash2,
+  Activity
 } from 'lucide-react';
 import StrainDetailPage from './StrainDetailPage';
 
@@ -35,6 +36,8 @@ export default function App() {
   const [resettingDb, setResettingDb] = useState(false);
   const [seedTypeFilter, setSeedTypeFilter] = useState('');
   const [onlyAvailable, setOnlyAvailable] = useState(false);
+  const [minFloweringFilter, setMinFloweringFilter] = useState('');
+  const [maxFloweringFilter, setMaxFloweringFilter] = useState('');
   
   const [sqlQuery, setSqlQuery] = useState('SELECT * FROM strains LIMIT 10;');
   const [queryResult, setQueryResult] = useState(null);
@@ -65,6 +68,18 @@ export default function App() {
   const [isScraperOpen, setIsScraperOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const logTerminalRef = useRef(null);
+
+  const [sanityCheck, setSanityCheck] = useState({
+    isOpen: false,
+    isRunning: false,
+    shop: null,
+    progress: 0,
+    total: 0,
+    logs: [],
+    results: null
+  });
+  const pollIntervalRef = useRef(null);
+  const sanityCheckLogsRef = useRef(null);
 
   // Fetch initial data
   const fetchData = async () => {
@@ -269,6 +284,110 @@ export default function App() {
     }
   };
 
+  const pollSanityCheck = () => {
+    if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+    pollIntervalRef.current = setInterval(async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/scrape/sanity-check/status`);
+        if (res.ok) {
+          const data = await res.json();
+          setSanityCheck(prev => ({
+            ...prev,
+            isRunning: data.isRunning,
+            progress: data.progress,
+            total: data.total,
+            logs: data.logs,
+            results: data.results
+          }));
+          if (!data.isRunning) {
+            clearInterval(pollIntervalRef.current);
+            pollIntervalRef.current = null;
+            fetchData();
+          }
+        }
+      } catch (err) {
+        console.error('Error polling sanity check status:', err);
+      }
+    }, 1000);
+  };
+
+  const handleStartSanityCheck = async (shopName) => {
+    try {
+      setSanityCheck({
+        isOpen: true,
+        isRunning: true,
+        shop: shopName,
+        progress: 0,
+        total: 50,
+        logs: [`[${new Date().toLocaleTimeString()}] Triggering sanity check for ${shopName}...`],
+        results: null
+      });
+
+      const res = await fetch(`${API_BASE_URL}/api/scrape/sanity-check`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shop: shopName })
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Server error starting sanity check');
+      }
+
+      pollSanityCheck();
+    } catch (err) {
+      setSanityCheck(prev => ({
+        ...prev,
+        isRunning: false,
+        logs: [...prev.logs, `[ERROR] Failed to start: ${err.message}`]
+      }));
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (sanityCheckLogsRef.current) {
+      sanityCheckLogsRef.current.scrollTop = sanityCheckLogsRef.current.scrollHeight;
+    }
+  }, [sanityCheck.logs]);
+
+  const getPercent = (stat) => {
+    if (!stat) return 0;
+    const total = stat.success + stat.fail;
+    if (total === 0) return 0;
+    return Math.round((stat.success / total) * 100);
+  };
+
+  const renderStat = (label, stat, isCritical = true) => {
+    const percent = getPercent(stat);
+    const total = stat.success + stat.fail;
+    const isHealthy = percent === 100;
+    
+    let colorClass = 'text-emerald-400 bg-emerald-500/5 border-emerald-500/10';
+    if (!isHealthy) {
+      if (isCritical) {
+        colorClass = 'text-red-400 bg-red-500/5 border-red-500/10';
+      } else {
+        colorClass = 'text-amber-400 bg-amber-500/5 border-amber-500/10';
+      }
+    }
+
+    return (
+      <div className={`p-2.5 rounded-xl border flex flex-col justify-between ${colorClass}`}>
+        <span className="text-[9px] uppercase tracking-wider font-semibold text-slate-400 leading-normal">{label}</span>
+        <div className="flex items-baseline justify-between mt-1 gap-1">
+          <span className="text-base font-bold font-mono">{percent}%</span>
+          <span className="text-[9px] font-medium text-slate-500">{stat.success}/{total}</span>
+        </div>
+      </div>
+    );
+  };
+
   const handleOpenPriceHistory = async (strainId, name, breeder) => {
     setPriceHistoryMeta({ name, breeder });
     setIsPriceHistoryOpen(true);
@@ -397,6 +516,25 @@ export default function App() {
 
   const groupedStrains = groupStrainsByName(
     strains
+      .filter(strain => {
+        if (minFloweringFilter) {
+          const minVal = parseInt(minFloweringFilter, 10);
+          if (!isNaN(minVal)) {
+            if (strain.floweringMin === null || strain.floweringMin === undefined || strain.floweringMin < minVal) {
+              return false;
+            }
+          }
+        }
+        if (maxFloweringFilter) {
+          const maxVal = parseInt(maxFloweringFilter, 10);
+          if (!isNaN(maxVal)) {
+            if (strain.floweringMax === null || strain.floweringMax === undefined || strain.floweringMax > maxVal) {
+              return false;
+            }
+          }
+        }
+        return true;
+      })
       .map(strain => {
         let filteredOffers = strain.offers;
         if (selectedShop) {
@@ -803,6 +941,198 @@ export default function App() {
         </div>
       )}
 
+      {/* Sanity Check Modal */}
+      {sanityCheck.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-2xl bg-slate-900 rounded-2xl relative flex flex-col max-h-[85vh] overflow-hidden shadow-2xl border border-slate-800 animate-scale-up">
+            
+            {/* Close Button */}
+            <button
+              onClick={() => {
+                setSanityCheck(prev => ({ ...prev, isOpen: false }));
+                if (pollIntervalRef.current) {
+                  clearInterval(pollIntervalRef.current);
+                  pollIntervalRef.current = null;
+                }
+              }}
+              className="absolute top-4 right-4 text-slate-500 hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-800"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Modal Header */}
+            <div className="p-6 border-b border-slate-800 flex items-center gap-3">
+              <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400 border border-emerald-500/20">
+                <Activity className="w-5 h-5 animate-pulse" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-100 text-base">
+                  Sanity Check: {sanityCheck.shop}
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Testing scraper reliability by processing a random 50-product sample in-memory.
+                </p>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto space-y-6 flex-1 scrollbar-thin">
+              
+              {/* Progress and status */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-baseline text-xs">
+                  <span className="text-slate-400 font-medium">
+                    {sanityCheck.isRunning ? 'Analyzing shop catalog...' : 'Check Completed'}
+                  </span>
+                  <span className="font-mono font-bold text-emerald-400">
+                    {sanityCheck.progress} / {sanityCheck.total} products checked
+                  </span>
+                </div>
+                <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-900">
+                  <div 
+                    className="h-full bg-emerald-500 transition-all duration-300"
+                    style={{ width: `${sanityCheck.total > 0 ? (sanityCheck.progress / sanityCheck.total) * 100 : 0}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Live console logs */}
+              <div className="space-y-2">
+                <span className="block text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Live Testing Logs</span>
+                <div 
+                  ref={sanityCheckLogsRef}
+                  className="bg-black/60 font-mono text-[10px] text-slate-300 p-4 rounded-xl border border-slate-950 h-44 overflow-y-auto space-y-1 select-text scrollbar-thin scroll-smooth"
+                >
+                  {sanityCheck.logs.map((log, idx) => {
+                    let color = 'text-slate-300';
+                    if (log.includes('[ERROR]')) color = 'text-red-400';
+                    else if (log.includes('[WARNING]')) color = 'text-amber-400';
+                    else if (log.includes('[SUCCESS]')) color = 'text-emerald-400';
+                    return (
+                      <div key={idx} className={`${color} leading-relaxed break-all`}>
+                        {log}
+                      </div>
+                    );
+                  })}
+                  {sanityCheck.logs.length === 0 && (
+                    <div className="text-slate-600 italic">Initializing runner...</div>
+                  )}
+                </div>
+              </div>
+
+              {/* Statistics Results */}
+              {sanityCheck.results && (
+                <div className="space-y-4">
+                  <div className="border-t border-slate-800 pt-5">
+                    <span className="block text-[10px] text-slate-500 uppercase tracking-wider mb-3 font-bold font-bold">Critical Information Check (Success Rate)</span>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {renderStat('Strain Name', sanityCheck.results.critical.name, true)}
+                      {renderStat('Breeder', sanityCheck.results.critical.breeder, true)}
+                      {renderStat('Price', sanityCheck.results.critical.price, true)}
+                      {renderStat('Seed Count', sanityCheck.results.critical.seeds, true)}
+                    </div>
+                  </div>
+
+                  <div className="border-t border-slate-800 pt-5">
+                    <span className="block text-[10px] text-slate-500 uppercase tracking-wider mb-3 font-bold font-bold">Secondary Information Check (Completeness Rate)</span>
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                      {renderStat('THC', sanityCheck.results.secondary.thc, false)}
+                      {renderStat('CBD', sanityCheck.results.secondary.cbd, false)}
+                      {renderStat('Genetics', sanityCheck.results.secondary.strainType, false)}
+                      {renderStat('Type (Fem/Reg)', sanityCheck.results.secondary.seedType, false)}
+                      {renderStat('Flowering (Auto/Photo)', sanityCheck.results.secondary.type, false)}
+                    </div>
+                  </div>
+
+                  {sanityCheck.results.failures.length > 0 && (
+                    <div className="border-t border-slate-800 pt-5">
+                      <span className="block text-[10px] text-red-500 uppercase tracking-wider mb-2 font-semibold">Failed Pages ({sanityCheck.results.failures.length})</span>
+                      <div className="max-h-36 overflow-y-auto border border-red-500/10 rounded-xl bg-red-500/5 divide-y divide-red-500/10 text-[10px] font-mono scrollbar-thin">
+                        {sanityCheck.results.failures.map((f, idx) => (
+                          <div key={idx} className="p-2.5 flex flex-col gap-1">
+                            <a href={f.url} target="_blank" rel="noopener noreferrer" className="text-red-400 hover:underline font-bold break-all flex items-center gap-1">
+                              {f.url}
+                              <ExternalLink className="w-2.5 h-2.5" />
+                            </a>
+                            <span className="text-slate-500">{f.error}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {sanityCheck.results.criticalFailures && sanityCheck.results.criticalFailures.length > 0 && (
+                    <div className="border-t border-slate-800 pt-5">
+                      <span className="block text-[10px] text-amber-500 uppercase tracking-wider mb-2 font-semibold">Missing Critical Details ({sanityCheck.results.criticalFailures.length})</span>
+                      <div className="max-h-40 overflow-y-auto border border-amber-500/10 rounded-xl bg-amber-500/5 divide-y divide-amber-500/10 text-[10px] font-mono scrollbar-thin">
+                        {sanityCheck.results.criticalFailures.map((f, idx) => (
+                          <div key={idx} className="p-2.5 flex flex-col gap-1">
+                            <a href={f.url} target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:underline font-bold break-all flex items-center gap-1">
+                              {f.url}
+                              <ExternalLink className="w-2.5 h-2.5" />
+                            </a>
+                            <div className="text-slate-400 flex flex-wrap gap-1.5 mt-0.5 items-center">
+                              <span>Missing critical fields:</span>
+                              {f.fields.map(field => (
+                                <span key={field} className="px-1.5 py-0.5 rounded bg-red-500/15 border border-red-500/25 text-red-400 text-[8px] font-bold uppercase tracking-wider">
+                                  {field}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {sanityCheck.results.secondaryFailures && sanityCheck.results.secondaryFailures.length > 0 && (
+                    <div className="border-t border-slate-800 pt-5">
+                      <span className="block text-[10px] text-sky-400 uppercase tracking-wider mb-2 font-semibold">Missing Secondary Details ({sanityCheck.results.secondaryFailures.length})</span>
+                      <div className="max-h-40 overflow-y-auto border border-sky-500/10 rounded-xl bg-sky-500/5 divide-y divide-sky-500/10 text-[10px] font-mono scrollbar-thin">
+                        {sanityCheck.results.secondaryFailures.map((f, idx) => (
+                          <div key={idx} className="p-2.5 flex flex-col gap-1">
+                            <a href={f.url} target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:underline font-bold break-all flex items-center gap-1">
+                              {f.url}
+                              <ExternalLink className="w-2.5 h-2.5" />
+                            </a>
+                            <div className="text-slate-400 flex flex-wrap gap-1.5 mt-0.5 items-center">
+                              <span>Missing optional fields:</span>
+                              {f.fields.map(field => (
+                                <span key={field} className="px-1.5 py-0.5 rounded bg-sky-500/15 border border-sky-500/25 text-sky-400 text-[8px] font-bold uppercase tracking-wider">
+                                  {field}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-slate-800 bg-slate-950/20 flex justify-end">
+              <button
+                onClick={() => {
+                  setSanityCheck(prev => ({ ...prev, isOpen: false }));
+                  if (pollIntervalRef.current) {
+                    clearInterval(pollIntervalRef.current);
+                    pollIntervalRef.current = null;
+                  }
+                }}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold border border-slate-700 transition-colors"
+              >
+                Close Window
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
       {/* Navigation Tabs (Only visible when debug is true) */}
       {config.debug && (
         <div className="border-b border-slate-900 bg-slate-950/20">
@@ -941,6 +1271,33 @@ export default function App() {
                 <span className={`w-1.5 h-1.5 rounded-full ${onlyAvailable ? 'bg-emerald-500 shadow shadow-emerald-500/50' : 'bg-slate-500'}`} />
                 Only In Stock
               </button>
+            </div>
+
+            {/* Flowering Filter */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider mr-2">Flowering</span>
+              <div className="flex items-center gap-1">
+                <input
+                  type="number"
+                  placeholder="Min"
+                  min="1"
+                  max="25"
+                  value={minFloweringFilter}
+                  onChange={e => setMinFloweringFilter(e.target.value)}
+                  className="w-16 h-9 px-2 bg-slate-950 border border-slate-900 rounded-lg text-slate-200 placeholder-slate-600 focus:outline-none focus:border-emerald-500/50 transition-colors text-xs font-semibold font-mono text-center"
+                />
+                <span className="text-slate-600 text-xs">-</span>
+                <input
+                  type="number"
+                  placeholder="Max"
+                  min="1"
+                  max="25"
+                  value={maxFloweringFilter}
+                  onChange={e => setMaxFloweringFilter(e.target.value)}
+                  className="w-16 h-9 px-2 bg-slate-950 border border-slate-900 rounded-lg text-slate-200 placeholder-slate-600 focus:outline-none focus:border-emerald-500/50 transition-colors text-xs font-semibold font-mono text-center"
+                />
+                <span className="text-xs text-slate-500 font-semibold ml-1">weeks</span>
+              </div>
             </div>
 
           </div>
@@ -1126,10 +1483,10 @@ export default function App() {
       {/* Admin Panel View */}
       {currentPath === '/admin' && (
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="space-y-8">
             
             {/* Scraper Settings Panel */}
-            <div className="lg:col-span-2 glass-panel rounded-2xl p-6">
+            <div className="glass-panel rounded-2xl p-6">
               <h2 className="text-lg font-bold text-slate-100 mb-6 flex items-center gap-2">
                 <RotateCw className="w-5 h-5 text-emerald-400" />
                 Scraper Configuration Settings
@@ -1189,76 +1546,86 @@ export default function App() {
             </div>
 
             {/* Database Diagnostics Panel */}
-            <div className="glass-panel rounded-2xl p-6 flex flex-col justify-between">
-              <div>
-                <h2 className="text-lg font-bold text-slate-100 mb-6 flex items-center gap-2">
-                  <Layers className="w-5 h-5 text-emerald-400" />
-                  Database Diagnostics
-                </h2>
+            <div className="glass-panel rounded-2xl p-6">
+              <h2 className="text-lg font-bold text-slate-100 mb-6 flex items-center gap-2">
+                <Layers className="w-5 h-5 text-emerald-400" />
+                Database Diagnostics
+              </h2>
 
-                <div className="space-y-4">
-                  <div className="flex justify-between border-b border-slate-900 pb-2">
-                    <span className="text-xs text-slate-500">Strains Count</span>
-                    <span className="text-xs text-slate-200 font-semibold">{dbStats.strainsCount}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-900 pb-2">
-                    <span className="text-xs text-slate-500">Scraped Offers</span>
-                    <span className="text-xs text-slate-200 font-semibold">{dbStats.offersCount}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-900 pb-2">
-                    <span className="text-xs text-slate-500">File Size</span>
-                    <span className="text-xs text-emerald-400 font-bold">{dbStats.fileSize}</span>
-                  </div>
-
-                  <div className="border-t border-slate-900 pt-4 mt-2">
-                    <span className="block text-[10px] text-slate-500 uppercase tracking-wider mb-2.5 font-semibold">Currently Scraped Shops</span>
-                    <div className="space-y-2">
-                      {dbStats.shopStats && dbStats.shopStats.map(s => (
-                        <div key={s.shop} className="bg-slate-950/60 border border-slate-900 rounded-xl p-3 flex justify-between items-center gap-3">
-                          <div className="flex-1 min-w-0">
-                            <span className="block text-xs font-bold text-slate-200 truncate">{s.shop}</span>
-                            <span className="block text-[9px] text-slate-500 mt-0.5 truncate">
-                              {s.strainsCount} strains • {s.offersCount} offers
-                            </span>
-                          </div>
-                          <div className="flex gap-2 shrink-0">
-                            <button
-                              onClick={() => handleStartScrape(s.shop)}
-                              disabled={scraper.isScanning}
-                              className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all flex items-center gap-1 ${
-                                scraper.isScanning
-                                  ? 'bg-slate-950 text-slate-600 border-slate-950 cursor-not-allowed'
-                                  : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 hover:text-emerald-300'
-                              }`}
-                            >
-                              <RotateCw className={`w-3.5 h-3.5 ${scraper.isScanning && scraper.currentShop === s.shop ? 'animate-spin' : ''}`} />
-                              Scrape
-                            </button>
-                            <button
-                              onClick={() => handleClearShop(s.shop)}
-                              disabled={scraper.isScanning}
-                              className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all flex items-center gap-1 ${
-                                scraper.isScanning
-                                  ? 'bg-slate-950 text-slate-600 border-slate-950 cursor-not-allowed'
-                                  : 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20 hover:text-red-300'
-                              }`}
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                              Clear
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <span className="block text-[10px] text-slate-500 uppercase tracking-wider mb-1 font-semibold">Absolute DB Path</span>
-                    <span className="block text-[10px] font-mono text-slate-400 break-all leading-normal bg-slate-950/60 p-2.5 rounded-lg border border-slate-900">
-                      {dbStats.dbPath}
-                    </span>
-                  </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <div className="bg-slate-950/40 p-4 border border-slate-900 rounded-xl flex flex-col justify-between gap-1">
+                  <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Strains Count</span>
+                  <span className="text-xl font-bold text-slate-200 font-mono">{dbStats.strainsCount}</span>
                 </div>
+                <div className="bg-slate-950/40 p-4 border border-slate-900 rounded-xl flex flex-col justify-between gap-1">
+                  <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Scraped Offers</span>
+                  <span className="text-xl font-bold text-slate-200 font-mono">{dbStats.offersCount}</span>
+                </div>
+                <div className="bg-slate-950/40 p-4 border border-slate-900 rounded-xl flex flex-col justify-between gap-1">
+                  <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">File Size</span>
+                  <span className="text-xl font-bold text-emerald-400 font-mono">{dbStats.fileSize}</span>
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <span className="block text-[10px] text-slate-500 uppercase tracking-wider mb-2.5 font-semibold">Currently Scraped Shops</span>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {dbStats.shopStats && dbStats.shopStats.map(s => (
+                    <div key={s.shop} className="bg-slate-950/60 border border-slate-900 rounded-xl p-4 flex flex-col justify-between gap-3">
+                      <div className="min-w-0">
+                        <span className="block text-xs font-bold text-slate-200 truncate">{s.shop}</span>
+                        <span className="block text-[9px] text-slate-500 mt-0.5 truncate">
+                          {s.strainsCount} strains • {s.offersCount} offers
+                        </span>
+                      </div>
+                      <div className="flex gap-1.5">
+                        <button
+                          onClick={() => handleStartScrape(s.shop)}
+                          disabled={scraper.isScanning || sanityCheck.isRunning}
+                          className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold border transition-all flex items-center justify-center gap-1 ${
+                            scraper.isScanning || sanityCheck.isRunning
+                              ? 'bg-slate-950 text-slate-600 border-slate-950 cursor-not-allowed'
+                              : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 hover:text-emerald-300'
+                          }`}
+                        >
+                          <RotateCw className={`w-3.5 h-3.5 ${scraper.isScanning && scraper.currentShop === s.shop ? 'animate-spin' : ''}`} />
+                          Scrape
+                        </button>
+                        <button
+                          onClick={() => handleStartSanityCheck(s.shop)}
+                          disabled={scraper.isScanning || sanityCheck.isRunning}
+                          className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold border transition-all flex items-center justify-center gap-1 ${
+                            scraper.isScanning || sanityCheck.isRunning
+                              ? 'bg-slate-950 text-slate-600 border-slate-950 cursor-not-allowed'
+                              : 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20 hover:text-amber-300'
+                          }`}
+                        >
+                          <Activity className="w-3.5 h-3.5" />
+                          Test
+                        </button>
+                        <button
+                          onClick={() => handleClearShop(s.shop)}
+                          disabled={scraper.isScanning || sanityCheck.isRunning}
+                          className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold border transition-all flex items-center justify-center gap-1 ${
+                            scraper.isScanning || sanityCheck.isRunning
+                              ? 'bg-slate-950 text-slate-600 border-slate-950 cursor-not-allowed'
+                              : 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20 hover:text-red-300'
+                          }`}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          Clear
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <span className="block text-[10px] text-slate-500 uppercase tracking-wider mb-1.5 font-semibold">Absolute DB Path</span>
+                <span className="block text-[10px] font-mono text-slate-400 break-all leading-normal bg-slate-950/60 p-2.5 rounded-lg border border-slate-900">
+                  {dbStats.dbPath}
+                </span>
               </div>
 
               <div className="border-t border-slate-900 pt-6 mt-6">
