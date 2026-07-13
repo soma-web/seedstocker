@@ -115,6 +115,7 @@ if (fs.existsSync(distPath)) {
 
   app.get('/', serveIndex);
   app.get('/admin', serveIndex);
+  app.get('/strain/*', serveIndex);
 }
 
 // API Routes
@@ -190,6 +191,42 @@ app.get('/api/strains', async (req, reply) => {
     reply.status(500).send({ error: err.message });
   }
 });
+
+app.get('/api/strains/:id/detail', async (req, reply) => {
+  try {
+    const { id } = req.params;
+    const strain = sqlite.prepare('SELECT * FROM strains WHERE id = ?').get(id);
+    if (!strain) return reply.status(404).send({ error: 'Strain not found' });
+    const offers = sqlite.prepare(`
+      SELECT id, shop, url, seeds, price, currency, availability, fetched_at AS fetchedAt
+      FROM scraped_offers WHERE strain_id = ?
+      ORDER BY shop ASC, seeds ASC, price ASC
+    `).all(id);
+
+    // Find other strains with the same name but different breeders
+    const siblings = sqlite.prepare(`
+      SELECT id, breeder
+      FROM strains
+      WHERE LOWER(TRIM(name)) = LOWER(TRIM(?)) AND id != ?
+      ORDER BY breeder ASC
+    `).all(strain.name, id);
+
+    return {
+      id: strain.id,
+      name: strain.name,
+      breeder: strain.breeder,
+      type: strain.type,
+      seedType: strain.seed_type,
+      createdAt: strain.created_at,
+      updatedAt: strain.updated_at,
+      offers,
+      siblings
+    };
+  } catch (err) {
+    reply.status(500).send({ error: err.message });
+  }
+});
+
 
 app.get('/api/strains/:id/price-history', async (req, reply) => {
   try {

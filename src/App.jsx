@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Search, 
-  RotateCw, 
-  Terminal, 
-  ExternalLink, 
-  Sparkles, 
-  Layers, 
+import {
+  Search,
+  RotateCw,
+  Terminal,
+  ExternalLink,
+  Sparkles,
+  Layers,
   Info,
   ChevronDown,
   ChevronUp,
@@ -16,6 +16,7 @@ import {
   Database,
   Trash2
 } from 'lucide-react';
+import StrainDetailPage from './StrainDetailPage';
 
 const API_BASE_URL = 'http://localhost:3002';
 
@@ -150,6 +151,7 @@ export default function App() {
   const navigateTo = (path) => {
     window.history.pushState(null, '', path);
     setCurrentPath(path);
+    window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
   // Load db stats when debug is enabled and path is /admin
@@ -364,6 +366,7 @@ export default function App() {
     return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
   };
 
+
   const groupStrainsByName = (strainsList) => {
     const groupedMap = new Map();
     for (const s of strainsList) {
@@ -406,6 +409,18 @@ export default function App() {
       })
       .filter(strain => strain.offers.length > 0)
   );
+
+  // â”€â”€ Strain detail page routing â”€â”€
+  const strainDetailMatch = currentPath.match(/^\/strain\/(.+)$/);
+  if (strainDetailMatch) {
+    return (
+      <StrainDetailPage
+        strainId={decodeURIComponent(strainDetailMatch[1])}
+        onBack={() => navigateTo('/')}
+        onNavigate={(path) => navigateTo(path)}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 pb-20 selection:bg-emerald-500/30 selection:text-emerald-400">
@@ -673,8 +688,8 @@ export default function App() {
                           <line x1="50" y1="130" x2="550" y2="130" stroke="#1e293b" strokeDasharray="3,3" />
 
                           {/* Grid Labels */}
-                          <text x="10" y="34" className="fill-slate-600 text-[9px] font-mono font-bold">€{yMax.toFixed(2)}</text>
-                          <text x="10" y="134" className="fill-slate-600 text-[9px] font-mono font-bold">€{yMin.toFixed(2)}</text>
+                          <text x="10" y="34" className="fill-slate-600 text-[9px] font-mono font-bold">â‚¬{yMax.toFixed(2)}</text>
+                          <text x="10" y="134" className="fill-slate-600 text-[9px] font-mono font-bold">â‚¬{yMin.toFixed(2)}</text>
 
                           {/* Draw Lines */}
                           {shopLines.map(line => {
@@ -723,7 +738,7 @@ export default function App() {
                                     textAnchor="middle"
                                     className="opacity-0 group-hover:opacity-100 fill-emerald-400 text-[9px] font-bold font-mono transition-opacity duration-100 pointer-events-none"
                                   >
-                                    €{p.price.toFixed(2)}
+                                    â‚¬{p.price.toFixed(2)}
                                   </text>
                                 </g>
                               );
@@ -755,11 +770,11 @@ export default function App() {
                           if (previous) {
                             const diff = item.price - previous.price;
                             if (diff > 0) {
-                              diffIndicator = <span className="text-red-400 font-bold">↑ +€{diff.toFixed(2)}</span>;
+                              diffIndicator = <span className="text-red-400 font-bold">â†‘ +â‚¬{diff.toFixed(2)}</span>;
                             } else if (diff < 0) {
-                              diffIndicator = <span className="text-emerald-400 font-bold">↓ -€{Math.abs(diff).toFixed(2)}</span>;
+                              diffIndicator = <span className="text-emerald-400 font-bold">â†“ -â‚¬{Math.abs(diff).toFixed(2)}</span>;
                             } else {
-                              diffIndicator = <span className="text-slate-500">—</span>;
+                              diffIndicator = <span className="text-slate-500">â€”</span>;
                             }
                           } else {
                             diffIndicator = <span className="text-slate-500 italic text-[10px]">First tracked</span>;
@@ -772,7 +787,7 @@ export default function App() {
                               </td>
                               <td className="p-3 font-bold text-slate-200">{item.shop}</td>
                               <td className="p-3">{item.seeds} Seeds</td>
-                              <td className="p-3 text-emerald-400 font-semibold">€{item.price.toFixed(2)}</td>
+                              <td className="p-3 text-emerald-400 font-semibold">â‚¬{item.price.toFixed(2)}</td>
                               <td className="p-3 text-right">{diffIndicator}</td>
                             </tr>
                           );
@@ -960,9 +975,14 @@ export default function App() {
               });
 
               return (
-                <div 
-                  key={strain.id} 
-                  className="glass-panel glass-panel-hover rounded-2xl p-6 flex flex-col justify-between"
+                <div
+                  key={strain.id}
+                  className="glass-panel glass-panel-hover rounded-2xl p-6 flex flex-col justify-between cursor-pointer group/card"
+                  onClick={() => navigateTo(`/strain/${encodeURIComponent(strain.id)}`)} 
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={e => e.key === 'Enter' && navigateTo(`/strain/${encodeURIComponent(strain.id)}`)}
+                  aria-label={`View details for ${strain.name}`}
                 >
                   {/* Strain Card Header */}
                   <div>
@@ -1044,7 +1064,7 @@ export default function App() {
                                     </td>
                                     <td className="p-3 font-mono whitespace-nowrap">
                                       <span className={`font-bold text-xs ${isCheapestForSize ? 'text-emerald-400' : 'text-slate-300'}`}>
-                                        €{o.price.toFixed(2)}
+                                        â‚¬{o.price.toFixed(2)}
                                       </span>
                                       {isCheapestForSize && (
                                         <span className="inline-flex items-center gap-0.5 text-[8px] font-bold text-emerald-400 bg-emerald-500/10 px-1 py-0.2 rounded border border-emerald-500/20 ml-1.5" title="Cheapest price for this pack size">
@@ -1080,8 +1100,8 @@ export default function App() {
                       <TrendingDown className="w-3.5 h-3.5 text-emerald-500" />
                       Lowest price details listed
                     </span>
-                    <span className="text-[9px] text-slate-600">
-                      Offers: {strain.offers.length}
+                    <span className="text-[10px] text-emerald-500/60 group-hover/card:text-emerald-400 transition-colors font-semibold">
+                      View Details â†’
                     </span>
                   </div>
 
@@ -1093,7 +1113,6 @@ export default function App() {
 
       </main>
       )}
-
       {/* Admin Panel View */}
       {currentPath === '/admin' && (
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
@@ -1189,7 +1208,7 @@ export default function App() {
                           <div className="flex-1 min-w-0">
                             <span className="block text-xs font-bold text-slate-200 truncate">{s.shop}</span>
                             <span className="block text-[9px] text-slate-500 mt-0.5 truncate">
-                              {s.strainsCount} strains • {s.offersCount} offers
+                              {s.strainsCount} strains â€¢ {s.offersCount} offers
                             </span>
                           </div>
                           <div className="flex gap-2 shrink-0">
