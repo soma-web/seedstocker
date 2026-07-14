@@ -76,6 +76,19 @@ function runNormalizationTests() {
   assert.strictEqual(scraper.cleanThc('18-22%'), '20%');
   assert.strictEqual(scraper.cleanThc('12-16%'), '14%');
 
+  // --- Breeder Normalization Tests ---
+  assert.strictEqual(scraper.normalizeBreeder('RQS'), 'Royal Queen Seeds');
+  assert.strictEqual(scraper.normalizeBreeder('royal queen'), 'Royal Queen Seeds');
+  assert.strictEqual(scraper.normalizeBreeder('Dutch Passion Seeds'), 'Dutch Passion');
+  assert.strictEqual(scraper.normalizeBreeder("barny's farm"), "Barney's Farm");
+  assert.strictEqual(scraper.normalizeBreeder('Some Unknown Breeder'), 'Some Unknown Breeder');
+  assert.strictEqual(scraper.normalizeBreeder(null), 'Unknown Breeder');
+
+  // --- Strain Name Cleaning Tests (Breeder/Alias Stripping) ---
+  assert.strictEqual(scraper.normalizeStrainName('RQS Amnesia Haze', 'Royal Queen Seeds'), 'Amnesia Haze');
+  assert.strictEqual(scraper.normalizeStrainName('Amnesia Haze by Royal Queen Seeds', 'Royal Queen Seeds'), 'Amnesia Haze');
+  assert.strictEqual(scraper.normalizeStrainName('DP Blueberry', 'Dutch Passion'), 'Blueberry');
+
   console.log('All normalization unit tests PASSED successfully!');
 }
 

@@ -5,6 +5,7 @@ import { db } from '../db.js';
 import { strains, scrapedOffers, priceHistory, strainShopDescriptions, rewrittenDescriptions } from '../schema.js';
 import { eq, and, desc } from 'drizzle-orm';
 import crypto from 'node:crypto';
+import { normalizeBreederName, CANONICAL_TO_ALIASES } from './breeder-normalize.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -45,21 +46,8 @@ export class BaseScraper {
 
   normalizeBreeder(breeder) {
     if (!breeder) return 'Unknown Breeder';
-    let b = breeder.trim();
-    const lower = b.toLowerCase();
-    
-    if (lower.includes('barney') || lower.includes('barny')) return "Barney's Farm";
-    if (lower.includes('royal queen') || lower.includes('rqs')) return 'Royal Queen Seeds';
-    if (lower.includes('sensi seed')) return 'Sensi Seeds';
-    if (lower.includes('dutch passion')) return 'Dutch Passion';
-    if (lower.includes('green house') || lower.includes('greenhouse')) return 'Greenhouse Seeds';
-    if (lower.includes('fastbuds') || lower.includes('fast buds') || lower.includes('2 fast 4 buds')) return 'FastBuds';
-    if (lower.includes('sweet seed')) return 'Sweet Seeds';
-    if (lower.includes('anesia')) return 'Anesia Seeds';
-    if (lower.includes('zamnesia')) return 'Zamnesia Seeds';
-    if (lower.includes('bud voyage') || lower.includes('budvoyage')) return 'Bud Voyage';
-    
-    return b;
+    const normalized = normalizeBreederName(breeder);
+    return normalized || 'Unknown Breeder';
   }
 
   normalizeStrainName(title, breeder) {
@@ -94,18 +82,7 @@ export class BaseScraper {
         spaceVariants.push(noSpace.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'));
       }
       
-      const breederAliases = {
-        'Royal Queen Seeds': ['RQS'],
-        'Dutch Passion': ['DP'],
-        'Greenhouse Seeds': ['GHS'],
-        'Sensi Seeds': ['Sensi'],
-        'Sweet Seeds': ['Sweet'],
-        'Anesia Seeds': ['Anesia'],
-        'Zamnesia Seeds': ['Zamnesia'],
-        'Bud Voyage': ['BudVoyage']
-      };
-      
-      const aliases = breederAliases[breeder] || [];
+      const aliases = CANONICAL_TO_ALIASES[breeder] || [];
       for (const alias of aliases) {
         spaceVariants.push(alias.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'));
       }

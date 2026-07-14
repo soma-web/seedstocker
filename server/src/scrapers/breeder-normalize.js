@@ -90,10 +90,56 @@ const BREEDER_ALIASES = new Map([
   ['ripper seeds', 'Ripper Seeds'],
   ['ripperseeds', 'Ripper Seeds'],
   ['ripper', 'Ripper Seeds'],
+
+  // Shared BaseScraper & General Breeders
+  ['rqs', 'Royal Queen Seeds'],
+  ['royal queen', 'Royal Queen Seeds'],
+  ['royal queen seeds', 'Royal Queen Seeds'],
+  ['dp', 'Dutch Passion'],
+  ['dutch passion', 'Dutch Passion'],
+  ['dutch passion seeds', 'Dutch Passion'],
+  ['ghs', 'Greenhouse Seeds'],
+  ['greenhouse', 'Greenhouse Seeds'],
+  ['greenhouse seeds', 'Greenhouse Seeds'],
+  ['green house', 'Greenhouse Seeds'],
+  ['green house seeds', 'Greenhouse Seeds'],
+  ['sensi', 'Sensi Seeds'],
+  ['sensi seeds', 'Sensi Seeds'],
+  ['sensi seed', 'Sensi Seeds'],
+  ['sweet', 'Sweet Seeds'],
+  ['sweet seeds', 'Sweet Seeds'],
+  ['sweet seed', 'Sweet Seeds'],
+  ['anesia', 'Anesia Seeds'],
+  ['anesia seeds', 'Anesia Seeds'],
+  ['zamnesia', 'Zamnesia Seeds'],
+  ['zamnesia seeds', 'Zamnesia Seeds'],
+  ['budvoyage', 'Bud Voyage'],
+  ['bud voyage', 'Bud Voyage'],
+  ['fastbuds', 'FastBuds'],
+  ['fast buds', 'FastBuds'],
+  ['2 fast 4 buds', 'FastBuds'],
+  ['2fast4buds', 'FastBuds'],
+  ['barny', "Barney's Farm"],
+  ['barnys', "Barney's Farm"],
+  ["barny's farm", "Barney's Farm"],
+  ['barnys farm', "Barney's Farm"],
 ]);
 
 // All known aliases (lowercase) for matching
 const KNOWN_BREEDERS = new Set(BREEDER_ALIASES.keys());
+
+// Derive canonical-to-aliases mapping dynamically from BREEDER_ALIASES
+const CANONICAL_TO_ALIASES = {};
+for (const [alias, canonical] of BREEDER_ALIASES.entries()) {
+  if (alias.toLowerCase() !== canonical.toLowerCase()) {
+    if (!CANONICAL_TO_ALIASES[canonical]) {
+      CANONICAL_TO_ALIASES[canonical] = [];
+    }
+    if (!CANONICAL_TO_ALIASES[canonical].includes(alias)) {
+      CANONICAL_TO_ALIASES[canonical].push(alias);
+    }
+  }
+}
 
 // Noise words to strip from breeder names (German product descriptors)
 const NOISE_RE = /[\s,]*(feminisierte?n?|feminized|regular|regulär|cannabissamen|cannabis\s*seeds|cannabis|premium|limited\s*(edition|drop)|drop|exclusive|samen)\s*/gi;
@@ -112,4 +158,4 @@ export function normalizeBreederName(raw) {
   return canonical || b;
 }
 
-export { BREEDER_ALIASES, KNOWN_BREEDERS };
+export { BREEDER_ALIASES, KNOWN_BREEDERS, CANONICAL_TO_ALIASES };
