@@ -93,6 +93,17 @@ export default function App() {
     logs: []
   });
   const [isSeedfinderOpen, setIsSeedfinderOpen] = useState(false);
+  const [bulkAi, setBulkAi] = useState({
+    isScanning: false,
+    startTime: null,
+    endTime: null,
+    totalStrains: 0,
+    processedStrains: 0,
+    currentStrain: null,
+    logs: []
+  });
+  const [isBulkAiOpen, setIsBulkAiOpen] = useState(false);
+  const bulkAiLogTerminalRef = useRef(null);
   const pollIntervalRef = useRef(null);
   const sanityCheckLogsRef = useRef(null);
 
@@ -296,6 +307,73 @@ export default function App() {
       }
     } catch (err) {
       console.error('Error fetching seedfinder status:', err);
+    }
+  };
+
+  // Effect to poll bulk AI status
+  useEffect(() => {
+    fetchBulkAiStatus();
+    
+    const interval = setInterval(() => {
+      fetchBulkAiStatus();
+      if (bulkAi.isScanning) {
+        // Also refresh list to show updated descriptions live
+        fetchData();
+      }
+    }, bulkAi.isScanning ? 1500 : 5000);
+
+    return () => clearInterval(interval);
+  }, [bulkAi.isScanning]);
+
+  // Auto-scroll bulk AI console logs to bottom
+  useEffect(() => {
+    if (bulkAiLogTerminalRef.current) {
+      bulkAiLogTerminalRef.current.scrollTop = bulkAiLogTerminalRef.current.scrollHeight;
+    }
+  }, [bulkAi.logs]);
+
+  const fetchBulkAiStatus = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/strains/generate-ai-descriptions/status`);
+      if (res.ok) {
+        const data = await res.json();
+        setBulkAi(data);
+      }
+    } catch (err) {
+      console.error('Error fetching bulk AI status:', err);
+    }
+  };
+
+  const handleStartBulkAi = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/strains/generate-ai-descriptions`, {
+        method: 'POST'
+      });
+      if (res.ok) {
+        setBulkAi(prev => ({ ...prev, isScanning: true, logs: [] }));
+        setIsBulkAiOpen(true);
+      } else {
+        const errData = await res.json();
+        alert(`Failed to start bulk AI description generation: ${errData.error || res.statusText}`);
+      }
+    } catch (err) {
+      alert(`Failed to trigger bulk AI description generation: ${err.message}`);
+    }
+  };
+
+  const handleStopBulkAi = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/strains/generate-ai-descriptions/stop`, {
+        method: 'POST'
+      });
+      if (res.ok) {
+        alert('Stopping bulk AI description generation...');
+      } else {
+        const errData = await res.json();
+        alert(`Failed to stop: ${errData.error || res.statusText}`);
+      }
+    } catch (err) {
+      alert(`Failed to stop bulk AI description generation: ${err.message}`);
     }
   };
 
@@ -2320,6 +2398,112 @@ export default function App() {
                   <span className="text-slate-600">No logs yet...</span>
                 ) : (
                   seedfinderScraper.logs.map((log, i) => (
+                    <div key={i} className={`mb-1 ${
+                      log.type === 'error' ? 'text-red-400' :
+                      log.type === 'success' ? 'text-emerald-400' :
+                      log.type === 'warning' ? 'text-amber-400' :
+                      'text-slate-400'
+                    }`}>
+                      <span className="text-slate-600">[{new Date(log.timestamp).toLocaleTimeString()}]</span>{' '}
+                      <span className="font-semibold">[{log.type.toUpperCase()}]</span>{' '}
+                      {log.message}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Bulk AI Description Generator Card */}
+          <div className="glass-panel rounded-2xl p-6 mt-8">
+            <h2 className="text-lg font-bold text-slate-100 mb-2 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-emerald-400" />
+              Bulk AI Description Generator
+            </h2>
+            <p className="text-xs text-slate-500 mb-6">
+              Synthesize natural German prose descriptions using the configured AI engine (Gemini API or local inference server) for all strains in the database.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 items-center">
+              <div className="flex gap-2 w-full sm:w-auto">
+                <button
+                  onClick={handleStartBulkAi}
+                  disabled={bulkAi.isScanning || scraper.isScanning || seedfinderScraper.isScanning}
+                  className={`px-6 h-12 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-1.5 flex-1 sm:flex-none ${
+                    bulkAi.isScanning || scraper.isScanning || seedfinderScraper.isScanning
+                      ? 'bg-slate-950 text-slate-600 border border-slate-950 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 shadow-lg shadow-emerald-500/10'
+                  }`}
+                >
+                  {bulkAi.isScanning ? (
+                    <>
+                      <RotateCw className="w-4 h-4 animate-spin" />
+                      Generating Descriptions...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      Start Bulk Generation
+                    </>
+                  )}
+                </button>
+                {bulkAi.isScanning && (
+                  <button
+                    onClick={handleStopBulkAi}
+                    className="px-6 h-12 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 font-bold text-sm transition-all flex items-center justify-center gap-1.5"
+                  >
+                    <X className="w-4 h-4" />
+                    Stop
+                  </button>
+                )}
+              </div>
+              <button
+                onClick={() => setIsBulkAiOpen(!isBulkAiOpen)}
+                className="px-4 h-12 rounded-xl bg-slate-950 border border-slate-900 text-slate-400 text-xs font-semibold hover:bg-slate-900 transition-all flex items-center justify-center gap-1.5 w-full sm:w-auto"
+              >
+                {isBulkAiOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                {isBulkAiOpen ? 'Hide' : 'Show'} Logs
+              </button>
+            </div>
+
+            {/* Progress Bar & Status */}
+            {bulkAi.totalStrains > 0 && (
+              <div className="mt-6 space-y-2">
+                <div className="flex justify-between text-xs font-semibold text-slate-400">
+                  <span>Generation Progress</span>
+                  <span>{bulkAi.processedStrains} / {bulkAi.totalStrains} Strains ({Math.round((bulkAi.processedStrains / bulkAi.totalStrains) * 100)}%)</span>
+                </div>
+                <div className="w-full bg-slate-950 rounded-full h-2.5 overflow-hidden border border-slate-900">
+                  <div 
+                    className="bg-gradient-to-r from-emerald-500 to-teal-500 h-full rounded-full transition-all duration-300"
+                    style={{ width: `${(bulkAi.processedStrains / bulkAi.totalStrains) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
+
+            {/* Status Info */}
+            <div className="mt-4 flex flex-wrap gap-4 text-[10px] text-slate-500">
+              <span>Total in Queue: <span className="text-slate-300 font-semibold">{bulkAi.totalStrains}</span></span>
+              <span>Processed: <span className="text-slate-300 font-semibold">{bulkAi.processedStrains}</span></span>
+              {bulkAi.currentStrain && (
+                <span>Current Strain: <span className="text-emerald-400 font-semibold">{bulkAi.currentStrain}</span></span>
+              )}
+              {bulkAi.isScanning && (
+                <span className="text-emerald-400 animate-pulse">Processing...</span>
+              )}
+              {bulkAi.endTime && (
+                <span>Finished: <span className="text-slate-300 font-semibold">{new Date(bulkAi.endTime).toLocaleTimeString()}</span></span>
+              )}
+            </div>
+
+            {/* Log Terminal */}
+            {isBulkAiOpen && (
+              <div className="mt-4 bg-slate-950 border border-slate-900 rounded-xl p-4 h-64 overflow-y-auto font-mono text-[11px] leading-relaxed" ref={bulkAiLogTerminalRef}>
+                {bulkAi.logs.length === 0 ? (
+                  <span className="text-slate-600">No logs yet...</span>
+                ) : (
+                  bulkAi.logs.map((log, i) => (
                     <div key={i} className={`mb-1 ${
                       log.type === 'error' ? 'text-red-400' :
                       log.type === 'success' ? 'text-emerald-400' :

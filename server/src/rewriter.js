@@ -77,6 +77,8 @@ ${cleanText(originalText)}
 Schreibe genau einen zusammenhängenden Absatz (ca. 4-6 Sätze).`;
 
   if (!skipAi && localConfig.useLocalLlm) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000); // 12 seconds timeout
     try {
       console.log(`[Local LLM] Sending request to local inference server: ${localConfig.localLlmUrl} (model: ${localConfig.localLlmModel})`);
       const response = await fetch(localConfig.localLlmUrl, {
@@ -97,8 +99,11 @@ Schreibe genau einen zusammenhängenden Absatz (ca. 4-6 Sätze).`;
             }
           ],
           temperature: 0.7
-        })
+        }),
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
 
       if (response.ok) {
         const data = await response.json();
@@ -115,12 +120,15 @@ Schreibe genau einen zusammenhängenden Absatz (ca. 4-6 Sätze).`;
         console.error(`[Local LLM] Server returned status ${response.status}: ${await response.text()}`);
       }
     } catch (err) {
+      clearTimeout(timeoutId);
       console.error(`[Local LLM] Connection failed: ${err.message}`);
     }
   }
 
   const apiKey = skipAi ? null : getGeminiApiKey();
   if (apiKey) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 seconds timeout
     try {
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
         method: 'POST',
@@ -133,8 +141,11 @@ Schreibe genau einen zusammenhängenden Absatz (ca. 4-6 Sätze).`;
               text: prompt
             }]
           }]
-        })
+        }),
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
 
       if (response.ok) {
         const data = await response.json();
@@ -148,6 +159,7 @@ Schreibe genau einen zusammenhängenden Absatz (ca. 4-6 Sätze).`;
         }
       }
     } catch (err) {
+      clearTimeout(timeoutId);
       // Bypassed: silent fallback
     }
   }
