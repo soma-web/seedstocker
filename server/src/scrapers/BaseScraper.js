@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { db } from '../db.js';
-import { strains, scrapedOffers, priceHistory } from '../schema.js';
+import { strains, scrapedOffers, priceHistory, strainShopDescriptions, rewrittenDescriptions } from '../schema.js';
 import { eq, and, desc } from 'drizzle-orm';
 import crypto from 'node:crypto';
 
@@ -10,9 +10,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export class BaseScraper {
-  constructor(shopName, logMessage) {
+  constructor(shopName, logMessage, scrapeMode = 'price') {
     this.shopName = shopName;
     this.logMessage = logMessage;
+    this.scrapeMode = scrapeMode;
     this.configPath = path.resolve(__dirname, '../../config/scraper.json');
   }
 
@@ -130,9 +131,24 @@ export class BaseScraper {
     return name.trim();
   }
 
-  isInvalidStrainName(title) {
+  getBlockedWords() {
+    try {
+      if (fs.existsSync(this.configPath)) {
+        const data = JSON.parse(fs.readFileSync(this.configPath, 'utf8'));
+        if (Array.isArray(data.blockedWords)) {
+          return data.blockedWords.map(w => w.trim().toLowerCase()).filter(Boolean);
+        }
+      }
+    } catch (err) {
+      this.log('error', `Failed reading blocked words from config: ${err.message}`);
+    }
+    return [];
+  }
+
+  isInvalidStrainName(title, description = '') {
     if (!title) return true;
     const lower = title.trim().toLowerCase();
+    const descLower = (description || '').trim().toLowerCase();
     
     // Ignore any strains containing "pack"/"packs" or "mystery" (mix packs / bundles)
     if (/\bpacks?\b/i.test(lower) || lower.includes('mystery')) {
@@ -151,10 +167,23 @@ export class BaseScraper {
       'wood display',
       'bodendisplay'
     ];
-    return invalidKeywords.some(kw => lower.includes(kw));
-  }
+    if (invalidKeywords.some(kw => lower.includes(kw))) {
+      return true;
+    }
 
-  async upsertStrain({ name, breeder, type, seedType, thc = null, cbd = null, strainType = null, floweringTime = null, floweringMin = null, floweringMax = null }) {
+    // Check custom blocked words from scraper.json
+    const blocked = this.getBlockedWords();
+    if (blocked.length > 0) {
+      const matchBlocked = blocked.some(word => lower.includes(word) || descLower.includes(word));
+      if (matchBlocked) {
+        this.log('info', `Skipping product "${title}" because it matches custom blocked word list.`);
+        return true;
+      }
+    }
+
+    return false;
+  }
+  async upsertStrain({ name, breeder, type, seedType, thc = null, cbd = null, strainType = null, floweringTime = null, floweringMin = null, floweringMax = null, description = null, genetics = null }) {
     let strainId;
     const [existing] = await db.select()
       .from(strains)
@@ -180,7 +209,8 @@ export class BaseScraper {
     if (floweringTime !== null) setValues.floweringTime = floweringTime;
     if (finalMin !== null) setValues.floweringMin = finalMin;
     if (finalMax !== null) setValues.floweringMax = finalMax;
-
+    if (genetics !== null) setValues.genetics = genetics;
+ 
     if (existing) {
       strainId = existing.id;
       await db.update(strains)
@@ -200,11 +230,62 @@ export class BaseScraper {
         floweringTime,
         floweringMin: finalMin,
         floweringMax: finalMax,
+        genetics,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       });
     }
+
+    if (description !== null) {
+      try {
+        await this.upsertShopDescription(strainId, this.shopName, description);
+      } catch (err) {
+        this.log('error', `Failed to upsert description for ${name} at ${this.shopName}: ${err.message}`);
+      }
+    }
+
     return strainId;
+  }
+
+  stripHtml(html) {
+    if (!html) return '';
+    return html
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  async upsertShopDescription(strainId, shop, description) {
+    if (!description) return;
+    const cleanDesc = this.stripHtml(description);
+    if (!cleanDesc) return;
+
+    const [existing] = await db.select()
+      .from(strainShopDescriptions)
+      .where(and(
+        eq(strainShopDescriptions.strainId, strainId),
+        eq(strainShopDescriptions.shop, shop)
+      ))
+      .limit(1);
+
+    const now = new Date().toISOString();
+    if (existing) {
+      await db.update(strainShopDescriptions)
+        .set({ description: cleanDesc, updatedAt: now })
+        .where(and(
+          eq(strainShopDescriptions.strainId, strainId),
+          eq(strainShopDescriptions.shop, shop)
+        ));
+    } else {
+      await db.insert(strainShopDescriptions)
+        .values({
+          strainId,
+          shop,
+          description: cleanDesc,
+          createdAt: now,
+          updatedAt: now
+        });
+    }
   }
 
   extractSpec(html, headerPattern) {

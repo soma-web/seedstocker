@@ -11,6 +11,7 @@ import { ZamnesiaScraper } from './scrapers/ZamnesiaScraper.js';
 import { HansBrainfoodScraper } from './scrapers/HansBrainfoodScraper.js';
 import { GasStationCoScraper } from './scrapers/GasStationCoScraper.js';
 import { startSanityCheck, sanityCheckStatus } from './sanity-check.js';
+import { rewriteDescriptionToProse } from './rewriter.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -30,6 +31,14 @@ sqlite.exec(`
     flowering_time TEXT,
     flowering_min INTEGER,
     flowering_max INTEGER,
+    environment TEXT,
+    plant_height TEXT,
+    harvest_month TEXT,
+    effects TEXT,
+    rating REAL,
+    seedfinder_url TEXT,
+    yield TEXT,
+    genetics TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
   );
@@ -54,9 +63,32 @@ sqlite.exec(`
     fetched_at TEXT NOT NULL,
     FOREIGN KEY (strain_id) REFERENCES strains(id) ON DELETE CASCADE
   );
+  CREATE TABLE IF NOT EXISTS strain_shop_descriptions (
+    strain_id TEXT NOT NULL,
+    shop TEXT NOT NULL,
+    description TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    PRIMARY KEY (strain_id, shop),
+    FOREIGN KEY (strain_id) REFERENCES strains(id) ON DELETE CASCADE
+  );
+  CREATE TABLE IF NOT EXISTS rewritten_descriptions (
+    strain_id TEXT PRIMARY KEY,
+    description TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (strain_id) REFERENCES strains(id) ON DELETE CASCADE
+  );
+  CREATE TABLE IF NOT EXISTS ai_descriptions (
+    strain_id TEXT PRIMARY KEY,
+    description TEXT NOT NULL,
+    model_used TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (strain_id) REFERENCES strains(id) ON DELETE CASCADE
+  );
   CREATE INDEX IF NOT EXISTS idx_strains_name_breeder ON strains(name, breeder);
   CREATE INDEX IF NOT EXISTS idx_scraped_offers_strain ON scraped_offers(strain_id);
   CREATE INDEX IF NOT EXISTS idx_price_history_strain ON price_history(strain_id);
+  CREATE INDEX IF NOT EXISTS idx_strain_shop_descriptions_strain ON strain_shop_descriptions(strain_id);
 `);
 try {
   sqlite.exec("ALTER TABLE scraped_offers ADD COLUMN availability TEXT NOT NULL DEFAULT 'available'");
@@ -80,6 +112,30 @@ try {
 } catch (err) {}
 try {
   sqlite.exec("ALTER TABLE strains ADD COLUMN flowering_max INTEGER");
+} catch (err) {}
+try {
+  sqlite.exec("ALTER TABLE strains ADD COLUMN environment TEXT");
+} catch (err) {}
+try {
+  sqlite.exec("ALTER TABLE strains ADD COLUMN plant_height TEXT");
+} catch (err) {}
+try {
+  sqlite.exec("ALTER TABLE strains ADD COLUMN harvest_month TEXT");
+} catch (err) {}
+try {
+  sqlite.exec("ALTER TABLE strains ADD COLUMN effects TEXT");
+} catch (err) {}
+try {
+  sqlite.exec("ALTER TABLE strains ADD COLUMN rating REAL");
+} catch (err) {}
+try {
+  sqlite.exec("ALTER TABLE strains ADD COLUMN seedfinder_url TEXT");
+} catch (err) {}
+try {
+  sqlite.exec("ALTER TABLE strains ADD COLUMN yield TEXT");
+} catch (err) {}
+try {
+  sqlite.exec("ALTER TABLE strains ADD COLUMN genetics TEXT");
 } catch (err) {}
 logMessage('success', 'Database tables are ready.');
 
@@ -141,6 +197,8 @@ if (fs.existsSync(distPath)) {
 
   app.get('/', serveIndex);
   app.get('/admin', serveIndex);
+  app.get('/descriptions', serveIndex);
+  app.get('/rewritten-descriptions', serveIndex);
   app.get('/strain/*', serveIndex);
 }
 
@@ -184,6 +242,27 @@ app.get('/api/strains', async (req, reply) => {
   sql += ` ORDER BY s.name ASC, o.seeds ASC, o.price ASC`;
   
   try {
+    const descRows = sqlite.prepare('SELECT strain_id AS strainId, shop, description FROM strain_shop_descriptions').all();
+    const descriptionsByStrain = {};
+    for (const d of descRows) {
+      if (!descriptionsByStrain[d.strainId]) {
+        descriptionsByStrain[d.strainId] = [];
+      }
+      descriptionsByStrain[d.strainId].push({ shop: d.shop, description: d.description });
+    }
+
+    const rewrittenRows = sqlite.prepare('SELECT strain_id AS strainId, description FROM rewritten_descriptions').all();
+    const rewrittenByStrain = {};
+    for (const rw of rewrittenRows) {
+      rewrittenByStrain[rw.strainId] = rw.description;
+    }
+
+    const aiRows = sqlite.prepare('SELECT strain_id AS strainId, description, model_used AS modelUsed FROM ai_descriptions').all();
+    const aiByStrain = {};
+    for (const ai of aiRows) {
+      aiByStrain[ai.strainId] = { description: ai.description, modelUsed: ai.modelUsed };
+    }
+
     const rows = sqlite.prepare(sql).all(...params);
     
     // Group rows by strain
@@ -202,6 +281,9 @@ app.get('/api/strains', async (req, reply) => {
           floweringTime: r.floweringTime,
           floweringMin: r.floweringMin,
           floweringMax: r.floweringMax,
+          descriptions: descriptionsByStrain[r.strainId] || [],
+          rewrittenDescription: rewrittenByStrain[r.strainId] || null,
+          aiDescription: aiByStrain[r.strainId] || null,
           offers: []
         });
       }
@@ -245,6 +327,24 @@ app.get('/api/strains/:id/detail', async (req, reply) => {
       ORDER BY breeder ASC
     `).all(strain.name, id);
 
+    const descriptions = sqlite.prepare(`
+      SELECT shop, description
+      FROM strain_shop_descriptions
+      WHERE strain_id = ?
+    `).all(id);
+
+    const rewritten = sqlite.prepare(`
+      SELECT description
+      FROM rewritten_descriptions
+      WHERE strain_id = ?
+    `).get(id);
+
+    const aiDesc = sqlite.prepare(`
+      SELECT description, model_used AS modelUsed
+      FROM ai_descriptions
+      WHERE strain_id = ?
+    `).get(id);
+
     return {
       id: strain.id,
       name: strain.name,
@@ -259,6 +359,9 @@ app.get('/api/strains/:id/detail', async (req, reply) => {
       floweringMax: strain.flowering_max,
       createdAt: strain.created_at,
       updatedAt: strain.updated_at,
+      descriptions,
+      rewrittenDescription: rewritten ? rewritten.description : null,
+      aiDescription: aiDesc ? { description: aiDesc.description, modelUsed: aiDesc.modelUsed } : null,
       offers,
       siblings
     };
@@ -267,6 +370,89 @@ app.get('/api/strains/:id/detail', async (req, reply) => {
   }
 });
 
+// Generate AI description for a single strain (separate on-demand process)
+app.post('/api/strains/:id/generate-ai-description', async (req, reply) => {
+  try {
+    const { id } = req.params;
+    const strain = sqlite.prepare('SELECT * FROM strains WHERE id = ?').get(id);
+    if (!strain) return reply.status(404).send({ error: 'Strain not found' });
+
+    // Get the best available raw shop description to use as context
+    const shopDesc = sqlite.prepare(`
+      SELECT description FROM strain_shop_descriptions
+      WHERE strain_id = ?
+      ORDER BY rowid DESC LIMIT 1
+    `).get(id);
+
+    const originalText = shopDesc ? shopDesc.description : '';
+
+    const strainObj = {
+      name: strain.name,
+      breeder: strain.breeder,
+      type: strain.type,
+      strainType: strain.strain_type,
+      thc: strain.thc,
+      cbd: strain.cbd,
+      floweringTime: strain.flowering_time
+    };
+
+    const result = await rewriteDescriptionToProse(originalText, strainObj);
+    if (!result || !result.description) {
+      return reply.status(503).send({ error: 'AI generation failed. Check that the local LLM or Gemini API key is configured.' });
+    }
+
+    const { description, isAi, modelUsed } = result;
+    const now = new Date().toISOString();
+
+    if (isAi) {
+      // Save to ai_descriptions table
+      const existing = sqlite.prepare('SELECT strain_id FROM ai_descriptions WHERE strain_id = ?').get(id);
+      if (existing) {
+        sqlite.prepare('UPDATE ai_descriptions SET description = ?, model_used = ?, updated_at = ? WHERE strain_id = ?')
+          .run(description, modelUsed, now, id);
+      } else {
+        sqlite.prepare('INSERT INTO ai_descriptions (strain_id, description, model_used, updated_at) VALUES (?, ?, ?, ?)')
+          .run(id, description, modelUsed, now);
+      }
+    } else {
+      // Fallback: save template result to rewritten_descriptions
+      const existing = sqlite.prepare('SELECT strain_id FROM rewritten_descriptions WHERE strain_id = ?').get(id);
+      if (existing) {
+        sqlite.prepare('UPDATE rewritten_descriptions SET description = ?, updated_at = ? WHERE strain_id = ?')
+          .run(description, now, id);
+      } else {
+        sqlite.prepare('INSERT INTO rewritten_descriptions (strain_id, description, updated_at) VALUES (?, ?, ?)')
+          .run(id, description, now);
+      }
+    }
+
+    return { success: true, isAi, modelUsed: modelUsed || null, description };
+  } catch (err) {
+    reply.status(500).send({ error: err.message });
+  }
+});
+
+app.delete('/api/strains/:id', async (req, reply) => {
+  try {
+    const { id } = req.params;
+    const strain = sqlite.prepare('SELECT id, name FROM strains WHERE id = ?').get(id);
+    if (!strain) return reply.status(404).send({ error: 'Strain not found' });
+
+    sqlite.transaction(() => {
+      sqlite.prepare('DELETE FROM scraped_offers WHERE strain_id = ?').run(id);
+      sqlite.prepare('DELETE FROM price_history WHERE strain_id = ?').run(id);
+      sqlite.prepare('DELETE FROM strain_shop_descriptions WHERE strain_id = ?').run(id);
+      sqlite.prepare('DELETE FROM rewritten_descriptions WHERE strain_id = ?').run(id);
+      sqlite.prepare('DELETE FROM ai_descriptions WHERE strain_id = ?').run(id);
+      sqlite.prepare('DELETE FROM strains WHERE id = ?').run(id);
+    })();
+
+    logMessage('success', `Deleted strain: ${strain.name} (${id})`);
+    return { success: true, message: `Strain "${strain.name}" deleted.` };
+  } catch (err) {
+    reply.status(500).send({ error: err.message });
+  }
+});
 
 app.get('/api/strains/:id/price-history', async (req, reply) => {
   try {
@@ -301,10 +487,10 @@ app.post('/api/scrape', async (req, reply) => {
     return reply.status(409).send({ error: 'Scraper task already running' });
   }
   
-  const { shop } = req.body || {};
+  const { shop, mode } = req.body || {};
   
   // Fire and forget background scrape
-  triggerScrape(shop).catch(err => {
+  triggerScrape(shop, mode || 'price').catch(err => {
     logMessage('error', `Unhandled background scrape error: ${err.message}`);
   });
   
@@ -431,20 +617,21 @@ app.post('/api/db/query', async (req, reply) => {
 
 app.post('/api/scrape/single', async (req, reply) => {
   try {
-    const { url } = req.body || {};
+    const { url, mode } = req.body || {};
     if (!url) {
       return reply.status(400).send({ error: 'No URL provided' });
     }
     
+    const scrapeMode = mode || 'metadata';
     let scraper;
     if (url.includes('zamnesia.de')) {
-      scraper = new ZamnesiaScraper(logMessage);
+      scraper = new ZamnesiaScraper(logMessage, scrapeMode);
     } else if (url.includes('house-of-seeds.de')) {
-      scraper = new HouseOfSeedsScraper(logMessage);
+      scraper = new HouseOfSeedsScraper(logMessage, scrapeMode);
     } else if (url.includes('hansbrainfood.de')) {
-      scraper = new HansBrainfoodScraper(logMessage);
+      scraper = new HansBrainfoodScraper(logMessage, scrapeMode);
     } else if (url.includes('gasstationcoseeds.de')) {
-      scraper = new GasStationCoScraper(logMessage);
+      scraper = new GasStationCoScraper(logMessage, scrapeMode);
     } else {
       return reply.status(400).send({ error: 'Unsupported URL. Only Zamnesia, House of Seeds, Hans Brainfood, and Gas Station Co. Seeds product links are supported.' });
     }
@@ -475,6 +662,93 @@ app.post('/api/scrape/sanity-check', async (req, reply) => {
 
 app.get('/api/scrape/sanity-check/status', async (req, reply) => {
   return sanityCheckStatus;
+});
+
+// Seedfinder.eu scraper routes
+const seedfinderStatus = {
+  isScanning: false,
+  startTime: null,
+  endTime: null,
+  currentProduct: null,
+  productsScraped: 0,
+  logs: []
+};
+
+function seedfinderLogMessage(type, message) {
+  const time = new Date().toISOString();
+  const logLine = `[${time}][Seedfinder][${type.toUpperCase()}] ${message}`;
+  console.log(logLine);
+  
+  seedfinderStatus.logs.push({ type, message, timestamp: time });
+  if (seedfinderStatus.logs.length > 200) {
+    seedfinderStatus.logs.shift();
+  }
+}
+
+app.post('/api/seedfinder-scrape', async (req, reply) => {
+  try {
+    if (seedfinderStatus.isScanning) {
+      return reply.status(409).send({ error: 'Seedfinder scraper is already running' });
+    }
+
+    seedfinderStatus.isScanning = true;
+    seedfinderStatus.startTime = new Date().toISOString();
+    seedfinderStatus.endTime = null;
+    seedfinderStatus.productsScraped = 0;
+    seedfinderStatus.logs = [];
+
+    seedfinderLogMessage('info', 'Starting Seedfinder.eu metadata enrichment...');
+
+    const { SeedfinderScraper } = await import('./scrapers/SeedfinderScraper.js');
+    const scraper = new SeedfinderScraper(seedfinderLogMessage);
+
+    scraper.scrape(seedfinderStatus).then(() => {
+      seedfinderStatus.isScanning = false;
+      seedfinderStatus.endTime = new Date().toISOString();
+      seedfinderLogMessage('success', 'Seedfinder scraping complete');
+    }).catch(err => {
+      seedfinderStatus.isScanning = false;
+      seedfinderStatus.endTime = new Date().toISOString();
+      seedfinderLogMessage('error', `Scraper failed: ${err.message}`);
+    });
+
+    return { success: true, message: 'Seedfinder scraper started' };
+  } catch (err) {
+    seedfinderStatus.isScanning = false;
+    seedfinderLogMessage('error', `Failed to start scraper: ${err.message}`);
+    reply.status(500).send({ error: err.message });
+  }
+});
+
+app.get('/api/seedfinder-scrape/status', async (req, reply) => {
+  return seedfinderStatus;
+});
+
+app.post('/api/seedfinder-scrape/test', async (req, reply) => {
+  try {
+    const { name, breeder } = req.body || {};
+    if (!name || !breeder) {
+      return reply.status(400).send({ error: 'Name and breeder are required' });
+    }
+
+    const { SeedfinderScraper } = await import('./scrapers/SeedfinderScraper.js');
+    const scraper = new SeedfinderScraper(seedfinderLogMessage);
+
+    seedfinderLogMessage('info', `Testing lookup for: ${name} (${breeder})`);
+
+    // Use the scraper's improved search strategy
+    const result = await scraper.scrapeStrain({ id: 'test', name, breeder, strainType: null, floweringTime: null, seedType: null, environment: null, thc: null, cbd: null, plantHeight: null, harvestMonth: null, genetics: null, effects: null, rating: null, yieldd: null, image: null, seedfinderUrl: null });
+    
+    if (!result) {
+      // Get search results for display
+      const searchResults = await scraper.searchStrains(name);
+      return { found: false, results: searchResults };
+    }
+
+    return { found: true, updates: result };
+  } catch (err) {
+    reply.status(500).send({ error: err.message });
+  }
 });
 
 // Fallback to index.html for React SPA router (for production build fallback)
