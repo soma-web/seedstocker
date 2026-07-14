@@ -1,8 +1,8 @@
 import { ShopifyScraper } from './ShopifyScraper.js';
 
 export class HansBrainfoodScraper extends ShopifyScraper {
-  constructor(logMessage) {
-    super('Hans Brainfood', logMessage);
+  constructor(logMessage, scrapeMode = 'price') {
+    super('Hans Brainfood', logMessage, scrapeMode);
   }
 
   async scrape(scraperStatus, targetUrl) {

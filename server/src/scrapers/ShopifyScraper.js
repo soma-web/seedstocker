@@ -1,8 +1,8 @@
 import { BaseScraper } from './BaseScraper.js';
 
 export class ShopifyScraper extends BaseScraper {
-  constructor(shopName, logMessage) {
-    super(shopName, logMessage);
+  constructor(shopName, logMessage, scrapeMode = 'price') {
+    super(shopName, logMessage, scrapeMode);
   }
 
   async scrape(scraperStatus, targetUrl) {
@@ -101,6 +101,34 @@ export class ShopifyScraper extends BaseScraper {
         }
         
         const specs = this.parseShopifySpecs(p.body_html, p.tags || []);
+        let thc = specs.thc;
+        let cbd = specs.cbd;
+        let strainType = specs.strainType;
+        let floweringTime = specs.floweringTime;
+
+        const productUrl = `${baseUrl}/products/${p.handle}`;
+
+        if (this.scrapeMode === 'metadata') {
+          this.log('info', `Fetching full HTML DOM for product metadata: ${productUrl}`);
+          const extraSpecs = await this.fetchMetafieldsFromHtml(productUrl);
+          if (extraSpecs.thc) {
+            this.log('info', `Successfully extracted THC from DOM for ${name}: ${extraSpecs.thc}`);
+            thc = extraSpecs.thc;
+          }
+          if (extraSpecs.cbd) {
+            this.log('info', `Successfully extracted CBD from DOM for ${name}: ${extraSpecs.cbd}`);
+            cbd = extraSpecs.cbd;
+          }
+          if (extraSpecs.strainType) strainType = extraSpecs.strainType;
+          if (extraSpecs.floweringTime) {
+            this.log('info', `Successfully extracted Flowering Time from DOM for ${name}: ${extraSpecs.floweringTime} weeks`);
+            floweringTime = extraSpecs.floweringTime;
+          }
+          if (extraSpecs.genetics) {
+            this.log('info', `Successfully extracted Genetics from DOM for ${name}: ${extraSpecs.genetics}`);
+          }
+        }
+
         let strainId;
         try {
           strainId = await this.upsertStrain({
@@ -108,10 +136,11 @@ export class ShopifyScraper extends BaseScraper {
             breeder,
             type,
             seedType,
-            thc: specs.thc,
-            cbd: specs.cbd,
-            strainType: specs.strainType,
-            floweringTime: specs.floweringTime
+            thc,
+            cbd,
+            strainType,
+            floweringTime,
+            description: p.body_html || ''
           });
         } catch (dbErr) {
           this.log('error', `Database error for strain ${name}: ${dbErr.message}`);
@@ -244,16 +273,41 @@ export class ShopifyScraper extends BaseScraper {
       }
     }
     const specs = this.parseShopifySpecs(html, tags);
+    let thc = specs.thc;
+    let cbd = specs.cbd;
+    let strainType = specs.strainType;
+    let floweringTime = specs.floweringTime;
+
+    if (this.scrapeMode === 'metadata') {
+      const extraSpecs = this.parseMetafieldsFromHtml(html);
+      if (extraSpecs.thc) {
+        this.log('info', `Successfully extracted THC from DOM for ${name}: ${extraSpecs.thc}`);
+        thc = extraSpecs.thc;
+      }
+      if (extraSpecs.cbd) {
+        this.log('info', `Successfully extracted CBD from DOM for ${name}: ${extraSpecs.cbd}`);
+        cbd = extraSpecs.cbd;
+      }
+      if (extraSpecs.strainType) strainType = extraSpecs.strainType;
+      if (extraSpecs.floweringTime) {
+        this.log('info', `Successfully extracted Flowering Time from DOM for ${name}: ${extraSpecs.floweringTime} weeks`);
+        floweringTime = extraSpecs.floweringTime;
+      }
+      if (extraSpecs.genetics) {
+        this.log('info', `Successfully extracted Genetics from DOM for ${name}: ${extraSpecs.genetics}`);
+      }
+    }
 
     const strainId = await this.upsertStrain({
       name,
       breeder,
       type,
       seedType,
-      thc: specs.thc,
-      cbd: specs.cbd,
-      strainType: specs.strainType,
-      floweringTime: specs.floweringTime
+      thc,
+      cbd,
+      strainType,
+      floweringTime,
+      description
     });
     let offersCreated = 0;
 
@@ -318,5 +372,90 @@ export class ShopifyScraper extends BaseScraper {
     }
 
     return { name, breeder, shop: this.shopName, offersCreated };
+  }
+
+  parseMetafieldsFromHtml(html) {
+    const specs = {};
+
+    // ── THC ──────────────────────────────────────────────────────────────────
+    // Matches: "25% THC", ">25% THC", "Potenz: ... 25%"
+    const thcMatch = html.match(/([>≥]?\s*\d+(?:[.,]\d+)?\s*%)\s*THC/i)
+                  || html.match(/THC[:\s]*([>≥]?\s*\d+(?:[.,]\d+)?\s*%)/i)
+                  || html.match(/Potenz[^<\n]{0,50}?(\d+(?:[.,]\d+)?\s*%)/i);
+    if (thcMatch) {
+      specs.thc = thcMatch[1].trim().replace(/\s+/g, '');
+    }
+
+    // ── CBD ──────────────────────────────────────────────────────────────────
+    // Matches: "0.2% CBD", "CBD: 1%"
+    const cbdMatch = html.match(/(\d+(?:[.,]\d+)?\s*%)\s*CBD/i)
+                  || html.match(/CBD[:\s]*(\d+(?:[.,]\d+)?\s*%)/i);
+    if (cbdMatch) {
+      specs.cbd = cbdMatch[1].trim().replace(/\s+/g, '');
+    }
+
+    // ── Blütezeit / Flowering Time ────────────────────────────────────────────
+    // Matches: "8–9 Wochen", "8-9 Wochen", "56 Wochen" (then convert to weeks)
+    const flowerMatch = html.match(/(\d+)\s*[-–]\s*(\d+)\s*(?:Wochen|weeks)/i)
+                     || html.match(/(\d+)\s*(?:Wochen|weeks)/i);
+    if (flowerMatch) {
+      if (flowerMatch[2]) {
+        // Range: "8–9 Wochen" → store as "8-9"
+        specs.floweringTime = `${flowerMatch[1]}-${flowerMatch[2]}`;
+      } else {
+        specs.floweringTime = flowerMatch[1];
+      }
+    }
+
+    // ── Genetics / Cross Name ─────────────────────────────────────────────────
+    // Priority 1: Meta description tag — "✓Genetik: X × Y ✓Feminisiert"
+    const metaDescMatch = html.match(/<meta[^>]*name="description"[^>]*content="([^"]+)"/i)
+                       || html.match(/<meta[^>]*content="([^"]+)"[^>]*name="description"/i);
+    if (metaDescMatch) {
+      const genetikInMeta = metaDescMatch[1].match(/Genetik[:\s]+([^✓✔\n,]{3,80})/i);
+      if (genetikInMeta) specs.genetics = genetikInMeta[1].trim();
+    }
+    // Priority 2: <dt>Kreuzung</dt> or "Breeder & Kreuzung" <dd> block
+    if (!specs.genetics) {
+      // DL block: <dt>Breeder & Kreuzung</dt><dd>Wizard Trees - 11:11 × Zangria</dd>
+      const kreuzungMatch = html.match(/<dt[^>]*>[^<]*[Kk]reuzung[^<]*<\/dt>\s*<dd[^>]*>([^<]+)<\/dd>/i)
+                         || html.match(/Breeder[^<]*?Kreuzung[^<]*?<\/dt>\s*<dd[^>]*>([^<]+)<\/dd>/i);
+      if (kreuzungMatch) {
+        // "Wizard Trees - 11:11 × Zangria" → take the part after " - "
+        const parts = kreuzungMatch[1].split(/\s*[-–]\s*/);
+        specs.genetics = (parts.length > 1 ? parts.slice(1).join(' - ') : parts[0]).trim();
+      }
+    }
+
+    // ── Strain Type ───────────────────────────────────────────────────────────
+    // Look for explicit strain type keywords in spec tables/labels, not random text
+    // Only match when preceded by a label keyword to avoid false positives
+    const strainTypeMatch = html.match(/(?:Sortentyp|Typ|Genetik|genetics)[^<\n]{0,30}?\b(Hybrid|Indica|Sativa|Indica-dominiert|Sativa-dominiert|indica-dominant|sativa-dominant)\b/i)
+                         || html.match(/<dt[^>]*>[^<]*(?:Typ|Type)[^<]*<\/dt>\s*<dd[^>]*>([^<]*(?:Hybrid|Indica|Sativa)[^<]*)<\/dd>/i);
+    if (strainTypeMatch) {
+      const raw = (strainTypeMatch[1] || strainTypeMatch[0]).toLowerCase().trim();
+      if (raw.includes('indica') && raw.includes('sativa')) specs.strainType = 'hybrid';
+      else if (raw.includes('indica')) specs.strainType = 'indica';
+      else if (raw.includes('sativa')) specs.strainType = 'sativa';
+      else if (raw.includes('hybrid')) specs.strainType = 'hybrid';
+    }
+
+    return specs;
+  }
+
+  async fetchMetafieldsFromHtml(productUrl) {
+    try {
+      const res = await fetch(productUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
+      });
+      if (!res.ok) return {};
+      const html = await res.text();
+      return this.parseMetafieldsFromHtml(html);
+    } catch (err) {
+      this.log('error', `Failed to fetch extra metafields from HTML at ${productUrl}: ${err.message}`);
+      return {};
+    }
   }
 }

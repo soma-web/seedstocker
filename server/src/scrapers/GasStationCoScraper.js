@@ -2,8 +2,8 @@ import { ShopifyScraper } from './ShopifyScraper.js';
 import { normalizeBreederName, KNOWN_BREEDERS } from './breeder-normalize.js';
 
 export class GasStationCoScraper extends ShopifyScraper {
-  constructor(logMessage) {
-    super('Gas Station Co. Seeds', logMessage);
+  constructor(logMessage, scrapeMode = 'price') {
+    super('Gas Station Co. Seeds', logMessage, scrapeMode);
   }
 
   normalizeStrainName(title, breeder) {
@@ -236,7 +236,8 @@ export class GasStationCoScraper extends ShopifyScraper {
             thc: specs.thc,
             cbd: specs.cbd,
             strainType: specs.strainType,
-            floweringTime: specs.floweringTime
+            floweringTime: specs.floweringTime,
+            description: p.body_html || ''
           });
         } catch (dbErr) {
           this.log('error', `Database error for strain ${name}: ${dbErr.message}`);
@@ -383,7 +384,8 @@ export class GasStationCoScraper extends ShopifyScraper {
       thc: specs.thc,
       cbd: specs.cbd,
       strainType: specs.strainType,
-      floweringTime: specs.floweringTime
+      floweringTime: specs.floweringTime,
+      description
     });
     let offersCreated = 0;
 

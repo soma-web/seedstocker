@@ -1,8 +1,8 @@
 import { BaseScraper } from './BaseScraper.js';
 
 export class ZamnesiaScraper extends BaseScraper {
-  constructor(logMessage) {
-    super('Zamnesia', logMessage);
+  constructor(logMessage, scrapeMode = 'price') {
+    super('Zamnesia', logMessage, scrapeMode);
   }
 
   parseArgs(argsStr) {
@@ -302,9 +302,10 @@ export class ZamnesiaScraper extends BaseScraper {
       const floweringTime = this.cleanFloweringTime(floweringRaw);
       const strainType = this.normalizeStrainType(geneticsRaw);
 
+      const description = this.extractDescription(html);
       let strainId;
       try {
-        strainId = await this.upsertStrain({ name, breeder, type, seedType, thc, cbd, strainType, floweringTime });
+        strainId = await this.upsertStrain({ name, breeder, type, seedType, thc, cbd, strainType, floweringTime, description });
       } catch (dbErr) {
         this.log('error', `Database error for Zamnesia strain ${name}: ${dbErr.message}`);
         await this.sleep(500);
@@ -464,7 +465,8 @@ export class ZamnesiaScraper extends BaseScraper {
     const floweringTime = this.cleanFloweringTime(floweringRaw);
     const strainType = this.normalizeStrainType(geneticsRaw);
 
-    const strainId = await this.upsertStrain({ name, breeder, type, seedType, thc, cbd, strainType, floweringTime });
+    const description = this.extractDescription(html);
+    const strainId = await this.upsertStrain({ name, breeder, type, seedType, thc, cbd, strainType, floweringTime, description });
     
     let offersCreated = 0;
     for (const combo of psCombinations) {
@@ -478,5 +480,31 @@ export class ZamnesiaScraper extends BaseScraper {
     }
     
     return { name, breeder, type, seedType, offersCreated, shop: this.shopName };
+  }
+
+  extractDescription(html) {
+    let description = null;
+    try {
+      const jsonLdRegex = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+      let jsonLdMatch;
+      while ((jsonLdMatch = jsonLdRegex.exec(html)) !== null) {
+        try {
+          const data = JSON.parse(jsonLdMatch[1]);
+          if (data && data['@type'] === 'Product' && data.description) {
+            description = data.description;
+            break;
+          }
+        } catch {}
+      }
+    } catch {}
+
+    if (!description) {
+      const descMetaMatch = html.match(/<meta\s+name=["']description["']\s+content=["']([\s\S]*?)["']/i) ||
+                           html.match(/<meta\s+property=["']og:description["']\s+content=["']([\s\S]*?)["']/i);
+      if (descMetaMatch) {
+        description = descMetaMatch[1];
+      }
+    }
+    return description || '';
   }
 }
