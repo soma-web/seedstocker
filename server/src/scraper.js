@@ -49,7 +49,7 @@ export function logMessage(type, message) {
 }
 
 // Background scraper runner
-export async function triggerScrape(targetShopName = null) {
+export async function triggerScrape(targetShopName = null, scrapeMode = 'price') {
   if (scraperStatus.isScanning) {
     logMessage('warning', 'Scraper already running. Call ignored.');
     return;
@@ -66,7 +66,7 @@ export async function triggerScrape(targetShopName = null) {
   } catch {}
   
   logMessage('info', '===============================================');
-  logMessage('info', targetShopName ? `Starting background scraping task for: ${targetShopName}...` : 'Starting complete background scraping task...');
+  logMessage('info', targetShopName ? `Starting background scraping task for: ${targetShopName} (mode: ${scrapeMode})...` : `Starting complete background scraping task (mode: ${scrapeMode})...`);
   logMessage('info', '===============================================');
   
   try {
@@ -94,7 +94,7 @@ export async function triggerScrape(targetShopName = null) {
     const hosConfig = getShopConfig('House of Seeds');
     if (hosConfig && shouldScrape('House of Seeds')) {
       const targetUrl = typeof hosConfig === 'string' ? null : hosConfig.url;
-      const hosScraper = new HouseOfSeedsScraper(logMessage);
+      const hosScraper = new HouseOfSeedsScraper(logMessage, scrapeMode);
       await hosScraper.scrape(scraperStatus, targetUrl);
     } else if (hosConfig) {
       logMessage('info', 'Skipping House of Seeds (not requested for this run).');
@@ -105,7 +105,7 @@ export async function triggerScrape(targetShopName = null) {
     const zamnConfig = getShopConfig('Zamnesia');
     if (zamnConfig && shouldScrape('Zamnesia')) {
       const targetUrl = typeof zamnConfig === 'string' ? null : zamnConfig.url;
-      const zamnScraper = new ZamnesiaScraper(logMessage);
+      const zamnScraper = new ZamnesiaScraper(logMessage, scrapeMode);
       await zamnScraper.scrape(scraperStatus, targetUrl);
     } else if (zamnConfig) {
       logMessage('info', 'Skipping Zamnesia (not requested for this run).');
@@ -116,7 +116,7 @@ export async function triggerScrape(targetShopName = null) {
     const hansConfig = getShopConfig('Hans Brainfood');
     if (hansConfig && shouldScrape('Hans Brainfood')) {
       const targetUrl = typeof hansConfig === 'string' ? null : hansConfig.url;
-      const hansScraper = new HansBrainfoodScraper(logMessage);
+      const hansScraper = new HansBrainfoodScraper(logMessage, scrapeMode);
       await hansScraper.scrape(scraperStatus, targetUrl);
     } else if (hansConfig) {
       logMessage('info', 'Skipping Hans Brainfood (not requested for this run).');
@@ -127,7 +127,7 @@ export async function triggerScrape(targetShopName = null) {
     const gasConfig = getShopConfig('Gas Station Co. Seeds');
     if (gasConfig && shouldScrape('Gas Station Co. Seeds')) {
       const targetUrl = typeof gasConfig === 'string' ? null : gasConfig.url;
-      const gasScraper = new GasStationCoScraper(logMessage);
+      const gasScraper = new GasStationCoScraper(logMessage, scrapeMode);
       await gasScraper.scrape(scraperStatus, targetUrl);
     } else if (gasConfig) {
       logMessage('info', 'Skipping Gas Station Co. Seeds (not requested for this run).');

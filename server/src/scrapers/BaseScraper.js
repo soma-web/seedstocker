@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { db } from '../db.js';
-import { strains, scrapedOffers, priceHistory } from '../schema.js';
+import { strains, scrapedOffers, priceHistory, strainShopDescriptions, rewrittenDescriptions } from '../schema.js';
 import { eq, and, desc } from 'drizzle-orm';
 import crypto from 'node:crypto';
 
@@ -10,9 +10,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export class BaseScraper {
-  constructor(shopName, logMessage) {
+  constructor(shopName, logMessage, scrapeMode = 'price') {
     this.shopName = shopName;
     this.logMessage = logMessage;
+    this.scrapeMode = scrapeMode;
     this.configPath = path.resolve(__dirname, '../../config/scraper.json');
   }
 
@@ -154,7 +155,7 @@ export class BaseScraper {
     return invalidKeywords.some(kw => lower.includes(kw));
   }
 
-  async upsertStrain({ name, breeder, type, seedType, thc = null, cbd = null, strainType = null, floweringTime = null, floweringMin = null, floweringMax = null }) {
+  async upsertStrain({ name, breeder, type, seedType, thc = null, cbd = null, strainType = null, floweringTime = null, floweringMin = null, floweringMax = null, description = null }) {
     let strainId;
     const [existing] = await db.select()
       .from(strains)
@@ -204,7 +205,57 @@ export class BaseScraper {
         updatedAt: new Date().toISOString()
       });
     }
+
+    if (description !== null) {
+      try {
+        await this.upsertShopDescription(strainId, this.shopName, description);
+      } catch (err) {
+        this.log('error', `Failed to upsert description for ${name} at ${this.shopName}: ${err.message}`);
+      }
+    }
+
     return strainId;
+  }
+
+  stripHtml(html) {
+    if (!html) return '';
+    return html
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  async upsertShopDescription(strainId, shop, description) {
+    if (!description) return;
+    const cleanDesc = this.stripHtml(description);
+    if (!cleanDesc) return;
+
+    const [existing] = await db.select()
+      .from(strainShopDescriptions)
+      .where(and(
+        eq(strainShopDescriptions.strainId, strainId),
+        eq(strainShopDescriptions.shop, shop)
+      ))
+      .limit(1);
+
+    const now = new Date().toISOString();
+    if (existing) {
+      await db.update(strainShopDescriptions)
+        .set({ description: cleanDesc, updatedAt: now })
+        .where(and(
+          eq(strainShopDescriptions.strainId, strainId),
+          eq(strainShopDescriptions.shop, shop)
+        ));
+    } else {
+      await db.insert(strainShopDescriptions)
+        .values({
+          strainId,
+          shop,
+          description: cleanDesc,
+          createdAt: now,
+          updatedAt: now
+        });
+    }
   }
 
   extractSpec(html, headerPattern) {
