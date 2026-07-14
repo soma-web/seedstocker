@@ -15,7 +15,8 @@ import {
   X,
   Database,
   Trash2,
-  Activity
+  Activity,
+  Coins
 } from 'lucide-react';
 import StrainDetailPage from './StrainDetailPage';
 
@@ -38,6 +39,10 @@ export default function App() {
   const [onlyAvailable, setOnlyAvailable] = useState(false);
   const [minFloweringFilter, setMinFloweringFilter] = useState('');
   const [maxFloweringFilter, setMaxFloweringFilter] = useState('');
+  const [selectedDescriptionShops, setSelectedDescriptionShops] = useState({});
+  const [copiedId, setCopiedId] = useState(null);
+  const [generatingAiId, setGeneratingAiId] = useState(null);
+  const [scrapeMode, setScrapeMode] = useState('price');
   
   const [sqlQuery, setSqlQuery] = useState('SELECT * FROM strains LIMIT 10;');
   const [queryResult, setQueryResult] = useState(null);
@@ -68,6 +73,7 @@ export default function App() {
   const [isScraperOpen, setIsScraperOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const logTerminalRef = useRef(null);
+  const seedfinderLogTerminalRef = useRef(null);
 
   const [sanityCheck, setSanityCheck] = useState({
     isOpen: false,
@@ -78,6 +84,15 @@ export default function App() {
     logs: [],
     results: null
   });
+  const [seedfinderScraper, setSeedfinderScraper] = useState({
+    isScanning: false,
+    startTime: null,
+    endTime: null,
+    currentProduct: null,
+    productsScraped: 0,
+    logs: []
+  });
+  const [isSeedfinderOpen, setIsSeedfinderOpen] = useState(false);
   const pollIntervalRef = useRef(null);
   const sanityCheckLogsRef = useRef(null);
 
@@ -123,6 +138,23 @@ export default function App() {
       console.error('Error fetching scraper status:', err);
     }
   };
+  const handleGenerateAiForStrain = async (strainId) => {
+    setGeneratingAiId(strainId);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/strains/${strainId}/generate-ai-description`, {
+        method: 'POST'
+      });
+      if (res.ok) {
+        // Refresh the full strains list to reflect the new AI description
+        await fetchData();
+      }
+    } catch (err) {
+      console.error('AI generation failed:', err);
+    } finally {
+      setGeneratingAiId(null);
+    }
+  };
+
 
   const fetchConfig = async () => {
     try {
@@ -204,12 +236,33 @@ export default function App() {
     }
   }, [scraper.logs]);
 
-  const handleStartScrape = async (shopName = null) => {
+  // Effect to poll seedfinder scraper status
+  useEffect(() => {
+    fetchSeedfinderStatus();
+    
+    const interval = setInterval(() => {
+      fetchSeedfinderStatus();
+      if (seedfinderScraper.isScanning) {
+        fetchData();
+      }
+    }, seedfinderScraper.isScanning ? 1500 : 5000);
+
+    return () => clearInterval(interval);
+  }, [seedfinderScraper.isScanning]);
+
+  // Auto-scroll seedfinder console logs to bottom
+  useEffect(() => {
+    if (seedfinderLogTerminalRef.current) {
+      seedfinderLogTerminalRef.current.scrollTop = seedfinderLogTerminalRef.current.scrollHeight;
+    }
+  }, [seedfinderScraper.logs]);
+
+  const handleStartScrape = async (shopName = null, modeOverride = null) => {
     try {
       const res = await fetch(`${API_BASE_URL}/api/scrape`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ shop: shopName })
+        body: JSON.stringify({ shop: shopName, mode: modeOverride || scrapeMode })
       });
       if (res.ok) {
         setScraper(prev => ({ ...prev, isScanning: true, logs: [] }));
@@ -217,6 +270,32 @@ export default function App() {
       }
     } catch (err) {
       alert(`Failed to trigger scraper: ${err.message}`);
+    }
+  };
+
+  const handleStartSeedfinderScrape = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/seedfinder-scrape`, {
+        method: 'POST'
+      });
+      if (res.ok) {
+        setSeedfinderScraper(prev => ({ ...prev, isScanning: true, logs: [] }));
+        setIsSeedfinderOpen(true);
+      }
+    } catch (err) {
+      alert(`Failed to trigger seedfinder scraper: ${err.message}`);
+    }
+  };
+
+  const fetchSeedfinderStatus = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/seedfinder-scrape/status`);
+      if (res.ok) {
+        const data = await res.json();
+        setSeedfinderScraper(data);
+      }
+    } catch (err) {
+      console.error('Error fetching seedfinder status:', err);
     }
   };
 
@@ -486,6 +565,25 @@ export default function App() {
     return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
   };
 
+  const getFallbackDescription = (strain) => {
+    const type = strain.type === 'autoflower' ? 'autoflowering' : 'photoperiodic';
+    const seedKind = strain.seedType === 'feminized' ? 'feminized' : 'regular';
+    const breeder = strain.breeder || 'an independent breeder';
+    const details = [];
+    if (strain.thc) details.push(`THC: ${strain.thc}`);
+    if (strain.cbd) details.push(`CBD: ${strain.cbd}`);
+    if (strain.strainType) details.push(`Genetics: ${strain.strainType.replace('-', ' ')}`);
+    
+    return `${strain.name} is a ${type} (${seedKind}) cannabis strain bred by ${breeder}. ${details.length > 0 ? 'Specifications: ' + details.join(', ') + '.' : ''}`;
+  };
+
+  const handleCopyProse = (id, text) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
 
   const groupStrainsByName = (strainsList) => {
     const groupedMap = new Map();
@@ -549,6 +647,26 @@ export default function App() {
       .filter(strain => strain.offers.length > 0)
   );
 
+  const filteredDescriptionStrains = strains.filter(strain => {
+    if (minFloweringFilter) {
+      const minVal = parseInt(minFloweringFilter, 10);
+      if (!isNaN(minVal)) {
+        if (strain.floweringMin === null || strain.floweringMin === undefined || strain.floweringMin < minVal) {
+          return false;
+        }
+      }
+    }
+    if (maxFloweringFilter) {
+      const maxVal = parseInt(maxFloweringFilter, 10);
+      if (!isNaN(maxVal)) {
+        if (strain.floweringMax === null || strain.floweringMax === undefined || strain.floweringMax > maxVal) {
+          return false;
+        }
+      }
+    }
+    return true;
+  });
+
   // â”€â”€ Strain detail page routing â”€â”€
   const strainDetailMatch = currentPath.match(/^\/strain\/(.+)$/);
   if (strainDetailMatch) {
@@ -599,6 +717,16 @@ export default function App() {
                 isScraperOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
               )}
             </button>
+
+            <select
+              value={scrapeMode}
+              onChange={e => setScrapeMode(e.target.value)}
+              disabled={scraper.isScanning}
+              className="h-11 px-3 bg-slate-950 border border-slate-900 rounded-xl text-slate-200 focus:outline-none focus:border-emerald-500/50 transition-colors text-sm font-medium"
+            >
+              <option value="price">Price Scan (Fast)</option>
+              <option value="metadata">Metadata Scan (DOM)</option>
+            </select>
 
             <button
               onClick={() => handleStartScrape()}
@@ -678,6 +806,87 @@ export default function App() {
                 </div>
               ) : (
                 scraper.logs.map((log, index) => (
+                  <div 
+                    key={index} 
+                    className={`py-0.5 border-l-2 pl-3 mb-1 ${
+                      log.type === 'error' ? 'border-red-500 text-red-400 bg-red-500/5' :
+                      log.type === 'warning' ? 'border-yellow-500 text-yellow-300 bg-yellow-500/5' :
+                      log.type === 'success' ? 'border-emerald-500 text-emerald-300 bg-emerald-500/5' :
+                      'border-slate-800 text-slate-400'
+                    }`}
+                  >
+                    <span className="text-slate-600 mr-2 text-[10px]">
+                      {new Date(log.timestamp).toLocaleTimeString()}
+                    </span>
+                    <span>{log.message}</span>
+                  </div>
+                ))
+              )}
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* Seedfinder Scraper Log Console Modal */}
+      {isSeedfinderOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+          <div className="w-full max-w-3xl glass-panel rounded-2xl p-6 relative overflow-hidden shadow-2xl border border-slate-800 animate-fade-in">
+            
+            {/* Close Button */}
+            <button
+              onClick={() => setIsSeedfinderOpen(false)}
+              className="absolute top-4 right-4 text-slate-500 hover:text-slate-200 transition-colors p-1.5 rounded-lg hover:bg-slate-900"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Header Status */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-slate-900 pb-5">
+              <div>
+                <h3 className="font-bold text-slate-100 flex items-center gap-2 text-base">
+                  <Database className="w-5 h-5 text-emerald-400" />
+                  Seedfinder.eu Enrichment Logs
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Metadata enrichment progress, strain matching, and field updates.
+                </p>
+              </div>
+              {seedfinderScraper.isScanning ? (
+                <div className="flex flex-wrap items-center gap-4 text-xs">
+                  <div className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-900 text-slate-300 max-w-[200px] truncate">
+                    Strain: <span className="text-teal-400 font-semibold">{seedfinderScraper.currentProduct || 'Initializing'}</span>
+                  </div>
+                  <div className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-900 text-slate-300">
+                    Processed: <span className="text-emerald-400 font-bold">{seedfinderScraper.productsScraped}</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-xs text-slate-400">
+                  {seedfinderScraper.endTime ? (
+                    <span className="flex items-center gap-1.5 text-emerald-400 bg-emerald-500/5 border border-emerald-500/10 px-3 py-1.5 rounded-lg font-medium">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      Enrichment completed ({seedfinderScraper.productsScraped} strains)
+                    </span>
+                  ) : (
+                    'Initializing enrichment...'
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Logs Monospace Console Box */}
+            <div 
+              ref={seedfinderLogTerminalRef}
+              className="h-96 bg-slate-950 border border-slate-900 rounded-xl p-4 overflow-y-auto font-mono text-xs leading-relaxed text-slate-300 select-text"
+            >
+              {seedfinderScraper.logs.length === 0 ? (
+                <div className="text-slate-600 italic flex items-center justify-center h-full gap-2">
+                  <Info className="w-4 h-4" />
+                  No enrichment logs currently in memory.
+                </div>
+              ) : (
+                seedfinderScraper.logs.map((log, index) => (
                   <div 
                     key={index} 
                     className={`py-0.5 border-l-2 pl-3 mb-1 ${
@@ -1134,36 +1343,56 @@ export default function App() {
         </div>
       )}
 
-      {/* Navigation Tabs (Only visible when debug is true) */}
-      {config.debug && (
-        <div className="border-b border-slate-900 bg-slate-950/20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex gap-2">
-            <button
-              onClick={() => navigateTo('/')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
-                currentPath !== '/admin'
-                  ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
-                  : 'border-slate-900 bg-slate-950 text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              Catalog Comparison
-            </button>
+      {/* Navigation Tabs */}
+      <div className="border-b border-slate-900 bg-slate-950/20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap gap-2">
+          <button
+            onClick={() => navigateTo('/')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
+              currentPath === '/'
+                ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
+                : 'border-slate-900 bg-slate-950/40 text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
+            }`}
+          >
+            Catalog Comparison
+          </button>
+          <button
+            onClick={() => navigateTo('/descriptions')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
+              currentPath === '/descriptions'
+                ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
+                : 'border-slate-900 bg-slate-950/40 text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
+            }`}
+          >
+            Plant Descriptions
+          </button>
+          <button
+            onClick={() => navigateTo('/rewritten-descriptions')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
+              currentPath === '/rewritten-descriptions'
+                ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
+                : 'border-slate-900 bg-slate-950/40 text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
+            }`}
+          >
+            Rewritten Prose
+          </button>
+          {config.debug && (
             <button
               onClick={() => navigateTo('/admin')}
               className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
                 currentPath === '/admin'
                   ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
-                  : 'border-slate-900 bg-slate-950 text-slate-400 hover:text-slate-200'
+                  : 'border-slate-900 bg-slate-950/40 text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
               }`}
             >
               System Administration
             </button>
-          </div>
+          )}
         </div>
-      )}
+      </div>
 
-      {/* Main Catalog View */}
-      {currentPath !== '/admin' && (
+      {/* Main Catalog / Descriptions View */}
+      {(currentPath === '/' || currentPath === '/descriptions' || currentPath === '/rewritten-descriptions') && (
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
 
         {/* Filter Controls Row */}
@@ -1311,7 +1540,7 @@ export default function App() {
             <RotateCw className="w-8 h-8 text-emerald-400 animate-spin" />
             <p className="text-sm text-slate-500">Querying pricing database...</p>
           </div>
-        ) : groupedStrains.length === 0 ? (
+        ) : (currentPath === '/' ? groupedStrains.length === 0 : filteredDescriptionStrains.length === 0) ? (
           <div className="glass-panel rounded-2xl py-20 text-center">
             <Info className="w-10 h-10 text-slate-600 mx-auto mb-3" />
             <h4 className="text-slate-400 font-semibold mb-1">No seed matches found</h4>
@@ -1319,7 +1548,7 @@ export default function App() {
               Try adjusting your query/filters or click the Scan button to load initial data.
             </p>
           </div>
-        ) : (
+        ) : currentPath === '/' ? (
           
           /* Strains Comparison Catalog Grid */
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1478,6 +1707,218 @@ export default function App() {
               );
             })}
           </div>
+        ) : currentPath === '/rewritten-descriptions' ? (
+          /* Legally Safe Rewritten Prose View */
+          <div className="glass-panel rounded-2xl overflow-hidden animate-fade-in border border-slate-900 bg-slate-950/40 backdrop-blur-md">
+            <div className="px-7 py-5 border-b border-slate-900 bg-slate-950/20">
+              <h2 className="text-base font-bold text-slate-100 flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-emerald-400" />
+                Legally Safe Prose Descriptions
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Uniquely structured prose written automatically by the backend combining original keywords and specs.
+              </p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-950/80 border-b border-slate-900 text-[10px] text-slate-500 uppercase font-bold tracking-wider">
+                    <th className="px-7 py-4">Strain</th>
+                    <th className="px-7 py-4">Breeder</th>
+                    <th className="px-7 py-4 max-w-[550px]">Rewritten Prose</th>
+                    <th className="px-7 py-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-900/50">
+                  {filteredDescriptionStrains.map(strain => {
+                    const prose = strain.aiDescription ? strain.aiDescription.description : strain.rewrittenDescription;
+                    const isAi = !!strain.aiDescription;
+                    const modelName = strain.aiDescription?.modelUsed;
+                    return (
+                      <tr key={strain.id} className="hover:bg-slate-900/10 transition-colors">
+                        <td className="px-7 py-4 whitespace-nowrap">
+                          <button
+                            onClick={() => navigateTo(`/strain/${encodeURIComponent(strain.id)}`)}
+                            className="font-bold text-slate-200 hover:text-emerald-400 transition-colors text-sm text-left block"
+                          >
+                            {strain.name}
+                          </button>
+                          <div className="flex items-center gap-1.5 mt-1.5">
+                            <span className={`px-1.5 py-0.2 rounded text-[8px] font-bold uppercase tracking-wider ${
+                              strain.type === 'autoflower' 
+                                ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' 
+                                : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                            }`}>
+                              {strain.type === 'autoflower' ? 'Auto' : 'Photo'}
+                            </span>
+                            <span className="px-1.5 py-0.2 rounded text-[8px] font-bold uppercase bg-slate-900 border border-slate-800 text-slate-400 tracking-wider">
+                              {strain.seedType === 'feminized' ? 'Fem' : 'Reg'}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-7 py-4 text-slate-400 text-sm font-medium whitespace-nowrap">
+                          {strain.breeder || 'Unknown'}
+                        </td>
+                        <td className="px-7 py-4 text-slate-300 text-xs leading-relaxed max-w-[550px]">
+                          {isAi && (
+                            <span className="inline-block px-1.5 py-0.5 text-[8px] bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded font-semibold uppercase tracking-normal mb-1.5">
+                              AI ({modelName})
+                            </span>
+                          )}
+                          {prose ? (
+                            <p>{prose}</p>
+                          ) : (
+                            <span className="text-slate-600 italic">
+                              No description scraped yet. Store prose is generated on scan.
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-7 py-4 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const p = strain.aiDescription ? strain.aiDescription.description : strain.rewrittenDescription;
+                                if (!p) return;
+                                navigator.clipboard.writeText(p);
+                                setCopiedId(strain.id);
+                                setTimeout(() => setCopiedId(null), 2000);
+                              }}
+                              disabled={!prose}
+                              className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
+                                !prose 
+                                  ? 'bg-slate-950 text-slate-700 border-slate-950 cursor-not-allowed'
+                                  : copiedId === strain.id
+                                    ? 'bg-emerald-500 text-slate-950 border-emerald-500'
+                                    : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-slate-100 hover:border-slate-700'
+                              }`}
+                            >
+                              {copiedId === strain.id ? 'Copied!' : 'Copy'}
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleGenerateAiForStrain(strain.id);
+                              }}
+                              disabled={generatingAiId === strain.id}
+                              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
+                                generatingAiId === strain.id
+                                  ? 'bg-purple-900/30 border-purple-700/40 text-purple-400 cursor-wait'
+                                  : 'bg-purple-500/10 border-purple-500/30 text-purple-300 hover:bg-purple-500/20 hover:border-purple-400/50'
+                              }`}
+                            >
+                              <Sparkles className={`w-3 h-3 ${generatingAiId === strain.id ? 'animate-spin' : ''}`} />
+                              {generatingAiId === strain.id ? '…' : isAi ? 'Regen.' : 'AI'}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : (
+          /* Plant Descriptions Catalog View */
+          <div className="glass-panel rounded-2xl overflow-hidden animate-fade-in border border-slate-900 bg-slate-950/40 backdrop-blur-md">
+            <div className="px-7 py-5 border-b border-slate-900 bg-slate-950/20">
+              <h2 className="text-base font-bold text-slate-100 flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-emerald-400" />
+                Strain Descriptions Catalog
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Detailed plant characteristics, growth details, and effects parsed from store pages.
+              </p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-950/80 border-b border-slate-900 text-[10px] text-slate-500 uppercase font-bold tracking-wider">
+                    <th className="px-7 py-4">Strain</th>
+                    <th className="px-7 py-4">Breeder</th>
+                    <th className="px-7 py-4">Source Shop</th>
+                    <th className="px-7 py-4 max-w-[500px]">Description</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-900/50">
+                  {filteredDescriptionStrains.map(strain => {
+                    const hasShopDescriptions = strain.descriptions && strain.descriptions.length > 0;
+                    const activeShop = selectedDescriptionShops[strain.id] || (hasShopDescriptions ? strain.descriptions[0].shop : 'Generated');
+                    const activeDesc = hasShopDescriptions 
+                      ? (strain.descriptions.find(d => d.shop === activeShop)?.description || strain.descriptions[0].description)
+                      : getFallbackDescription(strain);
+
+                    return (
+                      <tr key={strain.id} className="hover:bg-slate-900/10 transition-colors">
+                        <td className="px-7 py-4 whitespace-nowrap">
+                          <button
+                            onClick={() => navigateTo(`/strain/${encodeURIComponent(strain.id)}`)}
+                            className="font-bold text-slate-200 hover:text-emerald-400 transition-colors text-sm text-left block"
+                          >
+                            {strain.name}
+                          </button>
+                          <div className="flex items-center gap-1.5 mt-1.5">
+                            <span className={`px-1.5 py-0.2 rounded text-[8px] font-bold uppercase tracking-wider ${
+                              strain.type === 'autoflower' 
+                                ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' 
+                                : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                            }`}>
+                              {strain.type === 'autoflower' ? 'Auto' : 'Photo'}
+                            </span>
+                            <span className="px-1.5 py-0.2 rounded text-[8px] font-bold uppercase bg-slate-900 border border-slate-800 text-slate-400 tracking-wider">
+                              {strain.seedType === 'feminized' ? 'Fem' : 'Reg'}
+                            </span>
+                            {strain.thc && (
+                              <span className="px-1.5 py-0.2 rounded text-[8px] font-bold bg-rose-500/10 border border-rose-500/20 text-rose-400 tracking-wider">
+                                {strain.thc} THC
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-7 py-4 text-slate-400 text-sm font-medium whitespace-nowrap">
+                          {strain.breeder || 'Unknown'}
+                        </td>
+                        <td className="px-7 py-4 whitespace-nowrap">
+                          <div className="flex flex-wrap gap-1.5 max-w-[180px]">
+                            {hasShopDescriptions ? (
+                              strain.descriptions.map(desc => (
+                                <button
+                                  key={desc.shop}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedDescriptionShops(prev => ({ ...prev, [strain.id]: desc.shop }));
+                                  }}
+                                  className={`px-2 py-0.5 rounded text-[9px] font-bold border transition-all ${
+                                    activeShop === desc.shop
+                                      ? 'bg-emerald-500 text-slate-950 border-emerald-500 shadow-sm shadow-emerald-500/20'
+                                      : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                                  }`}
+                                >
+                                  {desc.shop}
+                                </button>
+                              ))
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-bold bg-slate-900 text-slate-500 border border-slate-800/80">
+                                Generated Fallback
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-7 py-4 text-slate-300 text-xs leading-relaxed max-w-[500px]">
+                          <p className={!hasShopDescriptions ? 'italic text-slate-400/85' : ''}>
+                            {activeDesc}
+                          </p>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
 
       </main>
@@ -1499,9 +1940,21 @@ export default function App() {
                 const formData = new FormData(e.target);
                 const limit = formData.get('maxItemsPerShop');
                 const debugVal = formData.get('debug') === 'on';
+                const geminiApiKeyVal = formData.get('geminiApiKey');
+                const useLocalLlmVal = formData.get('useLocalLlm') === 'on';
+                const localLlmUrlVal = formData.get('localLlmUrl');
+                const localLlmModelVal = formData.get('localLlmModel');
+                const blockedWordsVal = formData.get('blockedWords')
+                  ? formData.get('blockedWords').split('\n').map(w => w.trim()).filter(Boolean)
+                  : [];
                 handleSaveSettings({
                   maxItemsPerShop: limit === '' ? null : Number(limit),
-                  debug: debugVal
+                  debug: debugVal,
+                  geminiApiKey: geminiApiKeyVal || null,
+                  useLocalLlm: useLocalLlmVal,
+                  localLlmUrl: localLlmUrlVal || null,
+                  localLlmModel: localLlmModelVal || null,
+                  blockedWords: blockedWordsVal
                 });
               }} className="space-y-6">
                 <div>
@@ -1517,6 +1970,90 @@ export default function App() {
                   />
                   <p className="text-[11px] text-slate-500 mt-1.5 leading-normal">
                     Limit the number of listings fetched per store for debugging speed. Leaving this blank will crawl the entire catalog, which may take several minutes.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                    Blocked Words List
+                  </label>
+                  <textarea
+                    name="blockedWords"
+                    defaultValue={config.blockedWords ? config.blockedWords.join('\n') : ''}
+                    placeholder="Enter one word per line (e.g. bestseller, card)"
+                    rows={4}
+                    className="w-full p-4 bg-slate-950 border border-slate-900 rounded-xl text-slate-100 focus:outline-none focus:border-emerald-500/50 text-sm font-mono resize-y"
+                  />
+                  <p className="text-[11px] text-slate-500 mt-1.5 leading-normal">
+                    Strains/products containing any of these words in their name/title or description will be ignored and not inserted into the database. Enter each blocked word/phrase on a new line.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                    Gemini API Key
+                  </label>
+                  <input
+                    type="password"
+                    name="geminiApiKey"
+                    defaultValue={config.geminiApiKey ?? ''}
+                    placeholder="Enter your Gemini API Key..."
+                    className="w-full h-12 px-4 bg-slate-950 border border-slate-900 rounded-xl text-slate-100 focus:outline-none focus:border-emerald-500/50 text-sm"
+                  />
+                  <p className="text-[11px] text-slate-500 mt-1.5 leading-normal">
+                    Used to generate creative and natural German prose descriptions using Google Gemini. Leave blank to use the local fallback engine.
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between bg-slate-950/60 p-4 border border-slate-900 rounded-xl">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-0.5">
+                      Enable Local LLM (LM Studio / Ollama)
+                    </label>
+                    <span className="text-[11px] text-slate-500 leading-normal">
+                      Route prose description synthesis to a local server (e.g., LM Studio or Ollama).
+                    </span>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="useLocalLlm"
+                      defaultChecked={config.useLocalLlm}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500 peer-checked:after:bg-slate-950"></div>
+                  </label>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                    Local LLM API URL
+                  </label>
+                  <input
+                    type="text"
+                    name="localLlmUrl"
+                    defaultValue={config.localLlmUrl ?? 'http://localhost:1234/v1/chat/completions'}
+                    placeholder="e.g. http://localhost:1234/v1/chat/completions"
+                    className="w-full h-12 px-4 bg-slate-950 border border-slate-900 rounded-xl text-slate-100 focus:outline-none focus:border-emerald-500/50 text-sm"
+                  />
+                  <p className="text-[11px] text-slate-500 mt-1.5 leading-normal">
+                    The endpoint URL of your local inference server. For LM Studio, use <code>http://localhost:1234/v1/chat/completions</code>. For Ollama, use <code>http://localhost:11434/v1/chat/completions</code>.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                    Local LLM Model Name
+                  </label>
+                  <input
+                    type="text"
+                    name="localLlmModel"
+                    defaultValue={config.localLlmModel ?? 'local-model'}
+                    placeholder="e.g. llama3"
+                    className="w-full h-12 px-4 bg-slate-950 border border-slate-900 rounded-xl text-slate-100 focus:outline-none focus:border-emerald-500/50 text-sm"
+                  />
+                  <p className="text-[11px] text-slate-500 mt-1.5 leading-normal">
+                    Model name identifier to pass in completions payload. (Optional for LM Studio if only one model is loaded).
                   </p>
                 </div>
 
@@ -1580,19 +2117,35 @@ export default function App() {
                           {s.strainsCount} strains • {s.offersCount} offers
                         </span>
                       </div>
-                      <div className="flex gap-1.5">
-                        <button
-                          onClick={() => handleStartScrape(s.shop)}
-                          disabled={scraper.isScanning || sanityCheck.isRunning}
-                          className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold border transition-all flex items-center justify-center gap-1 ${
-                            scraper.isScanning || sanityCheck.isRunning
-                              ? 'bg-slate-950 text-slate-600 border-slate-950 cursor-not-allowed'
-                              : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 hover:text-emerald-300'
-                          }`}
-                        >
-                          <RotateCw className={`w-3.5 h-3.5 ${scraper.isScanning && scraper.currentShop === s.shop ? 'animate-spin' : ''}`} />
-                          Scrape
-                        </button>
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex gap-1.5">
+                          <button
+                            onClick={() => handleStartScrape(s.shop, 'price')}
+                            disabled={scraper.isScanning || sanityCheck.isRunning}
+                            title="Scrape Prices (Fast)"
+                            className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold border transition-all flex items-center justify-center gap-1 ${
+                              scraper.isScanning || sanityCheck.isRunning
+                                ? 'bg-slate-950 text-slate-600 border-slate-950 cursor-not-allowed'
+                                : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 hover:text-emerald-300'
+                            }`}
+                          >
+                            <Coins className="w-3.5 h-3.5" />
+                            Scrape Prices
+                          </button>
+                          <button
+                            onClick={() => handleStartScrape(s.shop, 'metadata')}
+                            disabled={scraper.isScanning || sanityCheck.isRunning}
+                            title="Scrape Full Metadata (DOM Scan)"
+                            className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold border transition-all flex items-center justify-center gap-1 ${
+                              scraper.isScanning || sanityCheck.isRunning
+                                ? 'bg-slate-950 text-slate-600 border-slate-950 cursor-not-allowed'
+                                : 'bg-teal-500/10 text-teal-400 border-teal-500/20 hover:bg-teal-500/20 hover:text-teal-300'
+                            }`}
+                          >
+                            <Database className="w-3.5 h-3.5" />
+                            Scrape Meta
+                          </button>
+                        </div>
                         <button
                           onClick={() => handleStartSanityCheck(s.shop)}
                           disabled={scraper.isScanning || sanityCheck.isRunning}
@@ -1701,6 +2254,84 @@ export default function App() {
                     Parsed <span className="text-emerald-400 font-semibold">{singleScrapeResult.name}</span> by <span className="text-emerald-400 font-semibold">{singleScrapeResult.breeder || 'Unknown'}</span> from <span className="text-slate-300 font-semibold">{singleScrapeResult.shop}</span>. Exposing <span className="text-emerald-400 font-semibold">{singleScrapeResult.offersCreated} pricing offers</span>.
                   </p>
                 </div>
+              </div>
+            )}
+          </div>
+
+          {/* Seedfinder.eu Scraper Card */}
+          <div className="glass-panel rounded-2xl p-6 mt-8">
+            <h2 className="text-lg font-bold text-slate-100 mb-2 flex items-center gap-2">
+              <Database className="w-5 h-5 text-emerald-400" />
+              Seedfinder.eu Metadata Enrichment
+            </h2>
+            <p className="text-xs text-slate-500 mb-6">
+              Enrich existing strains with metadata from <strong>seedfinder.eu</strong> including strain type, flowering time, THC/CBD, yield, and more. Only fills in missing fields - won't overwrite existing data.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4">
+              <button
+                onClick={handleStartSeedfinderScrape}
+                disabled={seedfinderScraper.isScanning || scraper.isScanning}
+                className={`px-6 h-12 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-1.5 shrink-0 ${
+                  seedfinderScraper.isScanning || scraper.isScanning
+                    ? 'bg-slate-950 text-slate-600 border border-slate-950 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 shadow-lg shadow-emerald-500/10'
+                }`}
+              >
+                {seedfinderScraper.isScanning ? (
+                  <>
+                    <RotateCw className="w-4 h-4 animate-spin" />
+                    Enriching...
+                  </>
+                ) : (
+                  <>
+                    <Database className="w-4 h-4" />
+                    Start Enrichment
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => setIsSeedfinderOpen(!isSeedfinderOpen)}
+                className="px-4 h-12 rounded-xl bg-slate-950 border border-slate-900 text-slate-400 text-xs font-semibold hover:bg-slate-900 transition-all flex items-center justify-center gap-1.5"
+              >
+                {isSeedfinderOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                {isSeedfinderOpen ? 'Hide' : 'Show'} Logs
+              </button>
+            </div>
+
+            {/* Status Info */}
+            <div className="mt-4 flex flex-wrap gap-4 text-[10px] text-slate-500">
+              <span>Processed: <span className="text-slate-300 font-semibold">{seedfinderScraper.productsScraped}</span></span>
+              {seedfinderScraper.currentProduct && (
+                <span>Current: <span className="text-emerald-400 font-semibold">{seedfinderScraper.currentProduct}</span></span>
+              )}
+              {seedfinderScraper.startTime && !seedfinderScraper.endTime && (
+                <span className="text-emerald-400">Running...</span>
+              )}
+              {seedfinderScraper.endTime && (
+                <span>Finished: <span className="text-slate-300 font-semibold">{new Date(seedfinderScraper.endTime).toLocaleTimeString()}</span></span>
+              )}
+            </div>
+
+            {/* Log Terminal */}
+            {isSeedfinderOpen && (
+              <div className="mt-4 bg-slate-950 border border-slate-900 rounded-xl p-4 h-64 overflow-y-auto font-mono text-[11px] leading-relaxed" ref={seedfinderLogTerminalRef}>
+                {seedfinderScraper.logs.length === 0 ? (
+                  <span className="text-slate-600">No logs yet...</span>
+                ) : (
+                  seedfinderScraper.logs.map((log, i) => (
+                    <div key={i} className={`mb-1 ${
+                      log.type === 'error' ? 'text-red-400' :
+                      log.type === 'success' ? 'text-emerald-400' :
+                      log.type === 'warning' ? 'text-amber-400' :
+                      'text-slate-400'
+                    }`}>
+                      <span className="text-slate-600">[{new Date(log.timestamp).toLocaleTimeString()}]</span>{' '}
+                      <span className="font-semibold">[{log.type.toUpperCase()}]</span>{' '}
+                      {log.message}
+                    </div>
+                  ))
+                )}
               </div>
             )}
           </div>

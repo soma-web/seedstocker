@@ -2,8 +2,8 @@ import { ShopifyScraper } from './ShopifyScraper.js';
 import { normalizeBreederName, KNOWN_BREEDERS } from './breeder-normalize.js';
 
 export class GasStationCoScraper extends ShopifyScraper {
-  constructor(logMessage) {
-    super('Gas Station Co. Seeds', logMessage);
+  constructor(logMessage, scrapeMode = 'price') {
+    super('Gas Station Co. Seeds', logMessage, scrapeMode);
   }
 
   normalizeStrainName(title, breeder) {
@@ -35,8 +35,8 @@ export class GasStationCoScraper extends ShopifyScraper {
       // Breeder appears at end of after → strip breeder from after
       else if (breeder && afterLower.endsWith(breeder.toLowerCase())) {
         const stripped = after.substring(0, after.length - breeder.length).trim().replace(/[\s\-–—]+$/, '').trim();
-        // If remaining is empty or looks like genetics info, use before
-        if (!stripped || /^\(|^x\s/i.test(stripped)) {
+        // If remaining is empty, looks like genetics info, or contains only seed-type noise, use before
+        if (!stripped || /^\(|^x\s/i.test(stripped) || !super.normalizeStrainName(stripped, breeder).trim()) {
           name = before;
         } else {
           name = stripped;
@@ -127,6 +127,50 @@ export class GasStationCoScraper extends ShopifyScraper {
     return normalizeBreederName(raw) || 'Gas Station Co. Seeds';
   }
 
+  parseMetafieldsFromHtml(html) {
+    // Start with whatever base class extracts (like THC, CBD, etc.)
+    const specs = super.parseMetafieldsFromHtml(html) || {};
+
+    // ── Flowering Time for Gas Station (converting days to weeks) ────────────────
+    const flowerMatch = html.match(/Flowering\s*Time[:\s]+(\d+)\s*[-–]\s*(\d+)\s*days/i)
+                     || html.match(/Flowering\s*Time[:\s]+(\d+)\s*days/i);
+    if (flowerMatch) {
+      if (flowerMatch[2]) {
+        const minW = Math.round(parseInt(flowerMatch[1]) / 7);
+        const maxW = Math.round(parseInt(flowerMatch[2]) / 7);
+        specs.floweringTime = `${minW}-${maxW}`;
+      } else {
+        specs.floweringTime = String(Math.round(parseInt(flowerMatch[1]) / 7));
+      }
+    }
+
+    // ── Strain Type / Ratio for Gas Station (Indica/Sativa ratio or genetics word) ──
+    const ratioMatch = html.match(/\b\d{2}\s*[\/\\:]\s*\d{2}\b/);
+    if (ratioMatch) {
+      specs.strainType = 'hybrid';
+    } else {
+      const typeMatch = html.match(/Genetics[:\s]+(Hybrid|Indica|Sativa)/i);
+      if (typeMatch) {
+        const val = typeMatch[1].toLowerCase();
+        if (val.includes('indica') && val.includes('sativa')) specs.strainType = 'hybrid';
+        else if (val.includes('indica')) specs.strainType = 'indica';
+        else if (val.includes('sativa')) specs.strainType = 'sativa';
+        else if (val.includes('hybrid')) specs.strainType = 'hybrid';
+      }
+    }
+
+    // ── Genetics / Lineage ────────────────────────────────────────────────────────
+    const lineageMatch = html.match(/Lineage[:\s]+([^<\n|]+)/i);
+    if (lineageMatch) {
+      const cleanLineage = lineageMatch[1]
+        .split(/Flower Yield:|Hash Yield:|Seed Type:|Indica \/ Sativa:|Indoor \/ Outdoor:|Flowering Time:|Genetics:/i)[0]
+        .trim();
+      specs.genetics = cleanLineage;
+    }
+
+    return specs;
+  }
+
   async scrape(scraperStatus, targetUrl) {
     this.log('info', `Starting ${this.shopName} scraper...`);
     scraperStatus.currentShop = this.shopName;
@@ -196,7 +240,7 @@ export class GasStationCoScraper extends ShopifyScraper {
                        titleLower.includes('seeds') ||
                        titleLower.includes('sämling');
 
-        if (!isSeed || productType === 'displays' || tagsString.includes('pos-only') || tagsString.includes('pos only') || tagsString.includes('wholesale-only') || this.isInvalidStrainName(p.title)) {
+        if (!isSeed || productType === 'displays' || tagsString.includes('pos-only') || tagsString.includes('pos only') || tagsString.includes('wholesale-only') || this.isInvalidStrainName(p.title, p.body_html)) {
           continue;
         }
 
@@ -226,6 +270,36 @@ export class GasStationCoScraper extends ShopifyScraper {
         }
 
         const specs = this.parseShopifySpecs(p.body_html, p.tags || []);
+        let thc = specs.thc;
+        let cbd = specs.cbd;
+        let strainType = specs.strainType;
+        let floweringTime = specs.floweringTime;
+        let genetics = specs.genetics || null;
+
+        const productUrl = `${baseUrl}/products/${p.handle}`;
+
+        if (this.scrapeMode === 'metadata') {
+          this.log('info', `Fetching full HTML DOM for product metadata: ${productUrl}`);
+          const extraSpecs = await this.fetchMetafieldsFromHtml(productUrl);
+          if (extraSpecs.thc) {
+            this.log('info', `Successfully extracted THC from DOM for ${name}: ${extraSpecs.thc}`);
+            thc = extraSpecs.thc;
+          }
+          if (extraSpecs.cbd) {
+            this.log('info', `Successfully extracted CBD from DOM for ${name}: ${extraSpecs.cbd}`);
+            cbd = extraSpecs.cbd;
+          }
+          if (extraSpecs.strainType) strainType = extraSpecs.strainType;
+          if (extraSpecs.floweringTime) {
+            this.log('info', `Successfully extracted Flowering Time from DOM for ${name}: ${extraSpecs.floweringTime} weeks`);
+            floweringTime = extraSpecs.floweringTime;
+          }
+          if (extraSpecs.genetics) {
+            this.log('info', `Successfully extracted Genetics from DOM for ${name}: ${extraSpecs.genetics}`);
+            genetics = extraSpecs.genetics;
+          }
+        }
+
         let strainId;
         try {
           strainId = await this.upsertStrain({
@@ -233,10 +307,12 @@ export class GasStationCoScraper extends ShopifyScraper {
             breeder,
             type,
             seedType,
-            thc: specs.thc,
-            cbd: specs.cbd,
-            strainType: specs.strainType,
-            floweringTime: specs.floweringTime
+            thc,
+            cbd,
+            strainType,
+            floweringTime,
+            description: p.body_html || '',
+            genetics
           });
         } catch (dbErr) {
           this.log('error', `Database error for strain ${name}: ${dbErr.message}`);
@@ -340,7 +416,7 @@ export class GasStationCoScraper extends ShopifyScraper {
     }
 
     const title = productSchema.name || productSchema.title;
-    if (this.isInvalidStrainName(title)) {
+    if (this.isInvalidStrainName(title, html)) {
       this.log('warning', `Skipping single page scrape for invalid/collection strain: ${title}`);
       return null;
     }
@@ -374,16 +450,44 @@ export class GasStationCoScraper extends ShopifyScraper {
       }
     }
     const specs = this.parseShopifySpecs(description, tags);
+    let thc = specs.thc;
+    let cbd = specs.cbd;
+    let strainType = specs.strainType;
+    let floweringTime = specs.floweringTime;
+    let genetics = specs.genetics || null;
+
+    if (this.scrapeMode === 'metadata') {
+      const extraSpecs = this.parseMetafieldsFromHtml(html);
+      if (extraSpecs.thc) {
+        this.log('info', `Successfully extracted THC from DOM for ${name}: ${extraSpecs.thc}`);
+        thc = extraSpecs.thc;
+      }
+      if (extraSpecs.cbd) {
+        this.log('info', `Successfully extracted CBD from DOM for ${name}: ${extraSpecs.cbd}`);
+        cbd = extraSpecs.cbd;
+      }
+      if (extraSpecs.strainType) strainType = extraSpecs.strainType;
+      if (extraSpecs.floweringTime) {
+        this.log('info', `Successfully extracted Flowering Time from DOM for ${name}: ${extraSpecs.floweringTime} weeks`);
+        floweringTime = extraSpecs.floweringTime;
+      }
+      if (extraSpecs.genetics) {
+        this.log('info', `Successfully extracted Genetics from DOM for ${name}: ${extraSpecs.genetics}`);
+        genetics = extraSpecs.genetics;
+      }
+    }
 
     const strainId = await this.upsertStrain({
       name,
       breeder,
       type,
       seedType,
-      thc: specs.thc,
-      cbd: specs.cbd,
-      strainType: specs.strainType,
-      floweringTime: specs.floweringTime
+      thc,
+      cbd,
+      strainType,
+      floweringTime,
+      description,
+      genetics
     });
     let offersCreated = 0;
 

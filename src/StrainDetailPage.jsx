@@ -10,7 +10,8 @@ import {
   ShoppingCart,
   Star,
   Sparkles,
-  Package
+  Package,
+  Trash2
 } from 'lucide-react';
 
 const API_BASE_URL = 'http://localhost:3002';
@@ -212,7 +213,7 @@ function PriceHistorySection({ strainId }) {
   );
 }
 
-// â”€â”€ Main Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ──────────────────────────────────────────────────────────────────────────────────────────────────
 
 export default function StrainDetailPage({ strainId, onBack, onNavigate }) {
   const [strain, setStrain] = useState(null);
@@ -220,6 +221,9 @@ export default function StrainDetailPage({ strainId, onBack, onNavigate }) {
   const [activeSection, setActiveSection] = useState('shops');
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiError, setAiError] = useState(null);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -228,6 +232,7 @@ export default function StrainDetailPage({ strainId, onBack, onNavigate }) {
     setImgLoaded(false);
     setImgError(false);
     setActiveSection('shops');
+    setCopied(false);
     async function load() {
       try {
         const res = await fetch(`${API_BASE_URL}/api/strains/${strainId}/detail`);
@@ -268,7 +273,6 @@ export default function StrainDetailPage({ strainId, onBack, onNavigate }) {
   const packs = Array.from(new Set((strain.offers || []).map(o => o.seeds))).sort((a, b) => Number(a) - Number(b));
   const isAuto = strain.type === 'autoflower';
 
-  // Breeder tabs: current + siblings, always sorted alphabetically so order never changes
   const allBreeders = [
     { id: strain.id, breeder: strain.breeder || 'Unknown' },
     ...((strain.siblings || []).map(s => ({ id: s.id, breeder: s.breeder || 'Unknown' })))
@@ -276,6 +280,52 @@ export default function StrainDetailPage({ strainId, onBack, onNavigate }) {
   const hasMultipleBreeders = allBreeders.length > 1;
 
   const plantImageSrc = `https://source.unsplash.com/featured/1400x560/?cannabis,marijuana,plant,${encodeURIComponent(strain.name.split(' ')[0] || 'cannabis')}`;
+
+  const handleCopyProse = () => {
+    const prose = strain.aiDescription ? strain.aiDescription.description : strain.rewrittenDescription;
+    if (!prose) return;
+    navigator.clipboard.writeText(prose);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm(`Are you sure you want to delete "${strain.name}"? This will permanently remove all associated offers, price history, and descriptions.`)) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/strains/${strainId}`, { method: 'DELETE' });
+      if (res.ok) {
+        onBack();
+      } else {
+        const err = await res.json();
+        alert('Delete failed: ' + (err.error || 'Unknown error'));
+      }
+    } catch {
+      alert('Could not connect to server');
+    }
+  };
+
+  const handleGenerateAi = async () => {
+    setAiGenerating(true);
+    setAiError(null);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/strains/${strainId}/generate-ai-description`, {
+        method: 'POST'
+      });
+      if (res.ok) {
+        const data = await res.json();
+        // Refresh strain data to pick up new description
+        const refreshRes = await fetch(`${API_BASE_URL}/api/strains/${strainId}/detail`);
+        if (refreshRes.ok) setStrain(await refreshRes.json());
+      } else {
+        const err = await res.json();
+        setAiError(err.error || 'AI generation failed');
+      }
+    } catch (e) {
+      setAiError('Could not connect to server');
+    } finally {
+      setAiGenerating(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-950" style={{ animation: 'pageFadeIn 0.3s ease-out' }}>
@@ -286,10 +336,9 @@ export default function StrainDetailPage({ strainId, onBack, onNavigate }) {
         }
       `}</style>
 
-      {/* â”€â”€â”€ HERO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ─── HERO ──────────────────────────────────────────────── */}
       <div className="relative w-full overflow-hidden" style={{ height: '460px' }}>
 
-        {/* Plant image */}
         {!imgError && (
           <img
             src={plantImageSrc}
@@ -301,7 +350,6 @@ export default function StrainDetailPage({ strainId, onBack, onNavigate }) {
           />
         )}
 
-        {/* Gradient background when image loads or if no image */}
         <div
           className="absolute inset-0 bg-gradient-to-br"
           style={{
@@ -312,29 +360,33 @@ export default function StrainDetailPage({ strainId, onBack, onNavigate }) {
           }}
         />
 
-        {/* Glowing orb accents */}
         <div className="absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full pointer-events-none"
           style={{ background: isAuto ? 'radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%)' }} />
         <div className="absolute -bottom-20 right-0 w-[400px] h-[400px] rounded-full pointer-events-none"
           style={{ background: 'radial-gradient(circle, rgba(20,184,166,0.08) 0%, transparent 70%)' }} />
 
-        {/* Overlays */}
         <div className="absolute inset-0 bg-gradient-to-b from-slate-950/30 via-transparent to-slate-950" />
         <div className="absolute inset-0 bg-gradient-to-r from-slate-950/50 via-transparent to-slate-950/50" />
 
-        {/* Hero content */}
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col justify-between py-7">
 
-          {/* Back nav */}
-          <button
-            onClick={onBack}
-            className="self-start flex items-center gap-2 px-4 h-10 rounded-xl border border-slate-800/80 bg-slate-950/50 text-slate-300 hover:text-white hover:border-slate-700 backdrop-blur-md transition-all text-sm font-medium group"
-          >
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-            Back to Catalog
-          </button>
+          <div className="self-start flex items-center gap-2">
+            <button
+              onClick={onBack}
+              className="flex items-center gap-2 px-4 h-10 rounded-xl border border-slate-800/80 bg-slate-950/50 text-slate-300 hover:text-white hover:border-slate-700 backdrop-blur-md transition-all text-sm font-medium group"
+            >
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+              Back to Catalog
+            </button>
+            <button
+              onClick={handleDelete}
+              className="flex items-center gap-2 px-4 h-10 rounded-xl border border-red-800/40 bg-red-950/30 text-red-400 hover:text-red-300 hover:bg-red-900/40 hover:border-red-700/60 backdrop-blur-md transition-all text-sm font-medium group"
+            >
+              <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              Delete
+            </button>
+          </div>
 
-          {/* Strain identity */}
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-4">
               <span className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border ${
@@ -358,7 +410,6 @@ export default function StrainDetailPage({ strainId, onBack, onNavigate }) {
               <span>{strain.breeder || 'Unknown Breeder'}</span>
             </div>
 
-            {/* Breeder tab bar — only shown when multiple breeders offer this strain */}
             {hasMultipleBreeders && (
               <div className="flex flex-wrap items-center gap-2 mb-5">
                 <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest shrink-0">Breeder</span>
@@ -380,7 +431,6 @@ export default function StrainDetailPage({ strainId, onBack, onNavigate }) {
               </div>
             )}
 
-            {/* Stat pills */}
             <div className="flex flex-wrap gap-3">
               {lowestPrice !== null && (
                 <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 backdrop-blur-sm">
@@ -407,18 +457,52 @@ export default function StrainDetailPage({ strainId, onBack, onNavigate }) {
         </div>
       </div>
 
-      {/* â”€â”€â”€ BODY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
 
-        {/* About card */}
         <div className="glass-panel rounded-2xl p-7">
           <h2 className="text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-3 flex items-center gap-2">
             <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
             About This Strain
+            {strain.aiDescription && (
+              <span className="ml-2 px-1.5 py-0.5 text-[9px] bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded font-semibold uppercase tracking-normal">
+                AI ({strain.aiDescription.modelUsed})
+              </span>
+            )}
           </h2>
-          <p className="text-slate-300 leading-relaxed text-base max-w-3xl">
-            {buildDescription(strain)}
-          </p>
+          <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+            <p className="text-slate-300 leading-relaxed text-base max-w-3xl">
+              {(strain.aiDescription ? strain.aiDescription.description : strain.rewrittenDescription) || buildDescription(strain)}
+            </p>
+            <div className="flex items-center gap-2 shrink-0">
+              {((strain.aiDescription ? strain.aiDescription.description : strain.rewrittenDescription)) && (
+                <button
+                  onClick={handleCopyProse}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
+                    copied
+                      ? 'bg-emerald-500 text-slate-950 border-emerald-500 shadow-sm shadow-emerald-500/20'
+                      : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-slate-100 hover:border-slate-700'
+                  }`}
+                >
+                  {copied ? 'Copied!' : 'Copy Prose'}
+                </button>
+              )}
+              <button
+                onClick={handleGenerateAi}
+                disabled={aiGenerating}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
+                  aiGenerating
+                    ? 'bg-purple-900/30 border-purple-700/40 text-purple-400 cursor-wait'
+                    : 'bg-purple-500/10 border-purple-500/30 text-purple-300 hover:bg-purple-500/20 hover:border-purple-400/50'
+                }`}
+              >
+                <Sparkles className={`w-3 h-3 ${aiGenerating ? 'animate-spin' : ''}`} />
+                {aiGenerating ? 'Generating…' : strain.aiDescription ? 'Regenerate AI' : 'Generate AI'}
+              </button>
+            </div>
+          </div>
+          {aiError && (
+            <p className="mt-2 text-[10px] text-red-400 font-medium">{aiError}</p>
+          )}
 
           {/* Attribute grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">

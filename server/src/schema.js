@@ -12,6 +12,14 @@ export const strains = sqliteTable('strains', {
   floweringTime: text('flowering_time'),
   floweringMin: integer('flowering_min'),
   floweringMax: integer('flowering_max'),
+  environment: text('environment'), // 'indoor' | 'outdoor' | 'both'
+  plantHeight: text('plant_height'),
+  harvestMonth: text('harvest_month'),
+  effects: text('effects'),
+  rating: real('rating'),
+  seedfinderUrl: text('seedfinder_url'),
+  yieldd: text('yield'),
+  genetics: text('genetics'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull()
 });
@@ -36,3 +44,26 @@ export const priceHistory = sqliteTable('price_history', {
   price: real('price').notNull(),
   fetchedAt: text('fetched_at').notNull()
 });
+
+export const strainShopDescriptions = sqliteTable('strain_shop_descriptions', {
+  strainId: text('strain_id').notNull().references(() => strains.id, { onDelete: 'cascade' }),
+  shop: text('shop').notNull(),
+  description: text('description').notNull(),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull()
+});
+
+export const rewrittenDescriptions = sqliteTable('rewritten_descriptions', {
+  strainId: text('strain_id').primaryKey().references(() => strains.id, { onDelete: 'cascade' }),
+  description: text('description').notNull(),
+  updatedAt: text('updated_at').notNull()
+});
+
+export const aiDescriptions = sqliteTable('ai_descriptions', {
+  strainId: text('strain_id').primaryKey().references(() => strains.id, { onDelete: 'cascade' }),
+  description: text('description').notNull(),
+  modelUsed: text('model_used').notNull(),
+  updatedAt: text('updated_at').notNull()
+});
+
+

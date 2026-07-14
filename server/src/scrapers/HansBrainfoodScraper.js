@@ -1,8 +1,8 @@
 import { ShopifyScraper } from './ShopifyScraper.js';
 
 export class HansBrainfoodScraper extends ShopifyScraper {
-  constructor(logMessage) {
-    super('Hans Brainfood', logMessage);
+  constructor(logMessage, scrapeMode = 'price') {
+    super('Hans Brainfood', logMessage, scrapeMode);
   }
 
   async scrape(scraperStatus, targetUrl) {
@@ -76,7 +76,7 @@ export class HansBrainfoodScraper extends ShopifyScraper {
                        titleLower.includes('seeds') ||
                        titleLower.includes('sämling');
                          
-        if (!isSeed || productType === 'displays' || tagsString.includes('pos-only') || tagsString.includes('pos only') || tagsString.includes('wholesale-only') || this.isInvalidStrainName(p.title)) {
+        if (!isSeed || productType === 'displays' || tagsString.includes('pos-only') || tagsString.includes('pos only') || tagsString.includes('wholesale-only') || this.isInvalidStrainName(p.title, p.body_html)) {
           continue;
         }
         
