@@ -123,6 +123,10 @@ const BREEDER_ALIASES = new Map([
   ['barnys', "Barney's Farm"],
   ["barny's farm", "Barney's Farm"],
   ['barnys farm', "Barney's Farm"],
+  ['187 sweeds', '187 Sweedz'],
+  ['187 sweedz', '187 Sweedz'],
+  ['187 strassenbande', '187 Sweedz'],
+  ['187', '187 Sweedz'],
 ]);
 
 // All known aliases (lowercase) for matching

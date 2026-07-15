@@ -5,6 +5,37 @@ export class HansBrainfoodScraper extends ShopifyScraper {
     super('Hans Brainfood', logMessage, scrapeMode);
   }
 
+  normalizeStrainName(title, breeder) {
+    let name = title;
+    if (title.toLowerCase().includes('187') || (breeder && breeder.toLowerCase().includes('187'))) {
+      const parts = title.split(/\s*-\s*/);
+      if (parts.length > 1) {
+        let candidate = parts[1].trim();
+        const stripKeywords = [
+          'feminisiert', 'feminisierte', 'feminised', 'feminized', 'feminize', 'fem',
+          'autoflowering', 'autoflower', 'automatic', 'auto',
+          'regulär', 'regular', 'reg',
+          'hanfsamen', 'cannabis', 'cannabis seeds', 'cannabissamen', 'seeds', 'samen',
+          'f1 hybrid', 'f1'
+        ];
+        for (const kw of stripKeywords) {
+          const kwRe = new RegExp(`\\b${kw}\\b`, 'gi');
+          candidate = candidate.replace(kwRe, '');
+        }
+        candidate = candidate.replace(/^[\s\-_,.]+/, '').replace(/[\s\-_,.()]+$/, '').trim();
+        if (candidate) {
+          name = candidate;
+        }
+      }
+    } else {
+      name = super.normalizeStrainName(title, breeder);
+    }
+    
+    // Strip any parenthesized content (closed or unclosed)
+    name = name.replace(/\(.*?\)/g, '').replace(/\(.*/g, '').trim();
+    return name;
+  }
+
   async scrape(scraperStatus, targetUrl) {
     this.log('info', `Starting ${this.shopName} scraper...`);
     scraperStatus.currentShop = this.shopName;
