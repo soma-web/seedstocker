@@ -160,6 +160,29 @@ export class BaseScraper {
 
     return false;
   }
+  cleanFilledValue(val) {
+    if (val === null || val === undefined) return null;
+    if (typeof val === 'number') {
+      return isNaN(val) ? null : val;
+    }
+    const str = String(val).trim();
+    const lower = str.toLowerCase();
+    if (
+      lower === '' ||
+      lower === 'not available' ||
+      lower === 'n/a' ||
+      lower === 'unknown' ||
+      lower === 'keine angabe' ||
+      lower === 'keine angaben' ||
+      lower === 'k.a.' ||
+      lower === 'unknown breeder' ||
+      lower === 'unknown_breeder'
+    ) {
+      return null;
+    }
+    return str;
+  }
+
   async upsertStrain({ name, breeder, type, seedType, thc = null, cbd = null, strainType = null, floweringTime = null, floweringMin = null, floweringMax = null, description = null, genetics = null }) {
     let strainId;
     const [existing] = await db.select()
@@ -175,39 +198,57 @@ export class BaseScraper {
       finalMax = range.max;
     }
       
-    const setValues = {
-      type,
-      seedType,
-      updatedAt: new Date().toISOString()
-    };
-    if (thc !== null) setValues.thc = thc;
-    if (cbd !== null) setValues.cbd = cbd;
-    if (strainType !== null) setValues.strainType = strainType;
-    if (floweringTime !== null) setValues.floweringTime = floweringTime;
-    if (finalMin !== null) setValues.floweringMin = finalMin;
-    if (finalMax !== null) setValues.floweringMax = finalMax;
-    if (genetics !== null) setValues.genetics = genetics;
- 
+    const cleanedType = this.cleanFilledValue(type);
+    const cleanedSeedType = this.cleanFilledValue(seedType);
+    const cleanedThc = this.cleanFilledValue(thc);
+    const cleanedCbd = this.cleanFilledValue(cbd);
+    const cleanedStrainType = this.cleanFilledValue(strainType);
+    const cleanedFloweringTime = this.cleanFilledValue(floweringTime);
+    const cleanedMin = this.cleanFilledValue(finalMin);
+    const cleanedMax = this.cleanFilledValue(finalMax);
+    const cleanedGenetics = this.cleanFilledValue(genetics);
+
     if (existing) {
       strainId = existing.id;
-      await db.update(strains)
-        .set(setValues)
-        .where(eq(strains.id, strainId));
+      
+      const updateFields = {};
+      const checkAndUpdate = (field, newVal) => {
+        if (newVal !== null && existing[field] !== newVal) {
+          updateFields[field] = newVal;
+        }
+      };
+
+      checkAndUpdate('type', cleanedType);
+      checkAndUpdate('seedType', cleanedSeedType);
+      checkAndUpdate('thc', cleanedThc);
+      checkAndUpdate('cbd', cleanedCbd);
+      checkAndUpdate('strainType', cleanedStrainType);
+      checkAndUpdate('floweringTime', cleanedFloweringTime);
+      checkAndUpdate('floweringMin', cleanedMin);
+      checkAndUpdate('floweringMax', cleanedMax);
+      checkAndUpdate('genetics', cleanedGenetics);
+
+      if (Object.keys(updateFields).length > 0) {
+        updateFields.updatedAt = new Date().toISOString();
+        await db.update(strains)
+          .set(updateFields)
+          .where(eq(strains.id, strainId));
+      }
     } else {
       strainId = crypto.randomUUID();
       await db.insert(strains).values({
         id: strainId,
         name,
         breeder,
-        type,
-        seedType,
-        thc,
-        cbd,
-        strainType,
-        floweringTime,
-        floweringMin: finalMin,
-        floweringMax: finalMax,
-        genetics,
+        type: cleanedType,
+        seedType: cleanedSeedType,
+        thc: cleanedThc,
+        cbd: cleanedCbd,
+        strainType: cleanedStrainType,
+        floweringTime: cleanedFloweringTime,
+        floweringMin: cleanedMin,
+        floweringMax: cleanedMax,
+        genetics: cleanedGenetics,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       });

@@ -89,6 +89,23 @@ function runNormalizationTests() {
   assert.strictEqual(scraper.normalizeStrainName('Amnesia Haze by Royal Queen Seeds', 'Royal Queen Seeds'), 'Amnesia Haze');
   assert.strictEqual(scraper.normalizeStrainName('DP Blueberry', 'Dutch Passion'), 'Blueberry');
 
+  // --- Clean Filled Value Tests ---
+  assert.strictEqual(scraper.cleanFilledValue('20%'), '20%');
+  assert.strictEqual(scraper.cleanFilledValue('8'), '8');
+  assert.strictEqual(scraper.cleanFilledValue(8), 8);
+  assert.strictEqual(scraper.cleanFilledValue('hybrid'), 'hybrid');
+  assert.strictEqual(scraper.cleanFilledValue(''), null);
+  assert.strictEqual(scraper.cleanFilledValue(null), null);
+  assert.strictEqual(scraper.cleanFilledValue(undefined), null);
+  assert.strictEqual(scraper.cleanFilledValue('Not available'), null);
+  assert.strictEqual(scraper.cleanFilledValue('not available '), null);
+  assert.strictEqual(scraper.cleanFilledValue('n/a'), null);
+  assert.strictEqual(scraper.cleanFilledValue('N/A'), null);
+  assert.strictEqual(scraper.cleanFilledValue('unknown'), null);
+  assert.strictEqual(scraper.cleanFilledValue('Keine Angabe'), null);
+  assert.strictEqual(scraper.cleanFilledValue('keine angaben'), null);
+  assert.strictEqual(scraper.cleanFilledValue('k.a.'), null);
+
   console.log('All normalization unit tests PASSED successfully!');
 }
 
