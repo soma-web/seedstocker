@@ -1,6 +1,6 @@
-import { db } from '../db.js';
+import { db, sqlite } from '../db.js';
 import { strains } from '../schema.js';
-import { eq, or, isNull } from 'drizzle-orm';
+import { eq, or, isNull, and, inArray } from 'drizzle-orm';
 import { BaseScraper } from './BaseScraper.js';
 
 export class SeedfinderScraper extends BaseScraper {
@@ -45,20 +45,51 @@ export class SeedfinderScraper extends BaseScraper {
     };
   }
 
-  async scrape(scraperStatus) {
+  async scrape(scraperStatus, shop = null) {
     this.log('info', 'Starting Seedfinder.eu metadata enrichment scraper...');
 
-    // Find strains missing key metadata
-    const missingStrains = await db.select()
-      .from(strains)
-      .where(
-        or(
-          isNull(strains.strainType),
-          isNull(strains.floweringTime),
-          isNull(strains.environment),
-          isNull(strains.seedfinderUrl)
-        )
-      );
+    let missingStrains = [];
+
+    if (shop) {
+      this.log('info', `Filtering strains by shop: ${shop}`);
+      // Find strains associated with the selected shop that are missing key metadata
+      const shopStrains = sqlite.prepare(`
+        SELECT DISTINCT strain_id FROM scraped_offers WHERE shop = ?
+      `).all(shop);
+
+      const strainIds = shopStrains.map(row => row.strain_id);
+
+      if (strainIds.length === 0) {
+        this.log('info', `No strains found for shop: ${shop}`);
+        missingStrains = [];
+      } else {
+        missingStrains = await db.select()
+          .from(strains)
+          .where(
+            and(
+              inArray(strains.id, strainIds),
+              or(
+                isNull(strains.strainType),
+                isNull(strains.floweringTime),
+                isNull(strains.environment),
+                isNull(strains.seedfinderUrl)
+              )
+            )
+          );
+      }
+    } else {
+      // Find any strains missing key metadata (original behavior)
+      missingStrains = await db.select()
+        .from(strains)
+        .where(
+          or(
+            isNull(strains.strainType),
+            isNull(strains.floweringTime),
+            isNull(strains.environment),
+            isNull(strains.seedfinderUrl)
+          )
+        );
+    }
 
     this.log('info', `Found ${missingStrains.length} strains missing metadata`);
 

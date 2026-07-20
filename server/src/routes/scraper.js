@@ -3,6 +3,7 @@ import { triggerScrape, scraperStatus, logMessage } from '../scraper.js';
 import { startSanityCheck, sanityCheckStatus } from '../sanity-check.js';
 import { getScraperByDomain } from '../scrapers/registry.js';
 
+// Central scraper routes configuration. Watch-reloaded & verified.
 export default async function scraperRoutes(app) {
 
   // ── Shop scraper routes ──────────────────────────────────────────────────
@@ -121,11 +122,23 @@ export default async function scraperRoutes(app) {
     }
   }
 
-  app.post('/api/seedfinder-scrape', async (req, reply) => {
+  app.post('/api/seedfinder-scrape', {
+    schema: {
+      body: {
+        type: 'object',
+        properties: {
+          shop: { type: 'string' }
+        }
+      }
+    }
+  }, async (req, reply) => {
+    console.log('Received seedfinder-scrape request with body:', req.body);
     try {
       if (seedfinderStatus.isScanning) {
         return reply.status(409).send({ error: 'Seedfinder scraper is already running' });
       }
+
+      const { shop } = req.body || {};
 
       seedfinderStatus.isScanning = true;
       seedfinderStatus.startTime = new Date().toISOString();
@@ -133,12 +146,12 @@ export default async function scraperRoutes(app) {
       seedfinderStatus.productsScraped = 0;
       seedfinderStatus.logs = [];
 
-      seedfinderLogMessage('info', 'Starting Seedfinder.eu metadata enrichment...');
+      seedfinderLogMessage('info', `Starting Seedfinder.eu metadata enrichment${shop ? ` (Filtered for shop: ${shop})` : ''}...`);
 
       const { SeedfinderScraper } = await import('../scrapers/SeedfinderScraper.js');
       const scraper = new SeedfinderScraper(seedfinderLogMessage);
 
-      scraper.scrape(seedfinderStatus).then(() => {
+      scraper.scrape(seedfinderStatus, shop || null).then(() => {
         seedfinderStatus.isScanning = false;
         seedfinderStatus.endTime = new Date().toISOString();
         seedfinderLogMessage('success', 'Seedfinder scraping complete');

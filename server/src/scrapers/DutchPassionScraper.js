@@ -100,20 +100,22 @@ export class DutchPassionScraper extends BaseScraper {
 
     this.log('info', `Queued ${productUrls.size} product URLs for parsing.`);
 
+    let scrapedCount = 0;
     for (const url of productUrls) {
-      if (limit !== null && scraperStatus.productsScraped >= limit) {
+      if (limit !== null && scrapedCount >= limit) {
         this.log('info', `Reached limit of ${limit} products. Stopping scrape.`);
         break;
       }
 
       try {
-        await this.scrapeProductPage(url, scraperStatus);
+        const scraped = await this.scrapeProductPage(url, scraperStatus);
+        if (scraped) scrapedCount++;
       } catch (err) {
         this.log('error', `Error scraping product ${url}: ${err.message}`);
       }
     }
 
-    this.log('success', `Finished Dutch Passion scraper. Scraped ${scraperStatus.productsScraped} total products.`);
+    this.log('success', `Finished Dutch Passion scraper. Scraped ${scrapedCount} products.`);
   }
 
   async scrapeProductPage(url, scraperStatus) {
@@ -246,5 +248,6 @@ export class DutchPassionScraper extends BaseScraper {
 
     scraperStatus.productsScraped++;
     this.log('success', `Saved strain "${strainName}" (${breeder}) with ${variants.length} offers.`);
+    return true;
   }
 }

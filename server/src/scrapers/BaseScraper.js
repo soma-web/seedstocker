@@ -42,7 +42,7 @@ export class BaseScraper {
 
   normalizeStrainName(title, breeder) {
     let name = title.trim();
-    
+
     // Strip registered trademark (®) and trademark (™) symbols
     name = name.replace(/[®™]/g, '');
 
@@ -57,26 +57,26 @@ export class BaseScraper {
 
     // Strip parenthesized breeder text from titles
     name = name.replace(/\(.*?\)/g, '');
-    
+
     const stripKeywords = [
       'feminisiert', 'feminisierte', 'feminised', 'feminized', 'feminize', 'fem',
       'autoflowering', 'autoflower', 'automatic', 'auto',
       'reguläre', 'regulär', 'regular', 'reg',
       'blitzversand', 'premium us', 'premium',
-      'hanfsamen',       'cannabis', 'cannabis seeds', 'cannabissamen', 'seeds', 'samen',
+      'hanfsamen', 'cannabis', 'cannabis seeds', 'cannabissamen', 'seeds', 'samen',
       'f1 hybrid', 'f1'
     ];
-    
+
     for (const kw of stripKeywords) {
       const kwRe = new RegExp(`\\b${kw}\\b`, 'gi');
       name = name.replace(kwRe, '');
       const kwDashRe = new RegExp(`\\s*-\\s*\\b${kw}\\b\\s*|\\s*\\b${kw}\\b\\s*-\\s*`, 'gi');
       name = name.replace(kwDashRe, '');
     }
-    
+
     name = name.replace(/^[\s\-_,.]+/, '').replace(/[\s\-_,.()]+$/, '');
     name = name.replace(/\s+/g, ' ');
-    
+
     if (breeder) {
       const breederEscaped = breeder.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
       const spaceVariants = [breederEscaped];
@@ -84,30 +84,30 @@ export class BaseScraper {
         const noSpace = breeder.replace(/\s+/g, '');
         spaceVariants.push(noSpace.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'));
       }
-      
+
       const aliases = CANONICAL_TO_ALIASES[breeder] || [];
       for (const alias of aliases) {
         spaceVariants.push(alias.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'));
       }
-      
+
       for (const variant of spaceVariants) {
         // Strip at start of string
         const startRe = new RegExp(`^${variant}\\s*`, 'i');
         name = name.replace(startRe, '');
-        
+
         // Strip with connecting prefixes like "von" or "by"
         const prefixRe = new RegExp(`\\b(von|by)\\s+${variant}\\b`, 'i');
         name = name.replace(prefixRe, '');
-        
+
         // Strip at end of string
         const endRe = new RegExp(`\\s*${variant}\\b`, 'i');
         name = name.replace(endRe, '');
       }
     }
-    
+
     name = name.replace(/^[\s\-_,.]+/, '').replace(/[\s\-_,.()]+$/, '');
     name = name.replace(/\s+/g, ' ');
-    
+
     return name.trim();
   }
 
@@ -115,9 +115,14 @@ export class BaseScraper {
     if (!title) return true;
     const lower = title.trim().toLowerCase();
     const descLower = (description || '').trim().toLowerCase();
-    
+
     // Ignore any strains containing "pack"/"packs" or "mystery" (mix packs / bundles)
     if (/\bpacks?\b/i.test(lower) || lower.includes('mystery')) {
+      return true;
+    }
+
+    // Ignore any strains containing "mix" (mix packs / bundles / assortments)
+    if (lower.includes('mix')) {
       return true;
     }
 
@@ -134,7 +139,9 @@ export class BaseScraper {
       'bodendisplay',
       'vorratspackung',
       'ungeschält',
-      'geschält'
+      'geschält',
+      'adventskalender',
+      'mix'
     ];
     if (invalidKeywords.some(kw => lower.includes(kw))) {
       return true;
@@ -188,7 +195,7 @@ export class BaseScraper {
         sql`LOWER(TRIM(${strains.breeder})) = LOWER(TRIM(${breeder}))`
       ))
       .limit(1);
-      
+
     let finalMin = floweringMin;
     let finalMax = floweringMax;
     if (floweringTime !== null && finalMin === null && finalMax === null) {
@@ -196,7 +203,7 @@ export class BaseScraper {
       finalMin = range.min;
       finalMax = range.max;
     }
-      
+
     const cleanedType = this.cleanFilledValue(type);
     const cleanedSeedType = this.cleanFilledValue(seedType);
     const cleanedThc = this.cleanFilledValue(thc);
@@ -209,31 +216,51 @@ export class BaseScraper {
 
     if (existing) {
       strainId = existing.id;
-      
-      const updateFields = {};
-      const checkAndUpdate = (field, newVal) => {
-        if (newVal !== null && existing[field] !== newVal) {
-          updateFields[field] = newVal;
+
+      // In price mode, skip all metadata updates — only prices are touched
+      if (this.scrapeMode !== 'price') {
+        const updateFields = {};
+        // Only fill in fields that are currently null/empty — never overwrite existing data
+        const checkAndUpdate = (field, newVal) => {
+          const existingVal = existing[field];
+          const isEmpty = existingVal === null || existingVal === undefined || existingVal === '';
+          if (newVal !== null && isEmpty) {
+            updateFields[field] = newVal;
+          }
+        };
+
+        checkAndUpdate('type', cleanedType);
+        checkAndUpdate('seedType', cleanedSeedType);
+        checkAndUpdate('thc', cleanedThc);
+        checkAndUpdate('cbd', cleanedCbd);
+        checkAndUpdate('strainType', cleanedStrainType);
+        checkAndUpdate('floweringTime', cleanedFloweringTime);
+        checkAndUpdate('floweringMin', cleanedMin);
+        checkAndUpdate('floweringMax', cleanedMax);
+        checkAndUpdate('genetics', cleanedGenetics);
+
+        if (Object.keys(updateFields).length > 0) {
+          updateFields.updatedAt = new Date().toISOString();
+          await db.update(strains)
+            .set(updateFields)
+            .where(eq(strains.id, strainId));
         }
-      };
 
-      checkAndUpdate('type', cleanedType);
-      checkAndUpdate('seedType', cleanedSeedType);
-      checkAndUpdate('thc', cleanedThc);
-      checkAndUpdate('cbd', cleanedCbd);
-      checkAndUpdate('strainType', cleanedStrainType);
-      checkAndUpdate('floweringTime', cleanedFloweringTime);
-      checkAndUpdate('floweringMin', cleanedMin);
-      checkAndUpdate('floweringMax', cleanedMax);
-      checkAndUpdate('genetics', cleanedGenetics);
-
-      if (Object.keys(updateFields).length > 0) {
-        updateFields.updatedAt = new Date().toISOString();
-        await db.update(strains)
-          .set(updateFields)
-          .where(eq(strains.id, strainId));
+        if (description !== null) {
+          try {
+            await this.upsertShopDescription(strainId, this.shopName, description);
+          } catch (err) {
+            this.log('error', `Failed to upsert description for ${name} at ${this.shopName}: ${err.message}`);
+          }
+        }
       }
     } else {
+      // In price mode, don't create new strains — only update prices on known ones
+      if (this.scrapeMode === 'price') {
+        this.log('info', `[price mode] Skipping unknown strain "${name}" (${breeder}) — not in database.`);
+        return null;
+      }
+
       strainId = crypto.randomUUID();
       await db.insert(strains).values({
         id: strainId,
@@ -251,13 +278,13 @@ export class BaseScraper {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       });
-    }
 
-    if (description !== null) {
-      try {
-        await this.upsertShopDescription(strainId, this.shopName, description);
-      } catch (err) {
-        this.log('error', `Failed to upsert description for ${name} at ${this.shopName}: ${err.message}`);
+      if (description !== null) {
+        try {
+          await this.upsertShopDescription(strainId, this.shopName, description);
+        } catch (err) {
+          this.log('error', `Failed to upsert description for ${name} at ${this.shopName}: ${err.message}`);
+        }
       }
     }
 
@@ -286,14 +313,7 @@ export class BaseScraper {
       .limit(1);
 
     const now = new Date().toISOString();
-    if (existing) {
-      await db.update(strainShopDescriptions)
-        .set({ description: cleanDesc, updatedAt: now })
-        .where(and(
-          eq(strainShopDescriptions.strainId, strainId),
-          eq(strainShopDescriptions.shop, shop)
-        ));
-    } else {
+    if (!existing) {
       await db.insert(strainShopDescriptions)
         .values({
           strainId,
@@ -303,6 +323,7 @@ export class BaseScraper {
           updatedAt: now
         });
     }
+    // If a description already exists it is kept as-is (no overwrite)
   }
 
   extractSpec(html, headerPattern) {
@@ -322,7 +343,7 @@ export class BaseScraper {
   cleanCannabinoidValue(val, { aggregation = 'avg', defaults = {} } = {}) {
     if (!val) return null;
     const str = val.trim().toLowerCase();
-    
+
     const numbers = [];
     const numberRegex = /(\d+(?:\.\d+)?)/g;
     let match;
@@ -375,7 +396,7 @@ export class BaseScraper {
   cleanFloweringTime(val) {
     if (!val) return null;
     const str = val.trim().toLowerCase();
-    
+
     if (str.includes('tage') || str.includes('days')) {
       const numbers = [];
       const numberRegex = /(\d+)/g;
@@ -392,7 +413,7 @@ export class BaseScraper {
         return minW === maxW ? minW.toString() : `${minW}-${maxW}`;
       }
     }
-    
+
     const m = val.match(/(\d+\s*-\s*\d+|\d+\s*–\s*\d+|\d+)/);
     if (m) {
       return m[1].replace(/\s+/g, '').trim();
@@ -429,7 +450,7 @@ export class BaseScraper {
       const str = val.toLowerCase();
       const indicaMatch = str.match(/(\d+)\s*%\s*indica/i) || str.match(/indica\s*(\d+)\s*%/i);
       const sativaMatch = str.match(/(\d+)\s*%\s*sativa/i) || str.match(/sativa\s*(\d+)\s*%/i);
-      
+
       if (indicaMatch && sativaMatch) {
         const ind = parseInt(indicaMatch[1], 10);
         const sat = parseInt(sativaMatch[1], 10);
@@ -437,7 +458,7 @@ export class BaseScraper {
         if (sat > ind + 10) return 'sativa-dominant';
         return 'hybrid';
       }
-      
+
       if (str.includes('indica-dominant') || str.includes('indica dominant') || str.includes('indica-lastig')) return 'indica-dominant';
       if (str.includes('sativa-dominant') || str.includes('sativa dominant') || str.includes('sativa-lastig')) return 'sativa-dominant';
       if (str.includes('indica')) return 'indica';
@@ -455,7 +476,7 @@ export class BaseScraper {
 
   parseShopifySpecs(bodyHtml, tags) {
     const plainText = bodyHtml ? bodyHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() : '';
-    
+
     let thc = null;
     let cbd = null;
     let flowering = null;
@@ -470,7 +491,7 @@ export class BaseScraper {
         foundIconsRow = true;
         const title = match[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
         const valueText = match[2].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-        
+
         if (title.includes('blütezeit') || title.includes('blütendauer') || title.includes('flowering')) {
           flowering = valueText;
         } else if (title.includes('potenz') || title.includes('thc')) {
@@ -528,6 +549,9 @@ export class BaseScraper {
 
   // Price validation added (issue #6)
   async insertOffer({ strainId, url, seeds, price, availability = 'available' }) {
+    // In price mode, a null strainId means the strain wasn't found — skip silently
+    if (strainId === null || strainId === undefined) return;
+
     // Reject offers with invalid prices
     if (price === null || price === undefined || isNaN(price) || price <= 0) {
       this.log('warning', `Skipping offer with invalid price: ${price} (seeds=${seeds}, url=${url})`);
@@ -546,6 +570,7 @@ export class BaseScraper {
       .limit(1);
 
     if (existing) {
+      // Update the current price on the offer
       await db.update(scrapedOffers)
         .set({
           url,
@@ -555,6 +580,11 @@ export class BaseScraper {
         })
         .where(eq(scrapedOffers.id, existing.id));
     } else {
+      // In price mode, don't create new offers — only refresh existing ones
+      if (this.scrapeMode === 'price') {
+        this.log('info', `[price mode] Skipping new offer for strain ${strainId}, seeds=${seeds} — not in database.`);
+        return;
+      }
       await db.insert(scrapedOffers).values({
         id: crypto.randomUUID(),
         strainId,

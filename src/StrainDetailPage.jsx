@@ -228,6 +228,82 @@ export default function StrainDetailPage({ strainId, onBack, onNavigate }) {
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiError, setAiError] = useState(null);
 
+  const [isEditing, setIsEditing] = useState(false);
+  const [editFields, setEditFields] = useState({
+    name: '',
+    breeder: '',
+    type: '',
+    seedType: '',
+    thc: '',
+    cbd: '',
+    strainType: '',
+    floweringTime: '',
+    floweringMin: '',
+    floweringMax: '',
+    environment: '',
+    plantHeight: '',
+    harvestMonth: '',
+    effects: '',
+    rating: '',
+    seedfinderUrl: '',
+    harvestYield: '',
+    genetics: '',
+    rewrittenDescription: ''
+  });
+
+  const handleStartEdit = () => {
+    setEditFields({
+      name: strain.name || '',
+      breeder: strain.breeder || '',
+      type: strain.type || 'photoperiodic',
+      seedType: strain.seedType || 'feminized',
+      thc: strain.thc || '',
+      cbd: strain.cbd || '',
+      strainType: strain.strainType || '',
+      floweringTime: strain.floweringTime || '',
+      floweringMin: strain.floweringMin !== null ? String(strain.floweringMin) : '',
+      floweringMax: strain.floweringMax !== null ? String(strain.floweringMax) : '',
+      environment: strain.environment || '',
+      plantHeight: strain.plantHeight || '',
+      harvestMonth: strain.harvestMonth || '',
+      effects: strain.effects || '',
+      rating: strain.rating !== null ? String(strain.rating) : '',
+      seedfinderUrl: strain.seedfinderUrl || '',
+      harvestYield: strain.harvestYield || '',
+      genetics: strain.genetics || '',
+      rewrittenDescription: strain.rewrittenDescription || ''
+    });
+    setIsEditing(false); // reset editing state if toggled back, but here we explicitly open:
+    setIsEditing(true);
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/strains/${strainId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...editFields,
+          floweringMin: editFields.floweringMin === '' ? null : Number(editFields.floweringMin),
+          floweringMax: editFields.floweringMax === '' ? null : Number(editFields.floweringMax),
+          rating: editFields.rating === '' ? null : Number(editFields.rating)
+        })
+      });
+      if (res.ok) {
+        setIsEditing(false);
+        const refreshRes = await fetch(`${API_BASE_URL}/api/strains/${strainId}/detail`);
+        if (refreshRes.ok) setStrain(await refreshRes.json());
+      } else {
+        const err = await res.json();
+        alert('Update failed: ' + (err.error || 'Unknown error'));
+      }
+    } catch (e) {
+      alert('Could not connect to server');
+    }
+  };
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
     setLoading(true);
@@ -373,7 +449,7 @@ export default function StrainDetailPage({ strainId, onBack, onNavigate }) {
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col justify-between py-7">
 
-          <div className="self-start flex items-center gap-2">
+          <div className="self-start flex items-center gap-2 flex-wrap">
             <button
               onClick={onBack}
               className="flex items-center gap-2 px-4 h-10 rounded-xl border border-slate-800/80 bg-slate-950/50 text-slate-300 hover:text-white hover:border-slate-700 backdrop-blur-md transition-all text-sm font-medium group"
@@ -381,37 +457,120 @@ export default function StrainDetailPage({ strainId, onBack, onNavigate }) {
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
               Back to Catalog
             </button>
-            <button
-              onClick={handleDelete}
-              className="flex items-center gap-2 px-4 h-10 rounded-xl border border-red-800/40 bg-red-950/30 text-red-400 hover:text-red-300 hover:bg-red-900/40 hover:border-red-700/60 backdrop-blur-md transition-all text-sm font-medium group"
-            >
-              <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              Delete
-            </button>
+            {!isEditing ? (
+              <>
+                <button
+                  onClick={handleStartEdit}
+                  className="flex items-center gap-2 px-4 h-10 rounded-xl border border-slate-800 bg-slate-900/60 text-slate-305 hover:text-white hover:border-slate-700 backdrop-blur-md transition-all text-sm font-medium"
+                >
+                  Edit Details
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="flex items-center gap-2 px-4 h-10 rounded-xl border border-red-800/40 bg-red-950/30 text-red-400 hover:text-red-300 hover:bg-red-900/40 hover:border-red-700/60 backdrop-blur-md transition-all text-sm font-medium group"
+                >
+                  <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                  Delete
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={handleSaveEdit}
+                  className="flex items-center gap-2 px-4 h-10 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-all text-sm font-bold shadow-md shadow-emerald-500/20"
+                >
+                  Save Changes
+                </button>
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="flex items-center gap-2 px-4 h-10 rounded-xl border border-slate-800 bg-slate-950 text-slate-450 hover:text-slate-200 transition-all text-sm font-medium"
+                >
+                  Cancel
+                </button>
+              </>
+            )}
           </div>
 
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-4">
-              <span className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border ${
-                isAuto
-                  ? 'bg-purple-500/20 text-purple-300 border-purple-500/30'
-                  : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-              }`}>
-                {isAuto ? '⚡ Autoflower' : '🌱 Photoperiodic'}
-              </span>
-              <span className="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border bg-slate-900/70 text-slate-300 border-slate-700">
-                {strain.seedType === 'feminized' ? '♀ Feminized' : 'Regular'}
-              </span>
+              {isEditing ? (
+                <>
+                  <div className="flex flex-col gap-1 animate-pulse">
+                    <span className="text-[8px] uppercase tracking-widest font-bold text-slate-500">Strain Type</span>
+                    <select
+                      value={editFields.type}
+                      onChange={e => setEditFields({ ...editFields, type: e.target.value })}
+                      className="bg-slate-900 border border-slate-800 text-slate-250 px-3 py-1.5 rounded-lg text-xs font-bold focus:outline-none focus:border-emerald-500"
+                    >
+                      <option value="photoperiodic">🌱 Photoperiodic</option>
+                      <option value="autoflower">⚡ Autoflower</option>
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1 animate-pulse">
+                    <span className="text-[8px] uppercase tracking-widest font-bold text-slate-500">Seed Type</span>
+                    <select
+                      value={editFields.seedType}
+                      onChange={e => setEditFields({ ...editFields, seedType: e.target.value })}
+                      className="bg-slate-900 border border-slate-800 text-slate-250 px-3 py-1.5 rounded-lg text-xs font-bold focus:outline-none focus:border-emerald-500"
+                    >
+                      <option value="feminized">♀ Feminized</option>
+                      <option value="regular">Regular</option>
+                    </select>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <span className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border ${
+                    isAuto
+                      ? 'bg-purple-500/20 text-purple-300 border-purple-500/30'
+                      : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                  }`}>
+                    {isAuto ? '⚡ Autoflower' : '🌱 Photoperiodic'}
+                  </span>
+                  <span className="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border bg-slate-900/70 text-slate-300 border-slate-700">
+                    {strain.seedType === 'feminized' ? '♀ Feminized' : 'Regular'}
+                  </span>
+                </>
+              )}
             </div>
 
-            <h1 className="text-5xl sm:text-6xl font-black tracking-tight leading-none text-white mb-3" style={{ textShadow: '0 2px 40px rgba(0,0,0,0.6)' }}>
-              {strain.name}
-            </h1>
+            {isEditing ? (
+              <div className="flex flex-col gap-1 mb-3 animate-pulse">
+                <span className="text-[8px] uppercase tracking-widest font-bold text-slate-500">Strain Name</span>
+                <input
+                  type="text"
+                  value={editFields.name}
+                  onChange={e => setEditFields({ ...editFields, name: e.target.value })}
+                  className="text-2xl sm:text-3xl font-black tracking-tight leading-none text-white bg-slate-900/60 border border-slate-800 px-3 py-1.5 rounded-xl w-full max-w-2xl focus:outline-none focus:border-emerald-500"
+                  placeholder="Strain Name"
+                />
+              </div>
+            ) : (
+              <h1 className="text-5xl sm:text-6xl font-black tracking-tight leading-none text-white mb-3" style={{ textShadow: '0 2px 40px rgba(0,0,0,0.6)' }}>
+                {strain.name}
+              </h1>
+            )}
 
-            <div className="flex items-center gap-2 text-emerald-400 font-semibold text-lg mb-4">
-              <Leaf className="w-5 h-5" />
-              <span>{strain.breeder || 'Unknown Breeder'}</span>
-            </div>
+            {isEditing ? (
+              <div className="flex flex-col gap-1 mb-4 animate-pulse">
+                <span className="text-[8px] uppercase tracking-widest font-bold text-slate-500">Breeder</span>
+                <div className="flex items-center gap-2 text-emerald-400">
+                  <Leaf className="w-4 h-4" />
+                  <input
+                    type="text"
+                    value={editFields.breeder}
+                    onChange={e => setEditFields({ ...editFields, breeder: e.target.value })}
+                    className="text-sm font-semibold text-emerald-350 bg-slate-900/60 border border-slate-800 px-3 py-1 rounded-lg w-full max-w-md focus:outline-none focus:border-emerald-500"
+                    placeholder="Breeder"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-emerald-400 font-semibold text-lg mb-4">
+                <Leaf className="w-5 h-5" />
+                <span>{strain.breeder || 'Unknown Breeder'}</span>
+              </div>
+            )}
 
             {hasMultipleBreeders && (
               <div className="flex flex-wrap items-center gap-2 mb-5">
@@ -466,65 +625,257 @@ export default function StrainDetailPage({ strainId, onBack, onNavigate }) {
           <h2 className="text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-3 flex items-center gap-2">
             <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
             About This Strain
-            {strain.aiDescription && (
+            {strain.aiDescription && !isEditing && (
               <span className="ml-2 px-1.5 py-0.5 text-[9px] bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded font-semibold uppercase tracking-normal">
                 AI ({strain.aiDescription.modelUsed})
               </span>
             )}
           </h2>
-          <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-            <p className="text-slate-300 leading-relaxed text-base max-w-3xl">
-              {(strain.aiDescription ? strain.aiDescription.description : strain.rewrittenDescription) || buildDescription(strain)}
-            </p>
-            <div className="flex items-center gap-2 shrink-0">
-              {((strain.aiDescription ? strain.aiDescription.description : strain.rewrittenDescription)) && (
+          {isEditing ? (
+            <div className="w-full space-y-2">
+              <label className="block text-[9px] uppercase tracking-widest font-bold text-slate-550">Custom Prose Description</label>
+              <textarea
+                value={editFields.rewrittenDescription}
+                onChange={e => setEditFields({ ...editFields, rewrittenDescription: e.target.value })}
+                className="w-full h-32 bg-slate-900/60 border border-slate-800 text-slate-200 p-4 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+                placeholder="Write a custom description for this strain..."
+              />
+            </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+              <p className="text-slate-300 leading-relaxed text-base max-w-3xl">
+                {(strain.aiDescription ? strain.aiDescription.description : strain.rewrittenDescription) || buildDescription(strain)}
+              </p>
+              <div className="flex items-center gap-2 shrink-0">
+                {((strain.aiDescription ? strain.aiDescription.description : strain.rewrittenDescription)) && (
+                  <button
+                    onClick={handleCopyProse}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
+                      copied
+                        ? 'bg-emerald-500 text-slate-950 border-emerald-500 shadow-sm shadow-emerald-500/20'
+                        : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-slate-100 hover:border-slate-700'
+                    }`}
+                  >
+                    {copied ? 'Copied!' : 'Copy Prose'}
+                  </button>
+                )}
                 <button
-                  onClick={handleCopyProse}
-                  className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
-                    copied
-                      ? 'bg-emerald-500 text-slate-950 border-emerald-500 shadow-sm shadow-emerald-500/20'
-                      : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-slate-100 hover:border-slate-700'
+                  onClick={handleGenerateAi}
+                  disabled={aiGenerating}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
+                    aiGenerating
+                      ? 'bg-purple-900/30 border-purple-700/40 text-purple-400 cursor-wait'
+                      : 'bg-purple-500/10 border-purple-500/30 text-purple-300 hover:bg-purple-500/20 hover:border-purple-400/50'
                   }`}
                 >
-                  {copied ? 'Copied!' : 'Copy Prose'}
+                  <Sparkles className={`w-3 h-3 ${aiGenerating ? 'animate-spin' : ''}`} />
+                  {aiGenerating ? 'Generating…' : strain.aiDescription ? 'Regenerate AI' : 'Generate AI'}
                 </button>
-              )}
-              <button
-                onClick={handleGenerateAi}
-                disabled={aiGenerating}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
-                  aiGenerating
-                    ? 'bg-purple-900/30 border-purple-700/40 text-purple-400 cursor-wait'
-                    : 'bg-purple-500/10 border-purple-500/30 text-purple-300 hover:bg-purple-500/20 hover:border-purple-400/50'
-                }`}
-              >
-                <Sparkles className={`w-3 h-3 ${aiGenerating ? 'animate-spin' : ''}`} />
-                {aiGenerating ? 'Generating…' : strain.aiDescription ? 'Regenerate AI' : 'Generate AI'}
-              </button>
+              </div>
             </div>
-          </div>
-          {aiError && (
+          )}
+          {aiError && !isEditing && (
             <p className="mt-2 text-[10px] text-red-400 font-medium">{aiError}</p>
           )}
 
-          {/* Attribute grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
-            {[
-              { label: 'Strain Type', value: isAuto ? 'Autoflower' : 'Photoperiodic', color: isAuto ? 'text-purple-400' : 'text-emerald-400' },
-              { label: 'Seed Type',   value: strain.seedType === 'feminized' ? 'Feminized' : 'Regular', color: 'text-teal-400' },
-              { label: 'Genetics',    value: strain.strainType ? strain.strainType.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('-') : 'Not available', color: 'text-sky-400' },
-              { label: 'THC',         value: strain.thc || 'Not available', color: 'text-rose-400' },
-              { label: 'CBD',         value: strain.cbd || 'Not available', color: 'text-indigo-400' },
-              { label: 'Flowering',   value: strain.floweringMin && strain.floweringMax ? (strain.floweringMin === strain.floweringMax ? `${strain.floweringMin} weeks` : `${strain.floweringMin}–${strain.floweringMax} weeks`) : (strain.floweringTime ? `${strain.floweringTime} weeks` : 'Not available'), color: 'text-lime-400' },
-              { label: 'Breeder',     value: strain.breeder || 'Unknown', color: 'text-slate-200' },
-              { label: 'Pack Sizes',  value: packs.length > 0 ? packs.join(', ') + ' Seeds' : 'Not available', color: 'text-amber-400' },
-            ].map(attr => (
-              <div key={attr.label} className="bg-slate-950/60 border border-slate-900 rounded-xl p-4">
-                <span className="block text-[9px] uppercase tracking-widest font-bold text-slate-600 mb-1.5">{attr.label}</span>
-                <span className={`block text-sm font-bold truncate ${attr.color}`}>{attr.value}</span>
+          {isEditing ? (
+            <div className="mt-8 border-t border-slate-900 pt-6">
+              <h3 className="text-xs uppercase tracking-widest font-bold text-slate-400 mb-4">Strain Specifications</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {/* 1. Genetics (Lineage) */}
+                <div className="bg-slate-950/60 border border-slate-900 rounded-xl p-4 space-y-1.5">
+                  <label className="block text-[9px] uppercase tracking-widest font-bold text-slate-600">Lineage / Genetics</label>
+                  <input
+                    type="text"
+                    value={editFields.genetics}
+                    onChange={e => setEditFields({ ...editFields, genetics: e.target.value })}
+                    className="w-full bg-slate-900 text-sky-400 text-sm font-bold px-2.5 py-1 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500"
+                    placeholder="e.g. Skunk #1 x Northern Lights"
+                  />
+                </div>
+
+                {/* 2. Genetics Type */}
+                <div className="bg-slate-950/60 border border-slate-900 rounded-xl p-4 space-y-1.5">
+                  <label className="block text-[9px] uppercase tracking-widest font-bold text-slate-600">Genetics Type (e.g. Indica/Sativa)</label>
+                  <input
+                    type="text"
+                    value={editFields.strainType}
+                    onChange={e => setEditFields({ ...editFields, strainType: e.target.value })}
+                    className="w-full bg-slate-900 text-sky-400 text-sm font-bold px-2.5 py-1 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500"
+                    placeholder="e.g. indica-dominant"
+                  />
+                </div>
+
+                {/* 3. THC */}
+                <div className="bg-slate-950/60 border border-slate-900 rounded-xl p-4 space-y-1.5">
+                  <label className="block text-[9px] uppercase tracking-widest font-bold text-slate-600">THC Content</label>
+                  <input
+                    type="text"
+                    value={editFields.thc}
+                    onChange={e => setEditFields({ ...editFields, thc: e.target.value })}
+                    className="w-full bg-slate-900 text-rose-400 text-sm font-bold px-2.5 py-1 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500"
+                    placeholder="e.g. 20%"
+                  />
+                </div>
+
+                {/* 4. CBD */}
+                <div className="bg-slate-950/60 border border-slate-900 rounded-xl p-4 space-y-1.5">
+                  <label className="block text-[9px] uppercase tracking-widest font-bold text-slate-600">CBD Content</label>
+                  <input
+                    type="text"
+                    value={editFields.cbd}
+                    onChange={e => setEditFields({ ...editFields, cbd: e.target.value })}
+                    className="w-full bg-slate-900 text-indigo-400 text-sm font-bold px-2.5 py-1 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500"
+                    placeholder="e.g. 1%"
+                  />
+                </div>
+
+                {/* 5. Flowering Time Prose */}
+                <div className="bg-slate-950/60 border border-slate-900 rounded-xl p-4 space-y-1.5">
+                  <label className="block text-[9px] uppercase tracking-widest font-bold text-slate-600">Flowering Time (Prose)</label>
+                  <input
+                    type="text"
+                    value={editFields.floweringTime}
+                    onChange={e => setEditFields({ ...editFields, floweringTime: e.target.value })}
+                    className="w-full bg-slate-900 text-lime-400 text-sm font-bold px-2.5 py-1 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500"
+                    placeholder="e.g. 8-9 weeks"
+                  />
+                </div>
+
+                {/* 6. Flowering Min */}
+                <div className="bg-slate-950/60 border border-slate-900 rounded-xl p-4 space-y-1.5">
+                  <label className="block text-[9px] uppercase tracking-widest font-bold text-slate-600">Flowering Min (Weeks)</label>
+                  <input
+                    type="number"
+                    value={editFields.floweringMin}
+                    onChange={e => setEditFields({ ...editFields, floweringMin: e.target.value })}
+                    className="w-full bg-slate-900 text-lime-400 text-sm font-bold px-2.5 py-1 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500"
+                    placeholder="Min weeks"
+                  />
+                </div>
+
+                {/* 7. Flowering Max */}
+                <div className="bg-slate-950/60 border border-slate-900 rounded-xl p-4 space-y-1.5">
+                  <label className="block text-[9px] uppercase tracking-widest font-bold text-slate-600">Flowering Max (Weeks)</label>
+                  <input
+                    type="number"
+                    value={editFields.floweringMax}
+                    onChange={e => setEditFields({ ...editFields, floweringMax: e.target.value })}
+                    className="w-full bg-slate-900 text-lime-400 text-sm font-bold px-2.5 py-1 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500"
+                    placeholder="Max weeks"
+                  />
+                </div>
+
+                {/* 8. Environment */}
+                <div className="bg-slate-950/60 border border-slate-900 rounded-xl p-4 space-y-1.5">
+                  <label className="block text-[9px] uppercase tracking-widest font-bold text-slate-600">Environment</label>
+                  <select
+                    value={editFields.environment}
+                    onChange={e => setEditFields({ ...editFields, environment: e.target.value })}
+                    className="w-full bg-slate-900 text-teal-400 text-sm font-bold px-2.5 py-1 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500"
+                  >
+                    <option value="">Select Environment</option>
+                    <option value="indoor">Indoor</option>
+                    <option value="outdoor">Outdoor</option>
+                    <option value="both">Both (Indoor/Outdoor)</option>
+                  </select>
+                </div>
+
+                {/* 9. Plant Height */}
+                <div className="bg-slate-950/60 border border-slate-900 rounded-xl p-4 space-y-1.5">
+                  <label className="block text-[9px] uppercase tracking-widest font-bold text-slate-600">Plant Height</label>
+                  <input
+                    type="text"
+                    value={editFields.plantHeight}
+                    onChange={e => setEditFields({ ...editFields, plantHeight: e.target.value })}
+                    className="w-full bg-slate-900 text-amber-400 text-sm font-bold px-2.5 py-1 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500"
+                    placeholder="e.g. Tall, Medium, Short"
+                  />
+                </div>
+
+                {/* 10. Yield */}
+                <div className="bg-slate-950/60 border border-slate-900 rounded-xl p-4 space-y-1.5">
+                  <label className="block text-[9px] uppercase tracking-widest font-bold text-slate-600">Harvest Yield</label>
+                  <input
+                    type="text"
+                    value={editFields.harvestYield}
+                    onChange={e => setEditFields({ ...editFields, harvestYield: e.target.value })}
+                    className="w-full bg-slate-900 text-amber-400 text-sm font-bold px-2.5 py-1 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500"
+                    placeholder="e.g. Heavy, Medium"
+                  />
+                </div>
+
+                {/* 11. Harvest Month */}
+                <div className="bg-slate-950/60 border border-slate-900 rounded-xl p-4 space-y-1.5">
+                  <label className="block text-[9px] uppercase tracking-widest font-bold text-slate-600">Harvest Month</label>
+                  <input
+                    type="text"
+                    value={editFields.harvestMonth}
+                    onChange={e => setEditFields({ ...editFields, harvestMonth: e.target.value })}
+                    className="w-full bg-slate-900 text-amber-400 text-sm font-bold px-2.5 py-1 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500"
+                    placeholder="e.g. Late October"
+                  />
+                </div>
+
+                {/* 12. Effects */}
+                <div className="bg-slate-950/60 border border-slate-900 rounded-xl p-4 space-y-1.5">
+                  <label className="block text-[9px] uppercase tracking-widest font-bold text-slate-600">Effects / High</label>
+                  <input
+                    type="text"
+                    value={editFields.effects}
+                    onChange={e => setEditFields({ ...editFields, effects: e.target.value })}
+                    className="w-full bg-slate-900 text-orange-400 text-sm font-bold px-2.5 py-1 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500"
+                    placeholder="e.g. Relaxed, Uplifting"
+                  />
+                </div>
+
+                {/* 13. Rating */}
+                <div className="bg-slate-950/60 border border-slate-900 rounded-xl p-4 space-y-1.5">
+                  <label className="block text-[9px] uppercase tracking-widest font-bold text-slate-600">Rating (1-5)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="5"
+                    step="0.1"
+                    value={editFields.rating}
+                    onChange={e => setEditFields({ ...editFields, rating: e.target.value })}
+                    className="w-full bg-slate-900 text-yellow-400 text-sm font-bold px-2.5 py-1 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500"
+                    placeholder="e.g. 4.5"
+                  />
+                </div>
+
+                {/* 14. Seedfinder URL */}
+                <div className="bg-slate-950/60 border border-slate-900 rounded-xl p-4 space-y-1.5 md:col-span-2 lg:col-span-3">
+                  <label className="block text-[9px] uppercase tracking-widest font-bold text-slate-600">Seedfinder URL</label>
+                  <input
+                    type="text"
+                    value={editFields.seedfinderUrl}
+                    onChange={e => setEditFields({ ...editFields, seedfinderUrl: e.target.value })}
+                    className="w-full bg-slate-900 text-slate-300 text-sm font-bold px-2.5 py-1 rounded-lg border border-slate-800 focus:outline-none focus:border-emerald-500"
+                    placeholder="https://..."
+                  />
+                </div>
               </div>
-            ))}
-          </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+              {[
+                { label: 'Strain Type', value: isAuto ? 'Autoflower' : 'Photoperiodic', color: isAuto ? 'text-purple-400' : 'text-emerald-400' },
+                { label: 'Seed Type',   value: strain.seedType === 'feminized' ? 'Feminized' : 'Regular', color: 'text-teal-400' },
+                { label: 'Genetics',    value: strain.strainType ? strain.strainType.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('-') : 'Not available', color: 'text-sky-400' },
+                { label: 'THC',         value: strain.thc || 'Not available', color: 'text-rose-400' },
+                { label: 'CBD',         value: strain.cbd || 'Not available', color: 'text-indigo-400' },
+                { label: 'Flowering',   value: strain.floweringMin && strain.floweringMax ? (strain.floweringMin === strain.floweringMax ? `${strain.floweringMin} weeks` : `${strain.floweringMin}–${strain.floweringMax} weeks`) : (strain.floweringTime ? `${strain.floweringTime} weeks` : 'Not available'), color: 'text-lime-400' },
+                { label: 'Breeder',     value: strain.breeder || 'Unknown', color: 'text-slate-200' },
+                { label: 'Pack Sizes',  value: packs.length > 0 ? packs.join(', ') + ' Seeds' : 'Not available', color: 'text-amber-400' },
+              ].map(attr => (
+                <div key={attr.label} className="bg-slate-950/60 border border-slate-900 rounded-xl p-4">
+                  <span className="block text-[9px] uppercase tracking-widest font-bold text-slate-600 mb-1.5">{attr.label}</span>
+                  <span className={`block text-sm font-bold truncate ${attr.color}`}>{attr.value}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Tab bar */}

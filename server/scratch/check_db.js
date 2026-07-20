@@ -4,12 +4,16 @@ const dbPath = './data/seedstocker.db';
 const db = new Database(dbPath);
 
 try {
-  const strains = db.prepare(`
-    SELECT id, name, breeder, flowering_time, flowering_min, flowering_max 
-    FROM strains 
-    WHERE flowering_time LIKE '%Blütezeit%' OR flowering_time IS NULL
-  `).all();
-  console.log('Strains with German flowering_time or NULL:', strains);
+  // Enable foreign keys for cascade deletes
+  db.pragma('foreign_keys = ON');
+  
+  // Find which ones we are going to delete first for logging
+  const toDelete = db.prepare("SELECT id, name, breeder FROM strains WHERE name LIKE '%mix%'").all();
+  console.log('Strains to delete:', toDelete);
+
+  // Perform delete
+  const res = db.prepare("DELETE FROM strains WHERE name LIKE '%mix%'").run();
+  console.log(`Successfully deleted ${res.changes} strains containing 'mix' from the database.`);
 } catch (err) {
   console.error('Error running check:', err);
 } finally {

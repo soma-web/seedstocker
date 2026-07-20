@@ -262,9 +262,10 @@ export default function App() {
     }
   };
 
-  const handleStartSeedfinderScrape = async () => {
+  const handleStartSeedfinderScrape = async (shopName = '') => {
+    console.log('Starting Seedfinder scrape for shop:', shopName);
     try {
-      await apiPost('/api/seedfinder-scrape');
+      await apiPost('/api/seedfinder-scrape', { shop: shopName || null });
       setSeedfinderScraper(prev => ({ ...prev, isScanning: true, logs: [] }));
       setIsSeedfinderOpen(true);
     } catch (err) {

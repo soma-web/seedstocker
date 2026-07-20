@@ -19,6 +19,15 @@ export class SensiSeedsScraper extends BaseScraper {
     super('Sensi Seeds', logMessage, scrapeMode);
   }
 
+  normalizeBreeder(breeder) {
+    if (!breeder) return 'Unknown Breeder';
+    const clean = breeder.trim().toLowerCase();
+    if (clean === 'research' || clean === 'sensi seeds research') {
+      return 'Sensi Seeds';
+    }
+    return super.normalizeBreeder(breeder);
+  }
+
   normalizeStrainName(title, breeder) {
     let name = super.normalizeStrainName(title, breeder);
     // Remove trailing loose "e" or " e" (e.g. from incomplete regex replacements of "reguläre")

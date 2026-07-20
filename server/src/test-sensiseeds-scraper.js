@@ -62,6 +62,8 @@ function runSensiSeedsScraperTests() {
 
   // --- 3. Breeder Normalization Tests for Sensi Seeds Brands ---
   assert.strictEqual(scraper.normalizeBreeder('Sensi Seeds'), 'Sensi Seeds');
+  assert.strictEqual(scraper.normalizeBreeder('Research'), 'Sensi Seeds');
+  assert.strictEqual(scraper.normalizeBreeder('Sensi Seeds Research'), 'Sensi Seeds');
   assert.strictEqual(scraper.normalizeBreeder('White Label'), 'White Label (Sensi Seeds)');
   assert.strictEqual(scraper.normalizeBreeder('whitelabel'), 'White Label (Sensi Seeds)');
   assert.strictEqual(scraper.normalizeBreeder('Sensi x Sherbinskis'), 'Sensi x Sherbinskis');

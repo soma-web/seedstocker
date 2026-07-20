@@ -231,6 +231,106 @@ export default async function strainRoutes(app) {
     }
   });
 
+  app.put('/api/strains/:id', async (req, reply) => {
+    try {
+      const { id } = req.params;
+      const {
+        name,
+        breeder,
+        type,
+        seedType,
+        thc,
+        cbd,
+        strainType,
+        floweringTime,
+        floweringMin,
+        floweringMax,
+        environment,
+        plantHeight,
+        harvestMonth,
+        effects,
+        rating,
+        seedfinderUrl,
+        harvestYield,
+        genetics,
+        rewrittenDescription
+      } = req.body;
+
+      const strain = sqlite.prepare('SELECT id FROM strains WHERE id = ?').get(id);
+      if (!strain) return reply.status(404).send({ error: 'Strain not found' });
+
+      sqlite.transaction(() => {
+        // Update strain fields
+        sqlite.prepare(`
+          UPDATE strains
+          SET name = ?,
+              breeder = ?,
+              type = ?,
+              seed_type = ?,
+              thc = ?,
+              cbd = ?,
+              strain_type = ?,
+              flowering_time = ?,
+              flowering_min = ?,
+              flowering_max = ?,
+              environment = ?,
+              plant_height = ?,
+              harvest_month = ?,
+              effects = ?,
+              rating = ?,
+              seedfinder_url = ?,
+              yield = ?,
+              genetics = ?,
+              updated_at = ?
+          WHERE id = ?
+        `).run(
+          name !== undefined ? name : null,
+          breeder !== undefined ? breeder : null,
+          type !== undefined ? type : null,
+          seedType !== undefined ? seedType : null,
+          thc !== undefined ? thc : null,
+          cbd !== undefined ? cbd : null,
+          strainType !== undefined ? strainType : null,
+          floweringTime !== undefined ? floweringTime : null,
+          floweringMin !== undefined && floweringMin !== null && floweringMin !== '' ? Number(floweringMin) : null,
+          floweringMax !== undefined && floweringMax !== null && floweringMax !== '' ? Number(floweringMax) : null,
+          environment !== undefined ? environment : null,
+          plantHeight !== undefined ? plantHeight : null,
+          harvestMonth !== undefined ? harvestMonth : null,
+          effects !== undefined ? effects : null,
+          rating !== undefined && rating !== null && rating !== '' ? Number(rating) : null,
+          seedfinderUrl !== undefined ? seedfinderUrl : null,
+          harvestYield !== undefined ? harvestYield : null,
+          genetics !== undefined ? genetics : null,
+          new Date().toISOString(),
+          id
+        );
+
+        // Update or insert rewrittenDescription if provided
+        if (rewrittenDescription !== undefined) {
+          const existing = sqlite.prepare('SELECT 1 FROM rewritten_descriptions WHERE strain_id = ?').get(id);
+          if (rewrittenDescription === null || rewrittenDescription.trim() === '') {
+            if (existing) {
+              sqlite.prepare('DELETE FROM rewritten_descriptions WHERE strain_id = ?').run(id);
+            }
+          } else {
+            if (existing) {
+              sqlite.prepare('UPDATE rewritten_descriptions SET description = ?, updated_at = ? WHERE strain_id = ?')
+                .run(rewrittenDescription, new Date().toISOString(), id);
+            } else {
+              sqlite.prepare('INSERT INTO rewritten_descriptions (strain_id, description, updated_at) VALUES (?, ?, ?)')
+                .run(id, rewrittenDescription, new Date().toISOString());
+            }
+          }
+        }
+      })();
+
+      return { success: true, message: 'Strain updated successfully.' };
+    } catch (err) {
+      reply.status(500).send({ error: err.message });
+    }
+  });
+
   app.get('/api/breeders', async (req, reply) => {
     try {
       const rows = sqlite.prepare(`

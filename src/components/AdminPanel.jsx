@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { 
   RotateCw, 
   Layers, 
@@ -50,6 +50,7 @@ export default function AdminPanel({
   queryResult,
   dbStrains
 }) {
+  const [enrichShop, setEnrichShop] = useState('');
   const seedfinderLogTerminalRef = useRef(null);
   const bulkAiLogTerminalRef = useRef(null);
 
@@ -409,9 +410,26 @@ export default function AdminPanel({
           Enrich existing strains with metadata from <strong>seedfinder.eu</strong> including strain type, flowering time, THC/CBD, yield, and more. Only fills in missing fields - won't overwrite existing data.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col sm:flex-row gap-4 items-center">
+          <div className="w-full sm:w-64">
+            <select
+              value={enrichShop}
+              onChange={e => setEnrichShop(e.target.value)}
+              disabled={seedfinderScraper.isScanning}
+              className="w-full h-12 px-4 bg-slate-950 border border-slate-900 rounded-xl text-slate-100 focus:outline-none focus:border-emerald-500/50 transition-colors text-sm font-medium"
+            >
+              <option value="">All Shops</option>
+              <option value="Zamnesia">Zamnesia</option>
+              <option value="House of Seeds">House of Seeds</option>
+              <option value="Hans Brainfood">Hans Brainfood</option>
+              <option value="Gas Station Co. Seeds">Gas Station Co. Seeds</option>
+              <option value="Gas Station LU">Gas Station LU</option>
+              <option value="Sensi Seeds">Sensi Seeds</option>
+              <option value="Dutch Passion">Dutch Passion</option>
+            </select>
+          </div>
           <button
-            onClick={handleStartSeedfinderScrape}
+            onClick={() => handleStartSeedfinderScrape(enrichShop)}
             disabled={seedfinderScraper.isScanning || scraper.isScanning}
             className={`px-6 h-12 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-1.5 shrink-0 ${
               seedfinderScraper.isScanning || scraper.isScanning
