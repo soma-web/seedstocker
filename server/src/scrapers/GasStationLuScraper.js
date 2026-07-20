@@ -216,8 +216,6 @@ export class GasStationLuScraper extends ShopifyScraper {
     this.log('info', `Starting ${this.shopName} scraper with rate-limit backoff protection...`);
     scraperStatus.currentShop = this.shopName;
 
-    await this.clearOffers();
-
     if (!targetUrl) {
       this.log('error', `No URL configured for ${this.shopName}. Skipping.`);
       return;

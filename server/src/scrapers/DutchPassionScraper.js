@@ -9,8 +9,6 @@ export class DutchPassionScraper extends BaseScraper {
     this.log('info', 'Starting Dutch Passion scraper...');
     scraperStatus.currentShop = this.shopName;
 
-    await this.clearOffers();
-
     const limit = this.getLimit();
     const productUrls = new Set();
 

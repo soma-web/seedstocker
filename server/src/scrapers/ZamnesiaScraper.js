@@ -45,8 +45,7 @@ export class ZamnesiaScraper extends BaseScraper {
     this.log('info', 'Starting Zamnesia scraper...');
     scraperStatus.currentShop = this.shopName;
     
-    await this.clearOffers();
-    
+
     let categories = [
       { url: 'https://www.zamnesia.de/35-cannabissamen/295-feminisiert-hanfsamen', type: 'photoperiodic', seedType: 'feminized' },
       { url: 'https://www.zamnesia.de/35-cannabissamen/294-autoflowering-hanfsamen', type: 'autoflower', seedType: 'feminized' },

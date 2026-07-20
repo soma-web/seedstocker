@@ -58,8 +58,6 @@ export class HansBrainfoodScraper extends ShopifyScraper {
     this.log('info', `Starting ${this.shopName} scraper...`);
     scraperStatus.currentShop = this.shopName;
     
-    await this.clearOffers();
-    
     if (!targetUrl) {
       this.log('error', `No URL configured for ${this.shopName}. Skipping.`);
       return;

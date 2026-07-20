@@ -59,8 +59,7 @@ export class SensiSeedsScraper extends BaseScraper {
     this.log('info', 'Starting Sensi Seeds scraper...');
     scraperStatus.currentShop = this.shopName;
     
-    await this.clearOffers();
-    
+
     const limit = this.getLimit();
     const productUrls = new Set();
     const baseCategoryUrl = 'https://sensiseeds.com/de/hanfsamen';
