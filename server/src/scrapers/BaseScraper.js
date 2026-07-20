@@ -61,7 +61,7 @@ export class BaseScraper {
     const stripKeywords = [
       'feminisiert', 'feminisierte', 'feminised', 'feminized', 'feminize', 'fem',
       'autoflowering', 'autoflower', 'automatic', 'auto',
-      'regulär', 'regular', 'reg',
+      'reguläre', 'regulär', 'regular', 'reg',
       'blitzversand', 'premium us', 'premium',
       'hanfsamen',       'cannabis', 'cannabis seeds', 'cannabissamen', 'seeds', 'samen',
       'f1 hybrid', 'f1'

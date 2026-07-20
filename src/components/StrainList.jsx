@@ -112,7 +112,7 @@ export default function StrainList({
               key={strain.id}
               strain={strain}
               onOpenPriceHistory={onOpenPriceHistory}
-              onNavigateToDetail={onNavigate}
+              onNavigateToDetail={(id) => onNavigate(`/strain/${encodeURIComponent(id)}`)}
             />
           ))}
         </div>

@@ -19,6 +19,15 @@ export class SensiSeedsScraper extends BaseScraper {
     super('Sensi Seeds', logMessage, scrapeMode);
   }
 
+  normalizeStrainName(title, breeder) {
+    let name = super.normalizeStrainName(title, breeder);
+    // Remove trailing loose "e" or " e" (e.g. from incomplete regex replacements of "reguläre")
+    name = name.replace(/\b[eE]\b$/, '').trim();
+    // Clean up any remaining trailing punctuation/whitespace
+    name = name.replace(/^[\s\-_,.]+/, '').replace(/[\s\-_,.()]+$/, '').trim();
+    return name;
+  }
+
   async scrape(scraperStatus, targetUrl = null) {
     this.log('info', 'Starting Sensi Seeds scraper...');
     scraperStatus.currentShop = this.shopName;

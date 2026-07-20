@@ -86,6 +86,14 @@ function runSensiSeedsScraperTests() {
     scraper.normalizeStrainName('Skunk #1 Regular Hanfsamen', 'Sensi Seeds'),
     'Skunk #1'
   );
+  assert.strictEqual(
+    scraper.normalizeStrainName('Early Girl Reguläre Hanfsamen', 'Sensi Seeds'),
+    'Early Girl'
+  );
+  assert.strictEqual(
+    scraper.normalizeStrainName('Early Girl e', 'Sensi Seeds'),
+    'Early Girl'
+  );
 
   // --- 5. Invalid / Pack / Bundle Name Filter Tests ---
   assert.strictEqual(scraper.isInvalidStrainName('Sensi Seeds Adventskalender 2026', ''), true);
