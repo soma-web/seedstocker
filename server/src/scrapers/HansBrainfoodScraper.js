@@ -5,16 +5,34 @@ export class HansBrainfoodScraper extends ShopifyScraper {
     super('Hans Brainfood', logMessage, scrapeMode);
   }
 
+  isInvalidStrainName(title, description = '') {
+    if (!title) return true;
+    const lower = title.toLowerCase();
+    if (
+      lower.includes('ungeschält') ||
+      lower.includes('geschält') ||
+      lower.includes('vorratspackung') ||
+      lower.includes('bio ungeschält')
+    ) {
+      return true;
+    }
+    return super.isInvalidStrainName(title, description);
+  }
+
   normalizeStrainName(title, breeder) {
-    let name = title;
-    if (title.toLowerCase().includes('187') || (breeder && breeder.toLowerCase().includes('187'))) {
-      const parts = title.split(/\s*-\s*/);
+    let cleanTitle = title.replace(/\bpremium\s+us\b/gi, '').replace(/\bpremium\b/gi, '').trim();
+    cleanTitle = cleanTitle.replace(/^[\s\-_,.]+/, '').replace(/[\s\-_,.()]+$/, '').trim();
+
+    let name = cleanTitle;
+    if (cleanTitle.toLowerCase().includes('187') || (breeder && breeder.toLowerCase().includes('187'))) {
+      const parts = cleanTitle.split(/\s*-\s*/);
       if (parts.length > 1) {
         let candidate = parts[1].trim();
         const stripKeywords = [
           'feminisiert', 'feminisierte', 'feminised', 'feminized', 'feminize', 'fem',
           'autoflowering', 'autoflower', 'automatic', 'auto',
           'regulär', 'regular', 'reg',
+          'blitzversand', 'premium us', 'premium',
           'hanfsamen', 'cannabis', 'cannabis seeds', 'cannabissamen', 'seeds', 'samen',
           'f1 hybrid', 'f1'
         ];
@@ -28,7 +46,7 @@ export class HansBrainfoodScraper extends ShopifyScraper {
         }
       }
     } else {
-      name = super.normalizeStrainName(title, breeder);
+      name = super.normalizeStrainName(cleanTitle, breeder);
     }
     
     // Strip any parenthesized content (closed or unclosed)
@@ -108,6 +126,7 @@ export class HansBrainfoodScraper extends ShopifyScraper {
                        titleLower.includes('sämling');
                          
         if (!isSeed || productType === 'displays' || tagsString.includes('pos-only') || tagsString.includes('pos only') || tagsString.includes('wholesale-only') || this.isInvalidStrainName(p.title, p.body_html)) {
+          this.log('info', `Skipping non-strain or faulty product "${p.title}"`);
           continue;
         }
         

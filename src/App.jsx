@@ -642,6 +642,7 @@ export default function App() {
     if (shop === 'Gas Station Co. Seeds') return 'text-red-400 bg-red-500/10 border-red-500/20';
     if (shop === 'Gas Station LU') return 'text-teal-400 bg-teal-500/10 border-teal-500/20';
     if (shop === 'Sensi Seeds') return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+    if (shop === 'Dutch Passion') return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
     return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
   };
 
@@ -1067,7 +1068,8 @@ export default function App() {
                 'Hans Brainfood': { stroke: '#a855f7' },
                 'Gas Station Co. Seeds': { stroke: '#ef4444' },
                 'Gas Station LU': { stroke: '#14b8a6' },
-                'Sensi Seeds': { stroke: '#10b981' }
+                'Sensi Seeds': { stroke: '#10b981' },
+                'Dutch Passion': { stroke: '#f59e0b' }
               };
               const defaultColors = { stroke: '#94a3b8' };
 
@@ -1522,6 +1524,7 @@ export default function App() {
                 <option value="Gas Station Co. Seeds">Gas Station Co. Seeds</option>
                 <option value="Gas Station LU">Gas Station LU</option>
                 <option value="Sensi Seeds">Sensi Seeds</option>
+                <option value="Dutch Passion">Dutch Passion</option>
               </select>
             </div>
 
@@ -2295,7 +2298,7 @@ export default function App() {
               On-Demand Single Page Scraper
             </h2>
             <p className="text-xs text-slate-500 mb-6">
-              Paste a specific product URL from <strong>Sensi Seeds</strong>, <strong>Gas Station LU</strong>, <strong>Gas Station Co. Seeds</strong>, <strong>Zamnesia</strong>, <strong>Hans Brainfood</strong>, or <strong>House of Seeds</strong> to scrape and upsert that strain and its price offers into the database instantly.
+              Paste a specific product URL from <strong>Dutch Passion</strong>, <strong>Sensi Seeds</strong>, <strong>Gas Station LU</strong>, <strong>Gas Station Co. Seeds</strong>, <strong>Zamnesia</strong>, <strong>Hans Brainfood</strong>, or <strong>House of Seeds</strong> to scrape and upsert that strain and its price offers into the database instantly.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">

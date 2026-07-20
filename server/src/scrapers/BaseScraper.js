@@ -5,7 +5,7 @@ import { db } from '../db.js';
 import { strains, scrapedOffers, priceHistory, strainShopDescriptions, rewrittenDescriptions } from '../schema.js';
 import { eq, and, desc } from 'drizzle-orm';
 import crypto from 'node:crypto';
-import { normalizeBreederName, CANONICAL_TO_ALIASES } from './breeder-normalize.js';
+import { normalizeBreederName, CANONICAL_TO_ALIASES, KNOWN_BREEDERS } from './breeder-normalize.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -53,6 +53,18 @@ export class BaseScraper {
   normalizeStrainName(title, breeder) {
     let name = title.trim();
     
+    // Strip registered trademark (®) and trademark (™) symbols
+    name = name.replace(/[®™]/g, '');
+
+    // Strip trailing "by <Breeder>" or "von <Breeder>" from titles if matching a breeder
+    const byMatch = name.match(/\s+(by|von)\s+(.+)$/i);
+    if (byMatch) {
+      const candidateBreeder = byMatch[2].trim().toLowerCase();
+      if (KNOWN_BREEDERS.has(candidateBreeder) || (breeder && candidateBreeder === breeder.toLowerCase())) {
+        name = name.substring(0, byMatch.index).trim();
+      }
+    }
+
     // Strip parenthesized breeder text from titles
     name = name.replace(/\(.*?\)/g, '');
     
@@ -60,6 +72,7 @@ export class BaseScraper {
       'feminisiert', 'feminisierte', 'feminised', 'feminized', 'feminize', 'fem',
       'autoflowering', 'autoflower', 'automatic', 'auto',
       'regulär', 'regular', 'reg',
+      'blitzversand', 'premium us', 'premium',
       'hanfsamen',       'cannabis', 'cannabis seeds', 'cannabissamen', 'seeds', 'samen',
       'f1 hybrid', 'f1'
     ];
@@ -142,7 +155,10 @@ export class BaseScraper {
       'gutschein',
       'bundle',
       'wood display',
-      'bodendisplay'
+      'bodendisplay',
+      'vorratspackung',
+      'ungeschält',
+      'geschält'
     ];
     if (invalidKeywords.some(kw => lower.includes(kw))) {
       return true;

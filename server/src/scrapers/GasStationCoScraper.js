@@ -9,6 +9,15 @@ export class GasStationCoScraper extends ShopifyScraper {
   normalizeStrainName(title, breeder) {
     let name = title.trim();
 
+    // Strip trailing "by <Breeder>" or "von <Breeder>" from title if it matches a known breeder
+    const byMatch = name.match(/\s+(by|von)\s+(.+)$/i);
+    if (byMatch) {
+      const candidateBreeder = byMatch[2].trim().toLowerCase();
+      if (KNOWN_BREEDERS.has(candidateBreeder) || (breeder && candidateBreeder === breeder.toLowerCase())) {
+        name = name.substring(0, byMatch.index).trim();
+      }
+    }
+
     // Find last dash (regular, en-dash, em-dash) — with or without leading space
     const dashRe = /\s*[-–—]\s+/g;
     let lastMatch = null;

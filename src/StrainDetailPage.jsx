@@ -22,7 +22,9 @@ function getShopColor(shop) {
   if (shop === 'Zamnesia') return { pill: 'text-orange-400 bg-orange-500/10 border-orange-500/20', accent: '#f97316' };
   if (shop === 'Hans Brainfood') return { pill: 'text-lime-400 bg-lime-500/10 border-lime-500/20', accent: '#84cc16' };
   if (shop === 'Gas Station Co. Seeds') return { pill: 'text-red-400 bg-red-500/10 border-red-500/20', accent: '#ef4444' };
+  if (shop === 'Gas Station LU') return { pill: 'text-purple-400 bg-purple-500/10 border-purple-500/20', accent: '#a855f7' };
   if (shop === 'Sensi Seeds') return { pill: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', accent: '#10b981' };
+  if (shop === 'Dutch Passion') return { pill: 'text-amber-400 bg-amber-500/10 border-amber-500/20', accent: '#f59e0b' };
   return { pill: 'text-blue-400 bg-blue-500/10 border-blue-500/20', accent: '#38bdf8' };
 }
 
@@ -114,7 +116,7 @@ function PriceHistorySection({ strainId }) {
     return spread === 0 ? 80 : 130 - ((price - yMin) / spread) * 100;
   };
   const shops = Array.from(new Set(filtered.map(d => d.shop)));
-  const colorMap = { 'Zamnesia': '#f97316', 'House of Seeds': '#38bdf8', 'Hans Brainfood': '#84cc16', 'Gas Station Co. Seeds': '#ef4444', 'Sensi Seeds': '#10b981' };
+  const colorMap = { 'Zamnesia': '#f97316', 'House of Seeds': '#38bdf8', 'Hans Brainfood': '#84cc16', 'Gas Station Co. Seeds': '#ef4444', 'Gas Station LU': '#a855f7', 'Sensi Seeds': '#10b981', 'Dutch Passion': '#f59e0b' };
 
   return (
     <div className="space-y-5">

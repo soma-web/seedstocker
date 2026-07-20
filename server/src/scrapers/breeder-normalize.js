@@ -167,7 +167,7 @@ for (const [alias, canonical] of BREEDER_ALIASES.entries()) {
 }
 
 // Noise words to strip from breeder names (German product descriptors)
-const NOISE_RE = /[\s,]*(feminisierte?n?|feminized|regular|regulär|cannabissamen|cannabis\s*seeds|cannabis|premium|limited\s*(edition|drop)|drop|exclusive|samen)\s*/gi;
+const NOISE_RE = /[\s,]*(feminisierte?n?|feminized|regular|regulär|blitzversand|cannabissamen|cannabis\s*seeds|cannabis|premium|limited\s*(edition|drop)|drop|exclusive|samen)\s*/gi;
 
 /**
  * Normalize a raw breeder string: strip noise words, resolve aliases.
