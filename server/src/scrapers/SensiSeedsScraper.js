@@ -28,6 +28,24 @@ export class SensiSeedsScraper extends BaseScraper {
     return name;
   }
 
+  normalizeFloweringTime(val) {
+    if (!val) return null;
+    const str = val.trim().toLowerCase();
+    if (str.includes('durchschnittliche blütezeit')) {
+      return '8-9';
+    }
+    if (str.includes('kurze blütezeit')) {
+      return '7-8';
+    }
+    if (str.includes('extralange blütezeit')) {
+      return '11-13';
+    }
+    if (str.includes('lange blütezeit')) {
+      return '9-11';
+    }
+    return val.trim();
+  }
+
   async scrape(scraperStatus, targetUrl = null) {
     this.log('info', 'Starting Sensi Seeds scraper...');
     scraperStatus.currentShop = this.shopName;
@@ -216,7 +234,7 @@ export class SensiSeedsScraper extends BaseScraper {
     }
 
     const strainType = attributes['sativa / indica'] || null;
-    const floweringTime = attributes['blütezeit'] || null;
+    const floweringTime = this.normalizeFloweringTime(attributes['blütezeit'] || null);
 
     // 7. Upsert Strain into DB
     const strainId = await this.upsertStrain({
@@ -347,7 +365,7 @@ export class SensiSeedsScraper extends BaseScraper {
     }
 
     const strainType = attributes['sativa / indica'] || null;
-    const floweringTime = attributes['blütezeit'] || null;
+    const floweringTime = this.normalizeFloweringTime(attributes['blütezeit'] || null);
 
     const strainId = await this.upsertStrain({
       name: strainName,

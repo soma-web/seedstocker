@@ -101,6 +101,13 @@ function runSensiSeedsScraperTests() {
   assert.strictEqual(scraper.isInvalidStrainName('Gift Card €50', ''), true);
   assert.strictEqual(scraper.isInvalidStrainName('Sticky Orange XXL', ''), false);
 
+  // --- 6. Flowering Time Normalization Tests ---
+  assert.strictEqual(scraper.normalizeFloweringTime('Durchschnittliche Blütezeit'), '8-9');
+  assert.strictEqual(scraper.normalizeFloweringTime('Kurze Blütezeit'), '7-8');
+  assert.strictEqual(scraper.normalizeFloweringTime('Lange Blütezeit'), '9-11');
+  assert.strictEqual(scraper.normalizeFloweringTime('Extralange Blütezeit'), '11-13');
+  assert.strictEqual(scraper.normalizeFloweringTime(null), null);
+
   console.log('All Sensi Seeds Scraper unit tests PASSED successfully!');
 }
 
