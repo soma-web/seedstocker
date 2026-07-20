@@ -78,4 +78,14 @@ export function getBlockedWords() {
   return [];
 }
 
+/**
+ * Get proxy configuration (list-based Webshare setup).
+ * Returns null if proxy is not configured.
+ */
+export function getProxyConfig() {
+  const config = getConfig();
+  if (!config.proxy) return null;
+  return config.proxy;
+}
+
 export { configPath };

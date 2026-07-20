@@ -7,6 +7,7 @@ import { eq, and, desc, sql } from 'drizzle-orm';
 import crypto from 'node:crypto';
 import { normalizeBreederName, CANONICAL_TO_ALIASES, KNOWN_BREEDERS } from './breeder-normalize.js';
 import { getMaxItemsLimit, getBlockedWords } from '../config.js';
+import { proxyManager } from './ProxyManager.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,6 +17,8 @@ export class BaseScraper {
     this.shopName = shopName;
     this.logMessage = logMessage;
     this.scrapeMode = scrapeMode;
+    // Flips to true once this scraper instance hits a 429 and activates proxy
+    this._proxyActive = false;
   }
 
   log(type, message) {
@@ -676,6 +679,88 @@ export class BaseScraper {
       if (m) return parseInt(m[1], 10);
     }
     return null;
+  }
+
+  /**
+   * Fetch wrapper with automatic proxy fallback on 429.
+   *
+   * Flow:
+   *   1. If proxy is already active for this session, go straight through proxy.
+   *   2. Otherwise try direct fetch first.
+   *   3. On 429: read Retry-After header, wait, then cycle to next proxy.
+   *   4. If the proxy also returns 429, mark it failed and try the next one.
+   *   5. If all proxies are exhausted, return the last response so the caller
+   *      can decide what to do (existing callers already handle non-ok status).
+   */
+  async fetchWithRetry(url, options = {}) {
+    // If proxy was already activated earlier in this session, use it immediately
+    if (this._proxyActive) {
+      return this._fetchViaProxy(url, options);
+    }
+
+    // --- Direct attempt ---
+    let res;
+    try {
+      res = await fetch(url, options);
+    } catch (err) {
+      throw err; // network error — bubble up so caller can break/log as before
+    }
+
+    if (res.status !== 429) return res;
+
+    // --- 429 hit: activate proxy fallback ---
+    const retryAfter = parseInt(res.headers.get('retry-after') || '5', 10);
+    this.log('warning', `429 on ${url} — waiting ${retryAfter}s then retrying via proxy...`);
+    await this.sleep(retryAfter * 1000);
+
+    if (!proxyManager.enabled) {
+      this.log('error', 'No proxy list configured — cannot recover from 429. Set proxy.list in scraper.json.');
+      return res;
+    }
+
+    this._proxyActive = true;
+    return this._fetchViaProxy(url, options);
+  }
+
+  /**
+   * Internal: try each proxy in round-robin order until one succeeds or all fail.
+   */
+  async _fetchViaProxy(url, options = {}) {
+    const maxAttempts = proxyManager.totalProxies || 1;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const next = proxyManager.nextAgent();
+      if (!next) {
+        this.log('error', `All ${maxAttempts} proxies exhausted for ${url}`);
+        // Return a synthetic 429-like response so the caller breaks gracefully
+        return new Response(null, { status: 429, statusText: 'All proxies exhausted' });
+      }
+
+      const { agent, index, hostPort } = next;
+      this.log('info', `[proxy] Trying ${hostPort} for ${url}`);
+
+      let res;
+      try {
+        res = await fetch(url, { ...options, dispatcher: agent });
+      } catch (err) {
+        this.log('warning', `[proxy] ${hostPort} connection error: ${err.message} — marking failed`);
+        proxyManager.markFailed(index);
+        continue;
+      }
+
+      if (res.status === 429) {
+        this.log('warning', `[proxy] ${hostPort} also returned 429 — marking failed, trying next`);
+        proxyManager.markFailed(index);
+        await this.sleep(2000);
+        continue;
+      }
+
+      this.log('info', `[proxy] ${hostPort} succeeded (${res.status}) for ${url}`);
+      return res;
+    }
+
+    this.log('error', `All proxies failed for ${url}`);
+    return new Response(null, { status: 429, statusText: 'All proxies failed' });
   }
 
   async sleep(ms) {

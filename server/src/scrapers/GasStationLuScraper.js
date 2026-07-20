@@ -163,39 +163,7 @@ export class GasStationLuScraper extends ShopifyScraper {
     return specs;
   }
 
-  async fetchWithRetry(url, options = {}, retries = 5, backoffMs = 3000) {
-    let attempt = 0;
-    while (attempt < retries) {
-      try {
-        const res = await fetch(url, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            ...(options.headers || {})
-          },
-          ...options
-        });
-
-        if (res.status === 429) {
-          attempt++;
-          const retryAfterHeader = res.headers.get('retry-after');
-          let delay = retryAfterHeader ? parseInt(retryAfterHeader, 10) * 1000 : backoffMs * Math.pow(2, attempt - 1);
-          if (isNaN(delay) || delay <= 0) delay = backoffMs * Math.pow(2, attempt - 1);
-
-          this.log('warning', `Received HTTP 429 (Too Many Requests) for ${url}. Waiting ${(delay / 1000).toFixed(1)}s before retry (attempt ${attempt}/${retries})...`);
-          await this.sleep(delay);
-          continue;
-        }
-
-        return res;
-      } catch (err) {
-        attempt++;
-        if (attempt >= retries) throw err;
-        this.log('warning', `Network error fetching ${url}: ${err.message}. Retrying in ${(backoffMs / 1000).toFixed(1)}s...`);
-        await this.sleep(backoffMs);
-      }
-    }
-    return null;
-  }
+  // fetchWithRetry is inherited from BaseScraper — it handles 429 with proxy fallback.
 
   async fetchMetafieldsFromHtml(productUrl) {
     // 1.5s polite delay between individual product page HTML requests to avoid triggering HTTP 429
