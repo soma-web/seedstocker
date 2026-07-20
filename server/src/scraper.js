@@ -5,6 +5,7 @@ import { HouseOfSeedsScraper } from './scrapers/HouseOfSeedsScraper.js';
 import { ZamnesiaScraper } from './scrapers/ZamnesiaScraper.js';
 import { HansBrainfoodScraper } from './scrapers/HansBrainfoodScraper.js';
 import { GasStationCoScraper } from './scrapers/GasStationCoScraper.js';
+import { GasStationLuScraper } from './scrapers/GasStationLuScraper.js';
 import { SensiSeedsScraper } from './scrapers/SensiSeedsScraper.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -77,6 +78,7 @@ export async function triggerScrape(targetShopName = null, scrapeMode = 'price')
       { name: 'House of Seeds', url: null },
       { name: 'Hans Brainfood', url: null },
       { name: 'Gas Station Co. Seeds', url: null },
+      { name: 'Gas Station LU', url: null },
       { name: 'Sensi Seeds', url: null }
     ];
 
@@ -135,6 +137,17 @@ export async function triggerScrape(targetShopName = null, scrapeMode = 'price')
       logMessage('info', 'Skipping Gas Station Co. Seeds (not requested for this run).');
     } else {
       logMessage('info', 'Skipping Gas Station Co. Seeds (not enabled in config).');
+    }
+
+    const gasLuConfig = getShopConfig('Gas Station LU');
+    if (gasLuConfig && shouldScrape('Gas Station LU')) {
+      const targetUrl = typeof gasLuConfig === 'string' ? null : gasLuConfig.url;
+      const gasLuScraper = new GasStationLuScraper(logMessage, scrapeMode);
+      await gasLuScraper.scrape(scraperStatus, targetUrl);
+    } else if (gasLuConfig) {
+      logMessage('info', 'Skipping Gas Station LU (not requested for this run).');
+    } else {
+      logMessage('info', 'Skipping Gas Station LU (not enabled in config).');
     }
 
     const sensiConfig = getShopConfig('Sensi Seeds');

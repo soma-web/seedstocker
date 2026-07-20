@@ -64,6 +64,18 @@ const BREEDER_ALIASES = new Map([
   ['nine weeks', 'Nine Weeks Harvest'],
   ['wizard tree', 'Wizard Trees'],
   ['wizard trees', 'Wizard Trees'],
+  ['capulator', 'Capulator'],
+  ['copycat genetix', 'Copycat Genetix'],
+  ['copycat', 'Copycat Genetix'],
+  ['umami seed company', 'Umami Seed Company'],
+  ['umami seeds', 'Umami Seed Company'],
+  ['umami', 'Umami Seed Company'],
+  ['poppin fire', 'Poppin Fire'],
+  ['humboldt seed company', 'Humboldt Seed Company'],
+  ['humboldt seeds', 'Humboldt Seed Company'],
+  ['humboldt seed co.', 'Humboldt Seed Company'],
+  ['nasha genetics', 'Nasha Genetics'],
+  ['nasha', 'Nasha Genetics'],
 
   // EU Exklusive
   ['barneys', "Barney's Farm"],
