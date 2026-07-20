@@ -1,54 +1,17 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const configPath = path.resolve(__dirname, '../config/scraper.json');
+import { getGeminiApiKey, getLocalLlmConfig } from './config.js';
 
 function cleanText(html) {
   if (!html) return '';
   return html
     .replace(/<[^>]*>/g, ' ')
-    .replace(/Zamnesia|Hans Brainfood|House of Seeds|Gas Station Co\.|Sensi Seeds/gi, ' ')
+    .replace(/Zamnesia|Hans Brainfood|House of Seeds|Gas Station Co\.|Sensi Seeds|Dutch Passion/gi, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
 
-function getGeminiApiKey() {
-  if (process.env.GEMINI_API_KEY) {
-    return process.env.GEMINI_API_KEY;
-  }
-  try {
-    if (fs.existsSync(configPath)) {
-      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-      return config.geminiApiKey || null;
-    }
-  } catch {}
-  return null;
-}
-
-function readLocalLlmConfig() {
-  try {
-    if (fs.existsSync(configPath)) {
-      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-      return {
-        useLocalLlm: !!config.useLocalLlm,
-        localLlmUrl: config.localLlmUrl || 'http://localhost:1234/v1/chat/completions',
-        localLlmModel: config.localLlmModel || 'local-model'
-      };
-    }
-  } catch {}
-  return {
-    useLocalLlm: false,
-    localLlmUrl: 'http://localhost:1234/v1/chat/completions',
-    localLlmModel: 'local-model'
-  };
-}
-
 export async function rewriteDescriptionToProse(originalText, strain, options = {}) {
   const skipAi = options.skipAi ?? false;
-  const localConfig = readLocalLlmConfig();
+  const localConfig = getLocalLlmConfig();
   
   const prompt = `Du bist ein professioneller Cannabis-Experte und Texter.
 Schreibe eine ansprechende, sachliche und einzigartige Sortenbeschreibung auf Deutsch für die folgende Cannabissorte.

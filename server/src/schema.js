@@ -1,4 +1,5 @@
 import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { primaryKey } from 'drizzle-orm/sqlite-core';
 
 export const strains = sqliteTable('strains', {
   id: text('id').primaryKey(),
@@ -18,7 +19,7 @@ export const strains = sqliteTable('strains', {
   effects: text('effects'),
   rating: real('rating'),
   seedfinderUrl: text('seedfinder_url'),
-  yieldd: text('yield'),
+  harvestYield: text('yield'),
   genetics: text('genetics'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull()
@@ -45,13 +46,16 @@ export const priceHistory = sqliteTable('price_history', {
   fetchedAt: text('fetched_at').notNull()
 });
 
+// Fixed: composite primary key (issue #15)
 export const strainShopDescriptions = sqliteTable('strain_shop_descriptions', {
   strainId: text('strain_id').notNull().references(() => strains.id, { onDelete: 'cascade' }),
   shop: text('shop').notNull(),
   description: text('description').notNull(),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull()
-});
+}, (table) => ({
+  pk: primaryKey({ columns: [table.strainId, table.shop] })
+}));
 
 export const rewrittenDescriptions = sqliteTable('rewritten_descriptions', {
   strainId: text('strain_id').primaryKey().references(() => strains.id, { onDelete: 'cascade' }),
@@ -65,5 +69,3 @@ export const aiDescriptions = sqliteTable('ai_descriptions', {
   modelUsed: text('model_used').notNull(),
   updatedAt: text('updated_at').notNull()
 });
-
-

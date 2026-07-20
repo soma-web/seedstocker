@@ -1,27 +1,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { HouseOfSeedsScraper } from './scrapers/HouseOfSeedsScraper.js';
-import { ZamnesiaScraper } from './scrapers/ZamnesiaScraper.js';
-import { HansBrainfoodScraper } from './scrapers/HansBrainfoodScraper.js';
-import { GasStationCoScraper } from './scrapers/GasStationCoScraper.js';
-import { GasStationLuScraper } from './scrapers/GasStationLuScraper.js';
-import { SensiSeedsScraper } from './scrapers/SensiSeedsScraper.js';
-import { DutchPassionScraper } from './scrapers/DutchPassionScraper.js';
+import { SCRAPER_REGISTRY, getScraperByName } from './scrapers/registry.js';
+import { getConfig } from './config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const logFilePath = path.resolve(__dirname, '../data/scraper.log');
-const configPath = path.resolve(__dirname, '../config/scraper.json');
-
-function readConfig() {
-  try {
-    if (fs.existsSync(configPath)) {
-      return JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    }
-  } catch {}
-  return { maxItemsPerShop: null, debug: false, shops: ['Zamnesia', 'House of Seeds'] };
-}
 
 export const scraperStatus = {
   isScanning: false,
@@ -38,7 +23,7 @@ export function logMessage(type, message) {
   const time = new Date().toISOString();
   const logLine = `[${time}][Scraper][${type.toUpperCase()}] ${message}`;
   console.log(logLine);
-  
+
   // In-memory logs
   scraperStatus.logs.push({ type, message, timestamp: time });
   if (scraperStatus.logs.length > 200) {
@@ -51,41 +36,33 @@ export function logMessage(type, message) {
   } catch {}
 }
 
-// Background scraper runner
+// Background scraper runner — uses registry instead of copy-paste blocks
 export async function triggerScrape(targetShopName = null, scrapeMode = 'price') {
   if (scraperStatus.isScanning) {
     logMessage('warning', 'Scraper already running. Call ignored.');
     return;
   }
-  
+
   scraperStatus.isScanning = true;
   scraperStatus.startTime = new Date().toISOString();
   scraperStatus.endTime = null;
   scraperStatus.productsScraped = 0;
-  
+
   // Reset logs file
   try {
     fs.writeFileSync(logFilePath, '', 'utf8');
   } catch {}
-  
+
   logMessage('info', '===============================================');
   logMessage('info', targetShopName ? `Starting background scraping task for: ${targetShopName} (mode: ${scrapeMode})...` : `Starting complete background scraping task (mode: ${scrapeMode})...`);
   logMessage('info', '===============================================');
-  
+
   try {
-    const config = readConfig();
-    const shopsToScrape = config.shops || [
-      { name: 'Zamnesia', url: null },
-      { name: 'House of Seeds', url: null },
-      { name: 'Hans Brainfood', url: null },
-      { name: 'Gas Station Co. Seeds', url: null },
-      { name: 'Gas Station LU', url: null },
-      { name: 'Sensi Seeds', url: null },
-      { name: 'Dutch Passion', url: null }
-    ];
+    const config = getConfig();
+    const configuredShops = config.shops || SCRAPER_REGISTRY.map(e => ({ name: e.name, url: null }));
 
     const getShopConfig = (name) => {
-      return shopsToScrape.find(s => {
+      return configuredShops.find(s => {
         if (typeof s === 'string') {
           return s.toLowerCase() === name.toLowerCase();
         }
@@ -97,81 +74,19 @@ export async function triggerScrape(targetShopName = null, scrapeMode = 'price')
       return !targetShopName || targetShopName.toLowerCase() === name.toLowerCase();
     };
 
-    const hosConfig = getShopConfig('House of Seeds');
-    if (hosConfig && shouldScrape('House of Seeds')) {
-      const targetUrl = typeof hosConfig === 'string' ? null : hosConfig.url;
-      const hosScraper = new HouseOfSeedsScraper(logMessage, scrapeMode);
-      await hosScraper.scrape(scraperStatus, targetUrl);
-    } else if (hosConfig) {
-      logMessage('info', 'Skipping House of Seeds (not requested for this run).');
-    } else {
-      logMessage('info', 'Skipping House of Seeds (not enabled in config).');
-    }
+    // Loop over all registered scrapers
+    for (const entry of SCRAPER_REGISTRY) {
+      const shopConfig = getShopConfig(entry.name);
 
-    const zamnConfig = getShopConfig('Zamnesia');
-    if (zamnConfig && shouldScrape('Zamnesia')) {
-      const targetUrl = typeof zamnConfig === 'string' ? null : zamnConfig.url;
-      const zamnScraper = new ZamnesiaScraper(logMessage, scrapeMode);
-      await zamnScraper.scrape(scraperStatus, targetUrl);
-    } else if (zamnConfig) {
-      logMessage('info', 'Skipping Zamnesia (not requested for this run).');
-    } else {
-      logMessage('info', 'Skipping Zamnesia (not enabled in config).');
-    }
-
-    const hansConfig = getShopConfig('Hans Brainfood');
-    if (hansConfig && shouldScrape('Hans Brainfood')) {
-      const targetUrl = typeof hansConfig === 'string' ? null : hansConfig.url;
-      const hansScraper = new HansBrainfoodScraper(logMessage, scrapeMode);
-      await hansScraper.scrape(scraperStatus, targetUrl);
-    } else if (hansConfig) {
-      logMessage('info', 'Skipping Hans Brainfood (not requested for this run).');
-    } else {
-      logMessage('info', 'Skipping Hans Brainfood (not enabled in config).');
-    }
-
-    const gasConfig = getShopConfig('Gas Station Co. Seeds');
-    if (gasConfig && shouldScrape('Gas Station Co. Seeds')) {
-      const targetUrl = typeof gasConfig === 'string' ? null : gasConfig.url;
-      const gasScraper = new GasStationCoScraper(logMessage, scrapeMode);
-      await gasScraper.scrape(scraperStatus, targetUrl);
-    } else if (gasConfig) {
-      logMessage('info', 'Skipping Gas Station Co. Seeds (not requested for this run).');
-    } else {
-      logMessage('info', 'Skipping Gas Station Co. Seeds (not enabled in config).');
-    }
-
-    const gasLuConfig = getShopConfig('Gas Station LU');
-    if (gasLuConfig && shouldScrape('Gas Station LU')) {
-      const targetUrl = typeof gasLuConfig === 'string' ? null : gasLuConfig.url;
-      const gasLuScraper = new GasStationLuScraper(logMessage, scrapeMode);
-      await gasLuScraper.scrape(scraperStatus, targetUrl);
-    } else if (gasLuConfig) {
-      logMessage('info', 'Skipping Gas Station LU (not requested for this run).');
-    } else {
-      logMessage('info', 'Skipping Gas Station LU (not enabled in config).');
-    }
-
-    const sensiConfig = getShopConfig('Sensi Seeds');
-    if (sensiConfig && shouldScrape('Sensi Seeds')) {
-      const targetUrl = typeof sensiConfig === 'string' ? null : sensiConfig.url;
-      const sensiScraper = new SensiSeedsScraper(logMessage, scrapeMode);
-      await sensiScraper.scrape(scraperStatus, targetUrl);
-    } else if (sensiConfig) {
-      logMessage('info', 'Skipping Sensi Seeds (not requested for this run).');
-    } else {
-      logMessage('info', 'Skipping Sensi Seeds (not enabled in config).');
-    }
-
-    const dpConfig = getShopConfig('Dutch Passion');
-    if (dpConfig && shouldScrape('Dutch Passion')) {
-      const targetUrl = typeof dpConfig === 'string' ? null : dpConfig.url;
-      const dpScraper = new DutchPassionScraper(logMessage, scrapeMode);
-      await dpScraper.scrape(scraperStatus, targetUrl);
-    } else if (dpConfig) {
-      logMessage('info', 'Skipping Dutch Passion (not requested for this run).');
-    } else {
-      logMessage('info', 'Skipping Dutch Passion (not enabled in config).');
+      if (shopConfig && shouldScrape(entry.name)) {
+        const targetUrl = typeof shopConfig === 'string' ? null : shopConfig.url;
+        const scraper = new entry.ScraperClass(logMessage, scrapeMode);
+        await scraper.scrape(scraperStatus, targetUrl);
+      } else if (shopConfig) {
+        logMessage('info', `Skipping ${entry.name} (not requested for this run).`);
+      } else {
+        logMessage('info', `Skipping ${entry.name} (not enabled in config).`);
+      }
     }
 
     logMessage('success', 'Scraper execution finished successfully!');

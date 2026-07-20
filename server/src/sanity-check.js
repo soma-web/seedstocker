@@ -1,11 +1,6 @@
 import crypto from 'node:crypto';
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const configPath = path.resolve(__dirname, '../config/scraper.json');
+import { getConfig } from './config.js';
+import { SCRAPER_REGISTRY, getScraperByName } from './scrapers/registry.js';
 
 export let sanityCheckStatus = {
   isRunning: false,
@@ -18,26 +13,26 @@ export let sanityCheckStatus = {
 
 function getShopUrlFromConfig(shopName) {
   try {
-    if (fs.existsSync(configPath)) {
-      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-      const shopConf = config.shops?.find(s => {
-        if (typeof s === 'string') return s.toLowerCase() === shopName.toLowerCase();
-        return s && s.name && s.name.toLowerCase() === shopName.toLowerCase();
-      });
-      if (shopConf && typeof shopConf === 'object' && shopConf.url) {
-        return shopConf.url;
-      }
+    const config = getConfig();
+    const shopConf = config.shops?.find(s => {
+      if (typeof s === 'string') return s.toLowerCase() === shopName.toLowerCase();
+      return s && s.name && s.name.toLowerCase() === shopName.toLowerCase();
+    });
+    if (shopConf && typeof shopConf === 'object' && shopConf.url) {
+      return shopConf.url;
     }
   } catch (err) {
     console.error('Error reading scraper config for sanity check:', err);
   }
   
-  // Fallbacks if config is missing or unreadable
-  if (shopName === 'House of Seeds') return 'https://house-of-seeds.de/products.json';
-  if (shopName === 'Hans Brainfood') return 'https://hansbrainfood.de/products.json';
-  if (shopName === 'Gas Station Co. Seeds') return 'https://gasstationcoseeds.de/products.json';
+  // Fallback: use defaultUrl from registry
+  const entry = getScraperByName(shopName);
+  if (entry && entry.defaultUrl) {
+    return entry.defaultUrl;
+  }
+
+  // Legacy fallbacks
   if (shopName === 'Zamnesia') return 'https://www.zamnesia.de/35-cannabissamen/295-feminisiert-hanfsamen, https://www.zamnesia.de/35-cannabissamen/294-autoflowering-hanfsamen';
-  if (shopName === 'Sensi Seeds') return 'https://sensiseeds.com/de/hanfsamen';
   return null;
 }
 
@@ -83,36 +78,25 @@ export async function startSanityCheck(shopName) {
   // Run in background
   (async () => {
     try {
-      let scraper;
-      if (shopName === 'House of Seeds') {
-        const { HouseOfSeedsScraper } = await import('./scrapers/HouseOfSeedsScraper.js');
-        scraper = new HouseOfSeedsScraper((level, msg) => addLog(level, msg));
-      } else if (shopName === 'Hans Brainfood') {
-        const { HansBrainfoodScraper } = await import('./scrapers/HansBrainfoodScraper.js');
-        scraper = new HansBrainfoodScraper((level, msg) => addLog(level, msg));
-      } else if (shopName === 'Gas Station Co. Seeds') {
-        const { GasStationCoScraper } = await import('./scrapers/GasStationCoScraper.js');
-        scraper = new GasStationCoScraper((level, msg) => addLog(level, msg));
-      } else if (shopName === 'Zamnesia') {
-        const { ZamnesiaScraper } = await import('./scrapers/ZamnesiaScraper.js');
-        scraper = new ZamnesiaScraper((level, msg) => addLog(level, msg));
-      } else if (shopName === 'Sensi Seeds') {
-        const { SensiSeedsScraper } = await import('./scrapers/SensiSeedsScraper.js');
-        scraper = new SensiSeedsScraper((level, msg) => addLog(level, msg));
-      } else {
-        throw new Error(`Unknown shop name: ${shopName}`);
+      // Use registry to find the scraper (issue #5, #13)
+      const entry = getScraperByName(shopName);
+      if (!entry) {
+        throw new Error(`Unknown shop name: ${shopName}. Available: ${SCRAPER_REGISTRY.map(e => e.name).join(', ')}`);
       }
+
+      const scraper = new entry.ScraperClass((level, msg) => addLog(level, msg));
 
       const configuredUrl = getShopUrlFromConfig(shopName);
       if (!configuredUrl) {
-        throw new Error(`No URL configured for ${shopName} in scraper.json`);
+        throw new Error(`No URL configured for ${shopName} in scraper.json or registry`);
       }
 
       // Gather random URLs
       let urls = [];
       addLog('info', 'Gathering shop product catalog URL list...');
       
-      if (shopName === 'House of Seeds' || shopName === 'Hans Brainfood' || shopName === 'Gas Station Co. Seeds') {
+      if (entry.shopifyJson) {
+        // Shopify-based shops
         const baseUrl = configuredUrl.replace(/\/products\.json$/, '').replace(/\/$/, '');
         const res = await fetch(`${baseUrl}/products.json?limit=250`);
         if (!res.ok) throw new Error(`Failed to fetch shop products.json: status ${res.status}`);
@@ -181,6 +165,26 @@ export async function startSanityCheck(shopName) {
             if (match && !match[1].includes('shoppingcart') && !match[1].includes('wishlist') && !match[1].includes('account')) {
               const full = match[1].startsWith('http') ? match[1] : `https://sensiseeds.com${match[1]}`;
               set.add(full);
+            }
+          }
+          set.forEach(url => urls.push({ url, type: 'photoperiodic', seedType: 'feminized' }));
+        }
+      } else if (shopName === 'Dutch Passion') {
+        addLog('info', `Fetching Dutch Passion catalog page: ${configuredUrl}`);
+        const res = await fetch(configuredUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'Accept-Language': 'de-DE,de;q=0.9'
+          }
+        });
+        if (res.ok) {
+          const html = await res.text();
+          const linkRe = /href=["'](https?:\/\/dutch-passion\.com\/de\/hanfsamen\/[^"']+)["']/gi;
+          const set = new Set();
+          let match;
+          while ((match = linkRe.exec(html)) !== null) {
+            if (!match[1].includes('page=') && !match[1].includes('?')) {
+              set.add(match[1]);
             }
           }
           set.forEach(url => urls.push({ url, type: 'photoperiodic', seedType: 'feminized' }));

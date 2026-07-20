@@ -3,9 +3,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { db } from '../db.js';
 import { strains, scrapedOffers, priceHistory, strainShopDescriptions, rewrittenDescriptions } from '../schema.js';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, sql } from 'drizzle-orm';
 import crypto from 'node:crypto';
 import { normalizeBreederName, CANONICAL_TO_ALIASES, KNOWN_BREEDERS } from './breeder-normalize.js';
+import { getMaxItemsLimit, getBlockedWords } from '../config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,7 +16,6 @@ export class BaseScraper {
     this.shopName = shopName;
     this.logMessage = logMessage;
     this.scrapeMode = scrapeMode;
-    this.configPath = path.resolve(__dirname, '../../config/scraper.json');
   }
 
   log(type, message) {
@@ -27,17 +27,7 @@ export class BaseScraper {
   }
 
   getLimit() {
-    try {
-      if (fs.existsSync(this.configPath)) {
-        const data = JSON.parse(fs.readFileSync(this.configPath, 'utf8'));
-        if (typeof data.maxItemsPerShop === 'number') {
-          return data.maxItemsPerShop;
-        }
-      }
-    } catch (err) {
-      this.log('error', `Failed reading config, defaulting to unlimited: ${err.message}`);
-    }
-    return null;
+    return getMaxItemsLimit();
   }
 
   async clearOffers() {
@@ -121,20 +111,6 @@ export class BaseScraper {
     return name.trim();
   }
 
-  getBlockedWords() {
-    try {
-      if (fs.existsSync(this.configPath)) {
-        const data = JSON.parse(fs.readFileSync(this.configPath, 'utf8'));
-        if (Array.isArray(data.blockedWords)) {
-          return data.blockedWords.map(w => w.trim().toLowerCase()).filter(Boolean);
-        }
-      }
-    } catch (err) {
-      this.log('error', `Failed reading blocked words from config: ${err.message}`);
-    }
-    return [];
-  }
-
   isInvalidStrainName(title, description = '') {
     if (!title) return true;
     const lower = title.trim().toLowerCase();
@@ -165,7 +141,7 @@ export class BaseScraper {
     }
 
     // Check custom blocked words from scraper.json
-    const blocked = this.getBlockedWords();
+    const blocked = getBlockedWords();
     if (blocked.length > 0) {
       const matchBlocked = blocked.some(word => lower.includes(word) || descLower.includes(word));
       if (matchBlocked) {
@@ -176,6 +152,7 @@ export class BaseScraper {
 
     return false;
   }
+
   cleanFilledValue(val) {
     if (val === null || val === undefined) return null;
     if (typeof val === 'number') {
@@ -199,11 +176,17 @@ export class BaseScraper {
     return str;
   }
 
+  // Case-insensitive strain lookup (issue #9)
   async upsertStrain({ name, breeder, type, seedType, thc = null, cbd = null, strainType = null, floweringTime = null, floweringMin = null, floweringMax = null, description = null, genetics = null }) {
     let strainId;
+
+    // Use case-insensitive, whitespace-normalized matching to prevent duplicates
     const [existing] = await db.select()
       .from(strains)
-      .where(and(eq(strains.name, name), eq(strains.breeder, breeder)))
+      .where(and(
+        sql`LOWER(TRIM(${strains.name})) = LOWER(TRIM(${name}))`,
+        sql`LOWER(TRIM(${strains.breeder})) = LOWER(TRIM(${breeder}))`
+      ))
       .limit(1);
       
     let finalMin = floweringMin;
@@ -328,7 +311,15 @@ export class BaseScraper {
     return match ? match[1].trim() : null;
   }
 
-  cleanThc(val) {
+  /**
+   * Unified cannabinoid value cleaner (issue #20)
+   * Replaces the nearly-identical cleanThc() and cleanCbd() methods.
+   * @param {string} val - Raw value string
+   * @param {object} options
+   * @param {'avg'|'max'} options.aggregation - How to combine multiple numbers
+   * @param {object} options.defaults - Low/medium/high percentage defaults
+   */
+  cleanCannabinoidValue(val, { aggregation = 'avg', defaults = {} } = {}) {
     if (!val) return null;
     const str = val.trim().toLowerCase();
     
@@ -339,21 +330,27 @@ export class BaseScraper {
       numbers.push(parseFloat(match[1]));
     }
     if (numbers.length >= 2) {
-      const avg = Math.round(numbers.reduce((a, b) => a + b, 0) / numbers.length);
-      return avg + '%';
+      const result = aggregation === 'max'
+        ? Math.max(...numbers)
+        : Math.round(numbers.reduce((a, b) => a + b, 0) / numbers.length);
+      return result + '%';
     }
     if (numbers.length === 1) {
       return numbers[0] + '%';
     }
 
+    const low = defaults.low || '2%';
+    const medium = defaults.medium || '10%';
+    const high = defaults.high || '21%';
+
     if (str.includes('gering') || str.includes('low') || str.includes('mild')) {
-      return '2%';
+      return low;
     }
     if (str.includes('mittel') || str.includes('medium') || str.includes('moderate')) {
-      return '10%';
+      return medium;
     }
     if (str.includes('hoch') || str.includes('high') || str.includes('strong')) {
-      return '21%';
+      return high;
     }
 
     const m = val.match(/(\d+(?:\.\d+)?\s*%\s*(?:-\s*\d+(?:\.\d+)?\s*%)?|\d+\s*-\s*\d+\s*%|\d+\s*%)/);
@@ -361,37 +358,18 @@ export class BaseScraper {
     return val.trim();
   }
 
+  cleanThc(val) {
+    return this.cleanCannabinoidValue(val, {
+      aggregation: 'avg',
+      defaults: { low: '2%', medium: '10%', high: '21%' }
+    });
+  }
+
   cleanCbd(val) {
-    if (!val) return null;
-    const str = val.trim().toLowerCase();
-    
-    const numbers = [];
-    const numberRegex = /(\d+(?:\.\d+)?)/g;
-    let match;
-    while ((match = numberRegex.exec(str)) !== null) {
-      numbers.push(parseFloat(match[1]));
-    }
-    if (numbers.length >= 2) {
-      const maxVal = Math.max(...numbers);
-      return maxVal + '%';
-    }
-    if (numbers.length === 1) {
-      return numbers[0] + '%';
-    }
-
-    if (str.includes('gering') || str.includes('low') || str.includes('mild')) {
-      return '1%';
-    }
-    if (str.includes('mittel') || str.includes('medium') || str.includes('moderate')) {
-      return '7%';
-    }
-    if (str.includes('hoch') || str.includes('high') || str.includes('strong')) {
-      return '11%';
-    }
-
-    const m = val.match(/(\d+(?:\.\d+)?\s*%\s*(?:-\s*\d+(?:\.\d+)?\s*%)?|\d+\s*-\s*\d+\s*%|\d+\s*%)/);
-    if (m) return m[1].replace(/\s+/g, '').trim();
-    return val.trim();
+    return this.cleanCannabinoidValue(val, {
+      aggregation: 'max',
+      defaults: { low: '1%', medium: '7%', high: '11%' }
+    });
   }
 
   cleanFloweringTime(val) {
@@ -507,7 +485,7 @@ export class BaseScraper {
         liMatches.forEach(li => {
           const liText = li.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
           if (/THC-Gehalt/i.test(liText) || /THC:/i.test(liText)) {
-            const match = liText.match(/(?:THC-Gehalt|THC):?\s*(?:ca\.)?\s*([^.\n]+)/i);
+            const match = liText.match(/(?:THC-Gehalt|THC):?\s*(?:ca\.)?s*([^.\n]+)/i);
             if (match) thc = match[1].trim();
           }
           if (/CBD/i.test(liText)) {
@@ -548,7 +526,14 @@ export class BaseScraper {
     };
   }
 
+  // Price validation added (issue #6)
   async insertOffer({ strainId, url, seeds, price, availability = 'available' }) {
+    // Reject offers with invalid prices
+    if (price === null || price === undefined || isNaN(price) || price <= 0) {
+      this.log('warning', `Skipping offer with invalid price: ${price} (seeds=${seeds}, url=${url})`);
+      return;
+    }
+
     const [existing] = await db.select()
       .from(scrapedOffers)
       .where(
@@ -582,7 +567,7 @@ export class BaseScraper {
       });
     }
 
-    // Check if price has changed from the latest recorded history entry
+    // Price history with 24h dedup (issue #7)
     const [latestHistory] = await db.select()
       .from(priceHistory)
       .where(
@@ -595,7 +580,15 @@ export class BaseScraper {
       .orderBy(desc(priceHistory.fetchedAt))
       .limit(1);
 
-    const shouldInsertHistory = !latestHistory || latestHistory.price !== price;
+    let shouldInsertHistory = !latestHistory;
+    if (latestHistory) {
+      const priceChanged = latestHistory.price !== price;
+      const lastTime = new Date(latestHistory.fetchedAt).getTime();
+      const now = Date.now();
+      const hoursSinceLast = (now - lastTime) / (1000 * 60 * 60);
+      // Only record if price changed OR it's been more than 24h since last entry
+      shouldInsertHistory = priceChanged || hoursSinceLast >= 24;
+    }
 
     if (shouldInsertHistory) {
       await db.insert(priceHistory).values({
