@@ -31,6 +31,7 @@ export class BaseScraper {
   }
 
   async clearOffers() {
+    // NOTE: Only clears scraped_offers for this shop. Strain records are NEVER deleted here.
     await db.delete(scrapedOffers).where(eq(scrapedOffers.shop, this.shopName));
   }
 

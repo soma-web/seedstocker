@@ -109,7 +109,8 @@ export default async function adminRoutes(app) {
       sqlite.transaction(() => {
         sqlite.prepare('DELETE FROM scraped_offers WHERE shop = ?').run(shop);
         sqlite.prepare('DELETE FROM price_history WHERE shop = ?').run(shop);
-        sqlite.prepare('DELETE FROM strains WHERE id NOT IN (SELECT DISTINCT strain_id FROM scraped_offers)').run();
+        // NOTE: Strains are NEVER deleted here — only offers and price history are removed.
+        // Strains are a curated catalogue and must survive shop resets / re-scrapes.
       })();
 
       logMessage('success', `Cleared all database entries for shop: ${shop}`);
