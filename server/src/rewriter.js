@@ -10,7 +10,7 @@ function cleanText(html) {
   if (!html) return '';
   return html
     .replace(/<[^>]*>/g, ' ')
-    .replace(/Zamnesia|Hans Brainfood|House of Seeds|Gas Station Co./gi, ' ')
+    .replace(/Zamnesia|Hans Brainfood|House of Seeds|Gas Station Co\.|Sensi Seeds/gi, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }

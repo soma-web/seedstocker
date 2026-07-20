@@ -640,6 +640,7 @@ export default function App() {
     if (shop === 'Zamnesia') return 'text-orange-400 bg-orange-500/10 border-orange-500/20';
     if (shop === 'Hans Brainfood') return 'text-lime-400 bg-lime-500/10 border-lime-500/20';
     if (shop === 'Gas Station Co. Seeds') return 'text-red-400 bg-red-500/10 border-red-500/20';
+    if (shop === 'Sensi Seeds') return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
     return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
   };
 
@@ -1060,9 +1061,11 @@ export default function App() {
               });
 
               const colorMap = {
-                'Zamnesia': { stroke: '#10b981' },
+                'Zamnesia': { stroke: '#f97316' },
                 'House of Seeds': { stroke: '#0ea5e9' },
-                'Hans Brainfood': { stroke: '#a855f7' }
+                'Hans Brainfood': { stroke: '#a855f7' },
+                'Gas Station Co. Seeds': { stroke: '#ef4444' },
+                'Sensi Seeds': { stroke: '#10b981' }
               };
               const defaultColors = { stroke: '#94a3b8' };
 
@@ -1515,6 +1518,7 @@ export default function App() {
                 <option value="House of Seeds">House of Seeds</option>
                 <option value="Hans Brainfood">Hans Brainfood</option>
                 <option value="Gas Station Co. Seeds">Gas Station Co. Seeds</option>
+                <option value="Sensi Seeds">Sensi Seeds</option>
               </select>
             </div>
 
@@ -2288,7 +2292,7 @@ export default function App() {
               On-Demand Single Page Scraper
             </h2>
             <p className="text-xs text-slate-500 mb-6">
-              Paste a specific product URL from <strong>Zamnesia</strong> or <strong>House of Seeds</strong> to scrape and upsert that strain and its price offers into the database instantly.
+              Paste a specific product URL from <strong>Sensi Seeds</strong>, <strong>Zamnesia</strong>, or <strong>House of Seeds</strong> to scrape and upsert that strain and its price offers into the database instantly.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">

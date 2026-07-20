@@ -10,6 +10,7 @@ import { HouseOfSeedsScraper } from './scrapers/HouseOfSeedsScraper.js';
 import { ZamnesiaScraper } from './scrapers/ZamnesiaScraper.js';
 import { HansBrainfoodScraper } from './scrapers/HansBrainfoodScraper.js';
 import { GasStationCoScraper } from './scrapers/GasStationCoScraper.js';
+import { SensiSeedsScraper } from './scrapers/SensiSeedsScraper.js';
 import { startSanityCheck, sanityCheckStatus } from './sanity-check.js';
 import { rewriteDescriptionToProse } from './rewriter.js';
 
@@ -531,7 +532,8 @@ app.get('/api/db/stats', async (req, reply) => {
       'Zamnesia': { strainsCount: 0, offersCount: 0 },
       'House of Seeds': { strainsCount: 0, offersCount: 0 },
       'Hans Brainfood': { strainsCount: 0, offersCount: 0 },
-      'Gas Station Co. Seeds': { strainsCount: 0, offersCount: 0 }
+      'Gas Station Co. Seeds': { strainsCount: 0, offersCount: 0 },
+      'Sensi Seeds': { strainsCount: 0, offersCount: 0 }
     };
     
     shopStats.forEach(s => {
@@ -632,8 +634,10 @@ app.post('/api/scrape/single', async (req, reply) => {
       scraper = new HansBrainfoodScraper(logMessage, scrapeMode);
     } else if (url.includes('gasstationcoseeds.de')) {
       scraper = new GasStationCoScraper(logMessage, scrapeMode);
+    } else if (url.includes('sensiseeds.com')) {
+      scraper = new SensiSeedsScraper(logMessage, scrapeMode);
     } else {
-      return reply.status(400).send({ error: 'Unsupported URL. Only Zamnesia, House of Seeds, Hans Brainfood, and Gas Station Co. Seeds product links are supported.' });
+      return reply.status(400).send({ error: 'Unsupported URL. Only Zamnesia, House of Seeds, Hans Brainfood, Gas Station Co. Seeds, and Sensi Seeds product links are supported.' });
     }
     
     logMessage('info', `On-demand single page scrape triggered for: ${url}`);

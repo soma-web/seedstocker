@@ -37,6 +37,7 @@ function getShopUrlFromConfig(shopName) {
   if (shopName === 'Hans Brainfood') return 'https://hansbrainfood.de/products.json';
   if (shopName === 'Gas Station Co. Seeds') return 'https://gasstationcoseeds.de/products.json';
   if (shopName === 'Zamnesia') return 'https://www.zamnesia.de/35-cannabissamen/295-feminisiert-hanfsamen, https://www.zamnesia.de/35-cannabissamen/294-autoflowering-hanfsamen';
+  if (shopName === 'Sensi Seeds') return 'https://sensiseeds.com/de/hanfsamen';
   return null;
 }
 
@@ -95,6 +96,9 @@ export async function startSanityCheck(shopName) {
       } else if (shopName === 'Zamnesia') {
         const { ZamnesiaScraper } = await import('./scrapers/ZamnesiaScraper.js');
         scraper = new ZamnesiaScraper((level, msg) => addLog(level, msg));
+      } else if (shopName === 'Sensi Seeds') {
+        const { SensiSeedsScraper } = await import('./scrapers/SensiSeedsScraper.js');
+        scraper = new SensiSeedsScraper((level, msg) => addLog(level, msg));
       } else {
         throw new Error(`Unknown shop name: ${shopName}`);
       }
@@ -159,6 +163,27 @@ export async function startSanityCheck(shopName) {
               urls.push({ url, type: cat.type, seedType: cat.seedType });
             }
           });
+        }
+      } else if (shopName === 'Sensi Seeds') {
+        addLog('info', `Fetching Sensi Seeds catalog page: ${configuredUrl}`);
+        const res = await fetch(configuredUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'Accept-Language': 'de-DE,de;q=0.9'
+          }
+        });
+        if (res.ok) {
+          const html = await res.text();
+          const itemBoxes = html.split(/<div class="product-item"|<div class="item-box"/i).slice(1);
+          const set = new Set();
+          for (const box of itemBoxes) {
+            const match = box.match(/href="(\/de\/[^"]+)"/);
+            if (match && !match[1].includes('shoppingcart') && !match[1].includes('wishlist') && !match[1].includes('account')) {
+              const full = match[1].startsWith('http') ? match[1] : `https://sensiseeds.com${match[1]}`;
+              set.add(full);
+            }
+          }
+          set.forEach(url => urls.push({ url, type: 'photoperiodic', seedType: 'feminized' }));
         }
       }
 
