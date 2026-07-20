@@ -262,6 +262,33 @@ export class BaseScraper {
         return null;
       }
 
+      // Secondary duplicate guard: check if THIS shop already has an offer linked to a strain
+      // with the same name (regardless of breeder). This catches cases where the breeder string
+      // changed between scraper runs, which would bypass the primary name+breeder lookup above.
+      const [shopMatch] = await db.select({ id: strains.id, breeder: strains.breeder })
+        .from(strains)
+        .innerJoin(scrapedOffers, eq(scrapedOffers.strainId, strains.id))
+        .where(and(
+          eq(scrapedOffers.shop, this.shopName),
+          sql`LOWER(TRIM(${strains.name})) = LOWER(TRIM(${name}))`
+        ))
+        .limit(1);
+
+      if (shopMatch) {
+        this.log('info', `[dup-guard] Reusing existing strain "${name}" (found via shop offer — breeder was "${shopMatch.breeder}", incoming was "${breeder}").`);
+        strainId = shopMatch.id;
+
+        if (description !== null) {
+          try {
+            await this.upsertShopDescription(strainId, this.shopName, description);
+          } catch (err) {
+            this.log('error', `Failed to upsert description for ${name} at ${this.shopName}: ${err.message}`);
+          }
+        }
+
+        return strainId;
+      }
+
       strainId = crypto.randomUUID();
       await db.insert(strains).values({
         id: strainId,
