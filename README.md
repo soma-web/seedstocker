@@ -1,3 +1,5 @@
+# Used Services
+- webshare.io for proxy if the scraper gets 429 returned
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
