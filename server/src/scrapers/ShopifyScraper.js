@@ -69,7 +69,14 @@ export class ShopifyScraper extends BaseScraper {
                        titleLower.includes('seeds') ||
                        titleLower.includes('sämling');
                          
-        if (!isSeed || productType === 'displays' || tagsString.includes('pos-only') || tagsString.includes('pos only') || tagsString.includes('wholesale-only') || this.isInvalidStrainName(p.title)) {
+        const rawBreeder = p.vendor || 'Unknown';
+        const breeder = this.normalizeBreeder(rawBreeder);
+
+        if (breeder.toLowerCase() === 'headshop' || rawBreeder.toLowerCase() === 'headshop' || this.isInvalidStrainName(p.title, p.body_html, breeder)) {
+          continue;
+        }
+
+        if (!isSeed || productType === 'displays' || tagsString.includes('pos-only') || tagsString.includes('pos only') || tagsString.includes('wholesale-only')) {
           continue;
         }
         
@@ -82,8 +89,6 @@ export class ShopifyScraper extends BaseScraper {
         
         scraperStatus.currentProduct = p.title;
         
-        const rawBreeder = p.vendor || 'Unknown';
-        const breeder = this.normalizeBreeder(rawBreeder);
         const name = this.normalizeStrainName(p.title, breeder);
         
         let type = 'photoperiodic';

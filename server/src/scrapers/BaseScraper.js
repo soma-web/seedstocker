@@ -115,10 +115,36 @@ export class BaseScraper {
     return name.trim();
   }
 
-  isInvalidStrainName(title, description = '') {
+  isInvalidStrainName(title, description = '', breeder = '') {
     if (!title) return true;
     const lower = title.trim().toLowerCase();
     const descLower = (description || '').trim().toLowerCase();
+    const breederLower = (breeder || '').trim().toLowerCase();
+
+    // Ignore non-seed merchandise (Headshop, AC Infinity, Calmag, Grinder, Zusatzzahlung, pH Down, RAW brand, Puffco, Greenception, Herbgarden, Netztopf)
+    if (
+      breederLower === 'headshop' || 
+      breederLower === 'head shop' || 
+      breederLower.includes('ac infinity') || 
+      lower.includes('ac infinity') ||
+      breederLower.includes('calmag') ||
+      lower.includes('calmag') ||
+      lower.includes('grinder') ||
+      lower.includes('zusatzzahlung') ||
+      breederLower.includes('zusatzzahlung') ||
+      lower.includes('ph down') ||
+      lower.includes('ph-down') ||
+      breederLower.includes('ph down') ||
+      /\braw\b/i.test(lower) ||
+      /\braw\b/i.test(breederLower) ||
+      lower.includes('puffco') ||
+      breederLower.includes('puffco') ||
+      lower.includes('greenception') ||
+      lower.includes('herbgarden') ||
+      lower.includes('netztopf')
+    ) {
+      return true;
+    }
 
     // Ignore any strains containing "pack"/"packs" or "mystery" (mix packs / bundles)
     if (/\bpacks?\b/i.test(lower) || lower.includes('mystery')) {
@@ -154,7 +180,7 @@ export class BaseScraper {
     // Check custom blocked words from scraper.json
     const blocked = getBlockedWords();
     if (blocked.length > 0) {
-      const matchBlocked = blocked.some(word => lower.includes(word) || descLower.includes(word));
+      const matchBlocked = blocked.some(word => lower.includes(word) || descLower.includes(word) || breederLower.includes(word));
       if (matchBlocked) {
         this.log('info', `Skipping product "${title}" because it matches custom blocked word list.`);
         return true;
@@ -189,6 +215,33 @@ export class BaseScraper {
 
   // Case-insensitive strain lookup (issue #9)
   async upsertStrain({ name, breeder, type, seedType, thc = null, cbd = null, strainType = null, floweringTime = null, floweringMin = null, floweringMax = null, description = null, genetics = null }) {
+    const bLower = (breeder || '').trim().toLowerCase();
+    const nLower = (name || '').trim().toLowerCase();
+    if (
+      bLower === 'headshop' || 
+      bLower === 'head shop' || 
+      bLower.includes('ac infinity') || 
+      nLower.includes('ac infinity') ||
+      bLower.includes('calmag') ||
+      nLower.includes('calmag') ||
+      nLower.includes('grinder') ||
+      nLower.includes('zusatzzahlung') ||
+      bLower.includes('zusatzzahlung') ||
+      nLower.includes('ph down') ||
+      nLower.includes('ph-down') ||
+      bLower.includes('ph down') ||
+      /\braw\b/i.test(nLower) ||
+      /\braw\b/i.test(bLower) ||
+      nLower.includes('puffco') ||
+      bLower.includes('puffco') ||
+      nLower.includes('greenception') ||
+      nLower.includes('herbgarden') ||
+      nLower.includes('netztopf')
+    ) {
+      this.log('info', `Skipping strain "${name}" - Non-seed merchandise (Headshop/AC Infinity/Calmag/Grinder/Zusatzzahlung/pH Down/RAW/Puffco/Greenception/Herbgarden/Netztopf)`);
+      return null;
+    }
+
     let strainId;
 
     // Use case-insensitive, whitespace-normalized matching to prevent duplicates

@@ -241,7 +241,14 @@ export class GasStationLuScraper extends ShopifyScraper {
                        titleLower.includes('sämling') ||
                        p.title.length > 0; // gas-station.lu items are seeds
 
-        if (!isSeed || productType === 'displays' || tagsString.includes('pos-only') || tagsString.includes('pos only') || tagsString.includes('wholesale-only') || this.isInvalidStrainName(p.title)) {
+        const rawBreeder = p.vendor || 'Unknown';
+        const breeder = this.normalizeBreeder(rawBreeder, p.title);
+
+        if (breeder.toLowerCase() === 'headshop' || rawBreeder.toLowerCase() === 'headshop' || this.isInvalidStrainName(p.title, p.body_html, breeder)) {
+          continue;
+        }
+
+        if (!isSeed || productType === 'displays' || tagsString.includes('pos-only') || tagsString.includes('pos only') || tagsString.includes('wholesale-only')) {
           continue;
         }
 
@@ -254,8 +261,6 @@ export class GasStationLuScraper extends ShopifyScraper {
 
         scraperStatus.currentProduct = p.title;
 
-        const rawBreeder = p.vendor || 'Unknown';
-        const breeder = this.normalizeBreeder(rawBreeder, p.title);
         const name = this.normalizeStrainName(p.title, breeder);
 
         let type = 'photoperiodic';
