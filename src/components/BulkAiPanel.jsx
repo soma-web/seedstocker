@@ -18,8 +18,8 @@ export default function BulkAiPanel({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-3xl glass-panel rounded-2xl p-6 relative overflow-hidden shadow-2xl border border-slate-800 animate-scale-up">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in overflow-y-auto">
+      <div className="w-full max-w-3xl max-h-[90vh] flex flex-col glass-panel rounded-2xl p-6 relative shadow-2xl border border-slate-800 animate-scale-up">
         
         {/* Close Button */}
         <button
@@ -30,7 +30,7 @@ export default function BulkAiPanel({
         </button>
 
         {/* Header Status */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-slate-900 pb-5">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-slate-900 pb-5 shrink-0">
           <div>
             <h3 className="font-bold text-slate-100 flex items-center gap-2 text-base">
               <Sparkles className="w-5 h-5 text-emerald-400" />
@@ -70,7 +70,7 @@ export default function BulkAiPanel({
 
         {/* Progress Bar */}
         {bulkAi.totalStrains > 0 && (
-          <div className="mb-4 space-y-2">
+          <div className="mb-4 space-y-2 shrink-0">
             <div className="flex justify-between text-xs font-semibold text-slate-400">
               <span>Generation Progress</span>
               <span>{Math.round((bulkAi.processedStrains / bulkAi.totalStrains) * 100)}%</span>
@@ -87,7 +87,7 @@ export default function BulkAiPanel({
         {/* Logs Monospace Console Box */}
         <div 
           ref={bulkAiLogTerminalRef}
-          className="h-90 bg-slate-950 border border-slate-900 rounded-xl p-4 overflow-y-auto font-mono text-xs leading-relaxed text-slate-300 select-text"
+          className="flex-1 min-h-[180px] bg-slate-950 border border-slate-900 rounded-xl p-4 overflow-y-auto font-mono text-xs leading-relaxed text-slate-300 select-text"
         >
           {bulkAi.logs.length === 0 ? (
             <div className="text-slate-600 italic flex items-center justify-center h-full gap-2">

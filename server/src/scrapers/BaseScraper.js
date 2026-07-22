@@ -543,6 +543,10 @@ export class BaseScraper {
       max = Math.round(max / 7);
     }
 
+    // Unrealistic flowering times < 5 weeks are invalid
+    if (min !== null && min < 5) min = null;
+    if (max !== null && max < 5) max = null;
+
     return { min, max };
   }
 

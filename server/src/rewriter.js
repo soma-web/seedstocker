@@ -9,6 +9,13 @@ function cleanText(html) {
     .trim();
 }
 
+function cleanLlmText(rawText) {
+  if (!rawText) return '';
+  let text = String(rawText).trim();
+  text = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+  return text;
+}
+
 export async function rewriteDescriptionToProse(originalText, strain, options = {}) {
   const skipAi = options.skipAi ?? false;
   const localConfig = getLocalLlmConfig();
@@ -72,7 +79,8 @@ Schreibe genau einen zusammenhängenden Absatz (ca. 4-6 Sätze).`;
 
       if (response.ok) {
         const data = await response.json();
-        const text = data.choices?.[0]?.message?.content;
+        let text = data.choices?.[0]?.message?.content || '';
+        text = cleanLlmText(text);
         if (text && text.trim()) {
           console.log(`[Local LLM] Successfully generated description for ${strain.name}`);
           return {
@@ -317,8 +325,9 @@ Antworte AUSSCHLIESSLICH mit einem gültigen JSON-Objekt im folgenden Format:
 
   function parseLlmJson(rawText) {
     if (!rawText) return null;
+    let cleaned = cleanLlmText(rawText);
+    cleaned = cleaned.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/\s*```$/, '').trim();
     try {
-      const cleaned = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
       const parsed = JSON.parse(cleaned);
       if (parsed && typeof parsed === 'object') {
         let thc = parsed.thc ? String(parsed.thc).trim() : null;
@@ -471,7 +480,7 @@ Antworte ausschließlich im folgenden JSON-Format ohne Markdown-Codeblöcke:
 
   function parseLlmJson(rawText) {
     if (!rawText) return null;
-    let cleaned = rawText.trim();
+    let cleaned = cleanLlmText(rawText);
     cleaned = cleaned.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/\s*```$/, '').trim();
 
     try {
@@ -622,7 +631,7 @@ Antworte ausschließlich im folgenden JSON-Format ohne Markdown-Codeblöcke:
 
   function parseLlmJson(rawText) {
     if (!rawText) return null;
-    let cleaned = rawText.trim();
+    let cleaned = cleanLlmText(rawText);
     cleaned = cleaned.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/\s*```$/, '').trim();
 
     try {
@@ -775,7 +784,7 @@ Antworte ausschließlich im folgenden JSON-Format ohne Markdown-Codeblöcke:
 
   function parseLlmJson(rawText) {
     if (!rawText) return null;
-    let cleaned = rawText.trim();
+    let cleaned = cleanLlmText(rawText);
     cleaned = cleaned.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/\s*```$/, '').trim();
 
     try {
@@ -783,7 +792,7 @@ Antworte ausschließlich im folgenden JSON-Format ohne Markdown-Codeblöcke:
       const min = parseInt(parsed.floweringMin, 10);
       const max = parseInt(parsed.floweringMax, 10);
 
-      if (!isNaN(min) && !isNaN(max)) {
+      if (!isNaN(min) && !isNaN(max) && min >= 5 && max >= 5) {
         return {
           floweringMin: Math.min(min, max),
           floweringMax: Math.max(min, max),
@@ -799,7 +808,7 @@ Antworte ausschließlich im folgenden JSON-Format ohne Markdown-Codeblöcke:
     let match;
     while ((match = numberRegex.exec(rawText)) !== null) {
       const num = parseInt(match[1], 10);
-      if (num >= 4 && num <= 16) {
+      if (num >= 5 && num <= 16) {
         numbers.push(num);
       }
     }
