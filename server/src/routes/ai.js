@@ -1,5 +1,5 @@
 import { sqlite } from '../db.js';
-import { rewriteDescriptionToProse } from '../rewriter.js';
+import { rewriteDescriptionToProse, estimateThcForStrain } from '../rewriter.js';
 
 export default async function aiRoutes(app) {
 
@@ -173,18 +173,26 @@ export default async function aiRoutes(app) {
         return reply.status(400).send({ error: 'All strains in the database already have AI descriptions.' });
       }
 
+      const { limit } = req.body || {};
+      const parsedLimit = limit ? parseInt(limit, 10) : null;
+
+      let strainsToProcess = allStrains;
+      if (parsedLimit && !isNaN(parsedLimit) && parsedLimit > 0) {
+        strainsToProcess = allStrains.slice(0, parsedLimit);
+      }
+
       bulkAiStatus.isScanning = true;
       bulkAiStatus.startTime = new Date().toISOString();
       bulkAiStatus.endTime = null;
-      bulkAiStatus.totalStrains = allStrains.length;
+      bulkAiStatus.totalStrains = strainsToProcess.length;
       bulkAiStatus.processedStrains = 0;
       bulkAiStatus.currentStrain = null;
       bulkAiStatus.logs = [];
       bulkAiStatus.cancelRequested = false;
 
-      bulkAiLogMessage('info', `Starting bulk AI description generation for ${allStrains.length} strains...`);
+      bulkAiLogMessage('info', `Starting bulk AI description generation for ${strainsToProcess.length} strains...`);
 
-      runBulkAiDescriptions(allStrains).catch(err => {
+      runBulkAiDescriptions(strainsToProcess).catch(err => {
         bulkAiStatus.isScanning = false;
         bulkAiStatus.endTime = new Date().toISOString();
         bulkAiLogMessage('error', `Bulk run crashed: ${err.message}`);
@@ -209,5 +217,100 @@ export default async function aiRoutes(app) {
     bulkAiStatus.cancelRequested = true;
     bulkAiLogMessage('info', 'Cancellation request received. Stopping generation...');
     return { success: true, message: 'Cancellation requested' };
+  });
+
+  app.get('/api/strains/missing-ai-description', async (req, reply) => {
+    try {
+      const count = sqlite.prepare(`
+        SELECT COUNT(*) AS count FROM strains s
+        LEFT JOIN ai_descriptions a ON s.id = a.strain_id
+        WHERE a.strain_id IS NULL
+      `).get().count;
+      return { count };
+    } catch (err) {
+      reply.status(500).send({ error: err.message });
+    }
+  });
+
+  // ── Missing THC Strains Listing ───────────────────────────────────────────
+  app.get('/api/strains/missing-thc', async (req, reply) => {
+    try {
+      const rows = sqlite.prepare(`
+        SELECT id, name, breeder, type, seed_type AS seedType, strain_type AS strainType, thc
+        FROM strains
+        WHERE thc IS NULL OR thc = '' OR thc = 'N/A' OR thc = 'Unknown' OR thc = '?'
+        ORDER BY name ASC
+      `).all();
+      return { count: rows.length, strains: rows };
+    } catch (err) {
+      reply.status(500).send({ error: err.message });
+    }
+  });
+
+  // ── Single Strain THC Estimation ──────────────────────────────────────────
+  app.post('/api/strains/:id/estimate-thc', async (req, reply) => {
+    try {
+      const { id } = req.params;
+      const strain = sqlite.prepare('SELECT * FROM strains WHERE id = ?').get(id);
+      if (!strain) return reply.status(404).send({ error: 'Strain not found' });
+
+      const shopDescs = sqlite.prepare(`
+        SELECT description FROM strain_shop_descriptions WHERE strain_id = ?
+      `).all(id);
+
+      const result = await estimateThcForStrain(strain, shopDescs);
+      return {
+        success: true,
+        strainId: strain.id,
+        name: strain.name,
+        breeder: strain.breeder,
+        proposedThc: result.thc,
+        confidence: result.confidence,
+        reasoning: result.reasoning,
+        modelUsed: result.modelUsed
+      };
+    } catch (err) {
+      reply.status(500).send({ error: err.message });
+    }
+  });
+
+  // ── Bulk Strain THC Estimation ────────────────────────────────────────────
+  app.post('/api/strains/estimate-thc/bulk', async (req, reply) => {
+    try {
+      const { limit = 20 } = req.body || {};
+      const parsedLimit = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 100);
+
+      const missingStrains = sqlite.prepare(`
+        SELECT * FROM strains
+        WHERE thc IS NULL OR thc = '' OR thc = 'N/A' OR thc = 'Unknown' OR thc = '?'
+        ORDER BY name ASC
+        LIMIT ?
+      `).all(parsedLimit);
+
+      const proposals = [];
+      for (const strain of missingStrains) {
+        const shopDescs = sqlite.prepare(`
+          SELECT description FROM strain_shop_descriptions WHERE strain_id = ?
+        `).all(strain.id);
+
+        const result = await estimateThcForStrain(strain, shopDescs);
+        if (result && result.thc) {
+          proposals.push({
+            strainId: strain.id,
+            name: strain.name,
+            breeder: strain.breeder,
+            currentThc: strain.thc,
+            proposedThc: result.thc,
+            confidence: result.confidence,
+            reasoning: result.reasoning,
+            modelUsed: result.modelUsed
+          });
+        }
+      }
+
+      return { success: true, count: proposals.length, proposals };
+    } catch (err) {
+      reply.status(500).send({ error: err.message });
+    }
   });
 }

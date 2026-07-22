@@ -273,9 +273,9 @@ export default function App() {
     }
   };
 
-  const handleStartBulkAi = async () => {
+  const handleStartBulkAi = async (limit) => {
     try {
-      await apiPost('/api/strains/generate-ai-descriptions');
+      await apiPost('/api/strains/generate-ai-descriptions', { limit: limit ? Number(limit) : null });
       setBulkAi(prev => ({ ...prev, isScanning: true, logs: [] }));
       setIsBulkAiOpen(true);
     } catch (err) {

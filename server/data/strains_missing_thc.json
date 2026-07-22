@@ -1,0 +1,4322 @@
+[
+  {
+    "id": "31176efd-26eb-4423-a7ce-049a284dfeef",
+    "name": "#18 Gusherz x Triangle Kush",
+    "breeder": "Gas Station LU",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:30:58.291Z",
+    "updated_at": "2026-07-20T19:30:58.291Z"
+  },
+  {
+    "id": "11d34bc0-d0ae-4c95-ad9c-4d7668c79d8d",
+    "name": "12",
+    "breeder": "In House Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:18:55.835Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "7d7d41fc-2986-442e-a982-ff62c85f1906",
+    "name": "24K Gold",
+    "breeder": "DNA Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:24:39.753Z",
+    "updated_at": "2026-07-20T19:24:39.753Z"
+  },
+  {
+    "id": "02b2a39d-9b4d-48c7-a8c6-2b417b87b4a5",
+    "name": "35K",
+    "breeder": "Floraganix",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:17:31.921Z",
+    "updated_at": "2026-07-20T19:17:31.921Z"
+  },
+  {
+    "id": "cda38eee-5fcc-43c7-b3e8-893737fc87c4",
+    "name": "443",
+    "breeder": "In House Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:13:45.994Z",
+    "updated_at": "2026-07-20T19:13:45.994Z"
+  },
+  {
+    "id": "15e1e747-3c35-4486-854b-281d721be7b9",
+    "name": "A to Z",
+    "breeder": "Nasha Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:37:36.431Z",
+    "updated_at": "2026-07-20T19:37:36.431Z"
+  },
+  {
+    "id": "38af4c7c-39e7-4dca-adca-7597645361a1",
+    "name": "ANIMAL CAKE X HOLLYWOOD",
+    "breeder": "Cookies Seedbank",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:34:38.247Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "e0bf5fb7-63c8-411a-bf39-41f0ff8ddccc",
+    "name": "APPLE CRUMBLE",
+    "breeder": "Nasha Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:41:30.837Z",
+    "updated_at": "2026-07-20T19:41:30.837Z"
+  },
+  {
+    "id": "f04ec5eb-049d-4add-95d6-d21a621b65b9",
+    "name": "After Party s1",
+    "breeder": "Copycat Genetix",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:31:51.908Z",
+    "updated_at": "2026-07-20T19:31:51.908Z"
+  },
+  {
+    "id": "1ed0b019-b97e-49c2-a32b-b859c4bffe40",
+    "name": "After Z",
+    "breeder": "Grateful Seeds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:01:44.509Z",
+    "updated_at": "2026-07-20T19:01:44.510Z"
+  },
+  {
+    "id": "d86de863-23bd-4a28-8087-a94a4c384792",
+    "name": "Alacrán",
+    "breeder": "Black Tuna",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:25:15.935Z",
+    "updated_at": "2026-07-20T19:25:15.935Z"
+  },
+  {
+    "id": "42c85a00-c584-4e7c-8044-10b42140028b",
+    "name": "Aliento de Dragón",
+    "breeder": "Black Tuna",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:25:10.440Z",
+    "updated_at": "2026-07-20T19:25:10.440Z"
+  },
+  {
+    "id": "ac669fd5-6ccf-4221-9d2f-d7451f9d775f",
+    "name": "All the Sauces R1",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:20:24.161Z",
+    "updated_at": "2026-07-20T19:20:24.161Z"
+  },
+  {
+    "id": "f5ff256b-cd57-4618-8e4f-60b78d1b0935",
+    "name": "Alpha Zero",
+    "breeder": "Mosca Seeds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:14:23.696Z",
+    "updated_at": "2026-07-20T19:14:23.696Z"
+  },
+  {
+    "id": "4575395e-5cfc-4c23-a11c-63691117fb6f",
+    "name": "Ameretto Mintz s1",
+    "breeder": "Copycat Genetix",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:22:15.695Z",
+    "updated_at": "2026-07-20T19:22:15.695Z"
+  },
+  {
+    "id": "54ab976d-421e-40de-a830-aa008bea5cc8",
+    "name": "Apple Drops",
+    "breeder": "Grounded Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:01:41.123Z",
+    "updated_at": "2026-07-20T19:01:41.123Z"
+  },
+  {
+    "id": "f6fef042-c099-4e62-870a-6b4a81d9d208",
+    "name": "Apple Fritter x Triangle Kush",
+    "breeder": "Gas Station - Made in USA",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:25:35.196Z",
+    "updated_at": "2026-07-20T19:25:35.196Z"
+  },
+  {
+    "id": "3374eca9-661c-4f66-a5f5-bf63b4aed6f8",
+    "name": "Apples & Bananas",
+    "breeder": "Elev8 Seeds Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T18:59:31.032Z",
+    "updated_at": "2026-07-20T18:59:31.032Z"
+  },
+  {
+    "id": "2723b178-221c-4f33-a236-55dd10ce2d7d",
+    "name": "Apples & Bananas Z",
+    "breeder": "James Loud",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:21:59.156Z",
+    "updated_at": "2026-07-20T19:21:59.156Z"
+  },
+  {
+    "id": "14aadf1e-5feb-4647-8da6-3210cabd97cc",
+    "name": "Apples N Banana's BX",
+    "breeder": "Tiki Madman",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:21:28.660Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "edbc4da4-22ff-4764-9973-5215145c77f5",
+    "name": "Aquamaster Compo pen ph/ec p110 pro",
+    "breeder": "Headshop",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:20:33.339Z",
+    "updated_at": "2026-07-20T19:20:33.340Z"
+  },
+  {
+    "id": "c55fdd80-a95c-4d43-aa43-b359ff34e0c5",
+    "name": "Açaí x Tropicanna Punch #61",
+    "breeder": "Black Tuna",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:24:57.663Z",
+    "updated_at": "2026-07-20T19:24:57.663Z"
+  },
+  {
+    "id": "15f05f1c-14da-4969-97f3-b0c1a1bb21c8",
+    "name": "BLUEBERRY BUBBLE GUM",
+    "breeder": "Cookies Seedbank",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:34:56.476Z",
+    "updated_at": "2026-07-20T19:34:56.476Z"
+  },
+  {
+    "id": "13d11131-e315-44cd-8264-4295f76cf67a",
+    "name": "BLUEBERRY CHERRIES",
+    "breeder": "Cookies Seedbank",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:34:54.669Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "aa8f5533-7056-4d12-b0c6-efc89ea08065",
+    "name": "BUBBLE GUMMY",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:32:08.207Z",
+    "updated_at": "2026-07-20T19:32:08.207Z"
+  },
+  {
+    "id": "319ed21f-1fcd-4b10-86d9-a4e780857ce5",
+    "name": "Backed Apple Cherries",
+    "breeder": "Elev8 Seeds Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T18:59:30.805Z",
+    "updated_at": "2026-07-20T18:59:30.805Z"
+  },
+  {
+    "id": "112b6fb2-44f3-406f-bced-de49b1881b1b",
+    "name": "Baked Apple Cherries",
+    "breeder": "Elev8 Seeds Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:14:27.341Z",
+    "updated_at": "2026-07-20T19:14:27.341Z"
+  },
+  {
+    "id": "ada86bba-25bc-4250-8536-475c7173f80b",
+    "name": "Baked in Paris",
+    "breeder": "Perfect Tree",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:35:35.950Z",
+    "updated_at": "2026-07-20T19:35:35.950Z"
+  },
+  {
+    "id": "7652c767-680c-4720-9ac0-599b85765be9",
+    "name": "Bakers Fruit",
+    "breeder": "Elev8 Seeds Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:15:41.174Z",
+    "updated_at": "2026-07-20T19:15:41.174Z"
+  },
+  {
+    "id": "1b4588e0-66f4-40a0-838f-6fe1fef215f7",
+    "name": "Banana CreamZ",
+    "breeder": "Nasha Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:38:23.682Z",
+    "updated_at": "2026-07-20T19:38:23.682Z"
+  },
+  {
+    "id": "6a7dad1e-8020-428a-81db-d1fc78374c71",
+    "name": "Banana Daddy IBL",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:41:36.625Z",
+    "updated_at": "2026-07-20T19:41:36.625Z"
+  },
+  {
+    "id": "5824ce30-dbec-46c9-98a3-65b42c797cce",
+    "name": "Banana Daddy R1",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:22:43.212Z",
+    "updated_at": "2026-07-20T19:22:43.212Z"
+  },
+  {
+    "id": "997b56d1-328c-4cab-b493-49c8c854efa0",
+    "name": "Banana Hammock RBX1",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:22:46.844Z",
+    "updated_at": "2026-07-20T19:22:46.844Z"
+  },
+  {
+    "id": "57b4bc18-9889-4d8d-bbc4-605471cc31be",
+    "name": "Bath House",
+    "breeder": "Umami Seed Company",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:30:31.053Z",
+    "updated_at": "2026-07-20T19:30:31.053Z"
+  },
+  {
+    "id": "39752e8a-32f6-4d4e-84d8-ebe1e2244c84",
+    "name": "Bens & Cherry",
+    "breeder": "NineWeeksHarvest",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:36:17.459Z",
+    "updated_at": "2026-07-20T19:36:17.459Z"
+  },
+  {
+    "id": "60bd2194-cb3f-4d49-90f0-f4ca76a4a1de",
+    "name": "Big Perm",
+    "breeder": "Floraganix",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:17:44.343Z",
+    "updated_at": "2026-07-20T19:17:44.343Z"
+  },
+  {
+    "id": "6a042fb6-b7c1-43aa-85a1-bdbf6d183be8",
+    "name": "Bitties",
+    "breeder": "Solfire Gardens",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:25:38.729Z",
+    "updated_at": "2026-07-20T19:25:38.729Z"
+  },
+  {
+    "id": "1bcc0db0-0ac4-4b9f-b8ed-2ca8e3ff877c",
+    "name": "Black Cherry Gushers",
+    "breeder": "Backpack Boyz x Barney's Farm",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:01:33.291Z",
+    "updated_at": "2026-07-20 19:55:06"
+  },
+  {
+    "id": "f714e051-9444-47bb-a82b-f83e1193ff8e",
+    "name": "Blood Diamonds 2.0",
+    "breeder": "Concious Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:01:42.026Z",
+    "updated_at": "2026-07-20T19:01:42.026Z"
+  },
+  {
+    "id": "c4396ec3-0d18-49a4-ab98-379b6aa64531",
+    "name": "Bloodsport",
+    "breeder": "Black Tuna",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:24:50.516Z",
+    "updated_at": "2026-07-20T19:24:50.516Z"
+  },
+  {
+    "id": "19bf50a8-e516-498e-8028-ad672b63fbf0",
+    "name": "Bloomstar Scrog-Netz 120x60cm",
+    "breeder": "Gas Station LU",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:15:06.929Z",
+    "updated_at": "2026-07-20T19:15:06.929Z"
+  },
+  {
+    "id": "9b50b88e-c4d3-44ca-a9b9-02f451a97988",
+    "name": "Blue Magic",
+    "breeder": "Copycat Genetix",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:22:55.803Z",
+    "updated_at": "2026-07-20T19:22:55.803Z"
+  },
+  {
+    "id": "7eeafdde-bc98-4661-a573-b20abf7cc37b",
+    "name": "Blue N3rdz S1",
+    "breeder": "Copycat Genetix",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:22:59.375Z",
+    "updated_at": "2026-07-20T19:22:59.375Z"
+  },
+  {
+    "id": "20c2f2cb-4cf2-43a6-93ff-a3294fdde790",
+    "name": "Blue Zushi S1",
+    "breeder": "Copycat Genetix",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:31:50.126Z",
+    "updated_at": "2026-07-20T19:31:50.126Z"
+  },
+  {
+    "id": "712a8120-2c60-43a8-bbd5-0721b31c6600",
+    "name": "Blueberry Honey",
+    "breeder": "Humboldt Seed Company",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:13:09.970Z",
+    "updated_at": "2026-07-20T19:13:09.970Z"
+  },
+  {
+    "id": "f717e3ee-7b1d-46ec-9558-b9d3c9d976da",
+    "name": "Blueberry Lobster",
+    "breeder": "Cipher Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:26:48.143Z",
+    "updated_at": "2026-07-20T19:26:48.143Z"
+  },
+  {
+    "id": "c432ad5f-b97e-42ca-98dc-ad8ddf2706e6",
+    "name": "Bogota",
+    "breeder": "Cookies Seedbank",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:35:11.166Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "fa58a6ac-53b5-4d25-81e1-7a6c56a3184b",
+    "name": "Bonded by Bud",
+    "breeder": "Josh D",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:14:43.452Z",
+    "updated_at": "2026-07-20T19:14:43.452Z"
+  },
+  {
+    "id": "d293ee85-4d15-4546-8b5b-719787ae2bdc",
+    "name": "BooBerry Cookies RBX",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:23:08.450Z",
+    "updated_at": "2026-07-20T19:23:08.450Z"
+  },
+  {
+    "id": "96c85ec0-5c99-4875-852d-df60f752e0c2",
+    "name": "Bow shooter",
+    "breeder": "Wizard Trees",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:25:27.465Z",
+    "updated_at": "2026-07-20T19:25:27.465Z"
+  },
+  {
+    "id": "6210b8f9-0c5b-4cfc-a12c-3e0339372a66",
+    "name": "Brainkiller Haze",
+    "breeder": "Others",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:18:09.833Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "89399f70-ef1c-4709-96e3-528949010c2d",
+    "name": "British Delight",
+    "breeder": "Wizard Trees",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:16:13.866Z",
+    "updated_at": "2026-07-20T19:16:13.866Z"
+  },
+  {
+    "id": "bfb60406-f995-4d7e-8a85-4036ada8b9eb",
+    "name": "Bubble's Blueberry F4",
+    "breeder": "Brother's Grimm",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:15:48.365Z",
+    "updated_at": "2026-07-20T19:15:48.366Z"
+  },
+  {
+    "id": "2e68c68c-e983-49c1-8f1e-ff07f58e93b4",
+    "name": "Bucket List",
+    "breeder": "Lost In Translation - LIT Farms",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:15:32.297Z",
+    "updated_at": "2026-07-20T19:15:32.297Z"
+  },
+  {
+    "id": "468e4bfb-9829-4c5b-90d6-39516ad6f6be",
+    "name": "Buddha Tahoe OG",
+    "breeder": "Cali Connection",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:23:53.726Z",
+    "updated_at": "2026-07-20T19:23:53.726Z"
+  },
+  {
+    "id": "42ba8d34-e187-4bf5-bae7-c42036d21900",
+    "name": "CBD 20:1",
+    "breeder": "420 Fast Buds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:24:34.364Z",
+    "updated_at": "2026-07-20T19:24:34.364Z"
+  },
+  {
+    "id": "58cc9b7d-eec1-43c3-9b23-11884dcb5ec5",
+    "name": "CHERRY COOKS",
+    "breeder": "Cookies Seedbank",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:34:52.882Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "92e1aa7f-fede-4d87-835d-1534c6efe1ef",
+    "name": "CHERRY FRITTER",
+    "breeder": "Cookies Seedbank",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:34:51.078Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "c91c8c45-9fc0-4e9e-8c80-5b405874607b",
+    "name": "COLOR THEORY",
+    "breeder": "Umami Seed Company",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:11:18.841Z",
+    "updated_at": "2026-07-20T19:11:18.841Z"
+  },
+  {
+    "id": "e18186a7-6f6c-4867-a9b7-72e8114d3385",
+    "name": "California Haze",
+    "breeder": "Humboldt Seed Company",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:26:26.254Z",
+    "updated_at": "2026-07-20T19:26:26.254Z"
+  },
+  {
+    "id": "1c09b214-0afd-43f0-a0fe-423939292352",
+    "name": "Candy Games #25",
+    "breeder": "Happy Valley Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:31:07.261Z",
+    "updated_at": "2026-07-20T19:31:07.261Z"
+  },
+  {
+    "id": "a1419f59-7c2c-43d3-95aa-65ff3bbe3c12",
+    "name": "Candy Games #38",
+    "breeder": "Happy Valley Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:31:00.099Z",
+    "updated_at": "2026-07-20T19:31:00.099Z"
+  },
+  {
+    "id": "f16b6ddd-acb5-4d30-bf8c-cac29aca8146",
+    "name": "Candy Hustle",
+    "breeder": "Humboldt Seed Company",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:13:08.164Z",
+    "updated_at": "2026-07-20T19:13:08.164Z"
+  },
+  {
+    "id": "30437643-d833-4a6d-a687-96dad8513358",
+    "name": "Candy Island",
+    "breeder": "James Loud",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:21:50.155Z",
+    "updated_at": "2026-07-20T19:21:50.155Z"
+  },
+  {
+    "id": "cbd13eda-a133-4b19-84c9-c955b323bcc8",
+    "name": "Candy Roll",
+    "breeder": "Elev8 Seeds Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:20:11.109Z",
+    "updated_at": "2026-07-20T19:20:11.109Z"
+  },
+  {
+    "id": "54cf8b6d-5394-4995-a039-024f6161f24e",
+    "name": "Candy Store RBX",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:22:45.050Z",
+    "updated_at": "2026-07-20T19:22:45.050Z"
+  },
+  {
+    "id": "fba050c5-ecd4-48a9-8d5f-efb3f11c47b3",
+    "name": "Caramel Monster",
+    "breeder": "Others",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:18:13.471Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "4b3a2284-ec26-41a9-9003-fc9ecf73a36d",
+    "name": "Cereal Milk S1",
+    "breeder": "Copycat Genetix",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:10:48.178Z",
+    "updated_at": "2026-07-20T19:10:48.178Z"
+  },
+  {
+    "id": "ebab3ff3-1e6a-40f4-93d7-5482a215ba24",
+    "name": "Champaña",
+    "breeder": "Black Tuna",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:24:52.280Z",
+    "updated_at": "2026-07-20T19:24:52.280Z"
+  },
+  {
+    "id": "e6cb8fbb-b384-467c-af9e-59e96ea526fd",
+    "name": "Chantilly 6- + 3 LH2P Freebies",
+    "breeder": "Perfect Tree",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:30:38.289Z",
+    "updated_at": "2026-07-20T19:30:38.289Z"
+  },
+  {
+    "id": "f3519bb8-7d5c-4ca9-9566-580c126824d7",
+    "name": "Cheek Meat",
+    "breeder": "Cannarado",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T18:59:32.162Z",
+    "updated_at": "2026-07-20T18:59:32.162Z"
+  },
+  {
+    "id": "01dc124f-fb84-413a-9ee2-8e74a81d33ff",
+    "name": "Chem Valley Kush",
+    "breeder": "Cali Connection",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:14:29.107Z",
+    "updated_at": "2026-07-20T19:14:29.107Z"
+  },
+  {
+    "id": "9b24ce2d-bd97-40e9-bb91-df27608eff1a",
+    "name": "Chemikaze",
+    "breeder": "Grounded Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:27:56.462Z",
+    "updated_at": "2026-07-20T19:27:56.463Z"
+  },
+  {
+    "id": "8cbf3feb-018d-4424-a0d0-6097bc22fb7d",
+    "name": "Cherry Cola",
+    "breeder": "420 Fast Buds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:26:13.224Z",
+    "updated_at": "2026-07-20T19:26:13.224Z"
+  },
+  {
+    "id": "cd76e66b-d4d7-472d-b31b-aca1a5d5f75b",
+    "name": "Cherry Crisp",
+    "breeder": "Perfect Tree",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:01:31.342Z",
+    "updated_at": "2026-07-20T19:01:31.342Z"
+  },
+  {
+    "id": "efe506aa-8754-4d85-a53c-55a31bb0ea09",
+    "name": "Cherry Gar-see-ya R1",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:41:49.381Z",
+    "updated_at": "2026-07-20T19:41:49.381Z"
+  },
+  {
+    "id": "6a2a8a1e-9259-436c-95cc-4c4ffae5d834",
+    "name": "Cherry Pie OG S1",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:17:47.948Z",
+    "updated_at": "2026-07-20T19:17:47.948Z"
+  },
+  {
+    "id": "0f6a69fc-c0a2-40e0-a28d-8360ecde7617",
+    "name": "Cherryland",
+    "breeder": "Green Luster Phenos",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:16:54.088Z",
+    "updated_at": "2026-07-20T19:16:54.088Z"
+  },
+  {
+    "id": "87502198-f3aa-4aae-a144-1dd6718ee6e4",
+    "name": "Cherrytini",
+    "breeder": "Perfect Tree",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:22:23.036Z",
+    "updated_at": "2026-07-20T19:22:23.036Z"
+  },
+  {
+    "id": "5f96cc6a-56f4-4eeb-b432-668acdcd92ab",
+    "name": "Chestah The Cheetah",
+    "breeder": "BeLeaf",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:23.810Z",
+    "updated_at": "2026-07-20T19:19:23.810Z"
+  },
+  {
+    "id": "eddb9001-05d1-4d3a-a6f2-feb23119e521",
+    "name": "Chicken n' Wafflez",
+    "breeder": "Humboldt Seed Company",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:26:00.367Z",
+    "updated_at": "2026-07-20T19:26:00.367Z"
+  },
+  {
+    "id": "f6a4df54-6f3b-4971-92aa-1f85187953ef",
+    "name": "Chimera #2 S1",
+    "breeder": "BeLeaf",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:30:29.187Z",
+    "updated_at": "2026-07-20T19:30:29.187Z"
+  },
+  {
+    "id": "d540c5f2-2511-48ca-8729-0008f860d9d5",
+    "name": "Chimera #3 s1",
+    "breeder": "BeLeaf",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:16.142Z",
+    "updated_at": "2026-07-20T19:19:16.142Z"
+  },
+  {
+    "id": "4d86dbdf-6905-42db-9b6f-14e60a4c05bc",
+    "name": "Cinderella Purple [ x Cinderella 99",
+    "breeder": "Brother's Grimm",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:15:44.725Z",
+    "updated_at": "2026-07-20T19:15:44.725Z"
+  },
+  {
+    "id": "40237139-599c-432c-aac7-0aeb11fa5707",
+    "name": "Citrus Limonia CBD",
+    "breeder": "Black Tuna",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:24:30.812Z",
+    "updated_at": "2026-07-20T19:24:30.813Z"
+  },
+  {
+    "id": "6a6fef56-7c17-4bd9-b3a7-b32ca00bc460",
+    "name": "Colin OG RBX",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:30:56.540Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "5b88c71a-47e3-412e-9a36-182bd6e52eee",
+    "name": "Cotton Candy Lobster",
+    "breeder": "Cipher Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:26:46.367Z",
+    "updated_at": "2026-07-20T19:26:46.367Z"
+  },
+  {
+    "id": "1711e021-23cf-4e76-bcfe-254aace5c5d3",
+    "name": "Cream 47",
+    "breeder": "Green Luster Phenos",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:16:59.473Z",
+    "updated_at": "2026-07-20T19:16:59.473Z"
+  },
+  {
+    "id": "eed9f6c9-8144-4b6a-803e-9cea972d157f",
+    "name": "Creamsicle x Dante's Inferno",
+    "breeder": "Tiki Madman",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:21:26.758Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "fe9f01f1-d33c-41e9-b506-d9a1cd808623",
+    "name": "Crescendo Multipack",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:31:41.125Z",
+    "updated_at": "2026-07-20T19:31:41.125Z"
+  },
+  {
+    "id": "ff7844d3-669b-42d5-99ae-baa34ee014c9",
+    "name": "Crescendo RBX1",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:41:47.596Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "44dbe906-7dc0-4e8b-9789-6283c320aba2",
+    "name": "Crusher Claw",
+    "breeder": "Cipher Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:26:42.749Z",
+    "updated_at": "2026-07-20T19:26:42.749Z"
+  },
+  {
+    "id": "e387b1bb-ae54-4118-a41a-fc7fbfc4a3f7",
+    "name": "Crystal Lobster",
+    "breeder": "Cipher Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:26:33.830Z",
+    "updated_at": "2026-07-20T19:26:33.830Z"
+  },
+  {
+    "id": "80edd8b6-ba63-4e3d-990d-f01e7c41a7f2",
+    "name": "DIRTY MONEY",
+    "breeder": "Cookies Seedbank",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:34:49.251Z",
+    "updated_at": "2026-07-20T19:34:49.251Z"
+  },
+  {
+    "id": "6b741cc6-d2e0-49be-991f-3a477d5b002d",
+    "name": "DNA Cake",
+    "breeder": "DNA Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:14:19.967Z",
+    "updated_at": "2026-07-20T19:14:19.967Z"
+  },
+  {
+    "id": "370d0ee5-19b5-4245-afb9-b35eae28e4cb",
+    "name": "DOUBLE SHERB",
+    "breeder": "Cookies Seedbank",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:34:47.450Z",
+    "updated_at": "2026-07-20T19:34:47.450Z"
+  },
+  {
+    "id": "655241e5-d860-4b4f-9fc8-3cefb3b3ac4a",
+    "name": "Dantes Fire",
+    "breeder": "Tiki Madman",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:20:20.407Z",
+    "updated_at": "2026-07-20T19:20:20.407Z"
+  },
+  {
+    "id": "eb06223f-bd94-4f13-be8a-97557bdbb367",
+    "name": "Dantes Inferno",
+    "breeder": "Tiki Madman",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:21:30.510Z",
+    "updated_at": "2026-07-20T19:21:30.510Z"
+  },
+  {
+    "id": "30578200-bda7-4a0f-af7b-471adbda90e4",
+    "name": "Dantes Inferno x Winter Storm",
+    "breeder": "Tiki Madman",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:42.051Z",
+    "updated_at": "2026-07-20T19:19:42.051Z"
+  },
+  {
+    "id": "73237f81-34b0-4122-8b67-d261d39a8f01",
+    "name": "Deep Fried Banana Truffle",
+    "breeder": "Floraganix",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:17:42.546Z",
+    "updated_at": "2026-07-20T19:17:42.546Z"
+  },
+  {
+    "id": "8d9bd371-703b-49f8-aaa0-9fbe2cad2b5e",
+    "name": "Devil Cherry V2",
+    "breeder": "Tiki Madman",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:52.839Z",
+    "updated_at": "2026-07-20T19:19:52.839Z"
+  },
+  {
+    "id": "9ff893a2-1d9c-490a-92c8-830fb0ee75f0",
+    "name": "Diesel",
+    "breeder": "Royal Queen Seeds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:40:39.930Z",
+    "updated_at": "2026-07-20T19:40:39.930Z"
+  },
+  {
+    "id": "32581c55-2008-468a-af5b-f7706a0d6d51",
+    "name": "Diesel Dessert CBD/THC 2:1",
+    "breeder": "Green Luster Phenos",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:16:55.861Z",
+    "updated_at": "2026-07-20T19:16:55.861Z"
+  },
+  {
+    "id": "c734eb7a-96df-4e60-b86e-a676f2b7dd74",
+    "name": "Dirty Banana GEN1 5 fast",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:18:52.230Z",
+    "updated_at": "2026-07-20T19:18:52.230Z"
+  },
+  {
+    "id": "6558d59c-285a-4ef5-b742-e247e4fba823",
+    "name": "Don Mega x Cherry Octane",
+    "breeder": "Gas Station - Made in USA",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:25:31.553Z",
+    "updated_at": "2026-07-20T19:25:31.553Z"
+  },
+  {
+    "id": "cc3554d6-93d9-43be-a77a-d43279c7dae2",
+    "name": "Dopalope R1 5",
+    "breeder": "BeLeaf",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:21.909Z",
+    "updated_at": "2026-07-20T19:19:21.909Z"
+  },
+  {
+    "id": "63aa49d1-2d7d-4651-8279-48d12b916f6e",
+    "name": "Dripz",
+    "breeder": "James Loud",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:22:00.971Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "0af4256b-49c3-4d6e-a7fd-dc6ab52040cb",
+    "name": "Drizzle",
+    "breeder": "In House Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:16:38.116Z",
+    "updated_at": "2026-07-20T19:16:38.116Z"
+  },
+  {
+    "id": "667ace13-ad12-4877-b2ab-7e33c7e9e252",
+    "name": "Dulce Con Gas",
+    "breeder": "Terphogz Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:01:34.287Z",
+    "updated_at": "2026-07-20T19:01:34.287Z"
+  },
+  {
+    "id": "03b13ced-bc11-4984-8ef5-a35577426214",
+    "name": "Dulce de Papaya",
+    "breeder": "NineWeeksHarvest",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:28:18.731Z",
+    "updated_at": "2026-07-20T19:28:18.731Z"
+  },
+  {
+    "id": "c56e8d1d-8ac5-4440-85c6-c73140277888",
+    "name": "Dulce de Uva x Cherry Octane",
+    "breeder": "Gas Station - Made in USA",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:25:29.499Z",
+    "updated_at": "2026-07-20T19:25:29.499Z"
+  },
+  {
+    "id": "2929b005-2a60-4750-9b11-0efb9d48bbf4",
+    "name": "Dulce de Uva x Grape Cream Cake",
+    "breeder": "Gas Station - Made in USA",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:13:51.306Z",
+    "updated_at": "2026-07-20T19:13:51.306Z"
+  },
+  {
+    "id": "ef58589c-6112-436f-8506-3f113ca97c4d",
+    "name": "Dynavap The B",
+    "breeder": "Headshop",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:27:48.258Z",
+    "updated_at": "2026-07-20T19:27:48.258Z"
+  },
+  {
+    "id": "9dbb2088-a93f-4031-99e6-f8665d8788c7",
+    "name": "Early Girls Multipack",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:31:39.314Z",
+    "updated_at": "2026-07-20T19:31:39.314Z"
+  },
+  {
+    "id": "cd1ef5ae-78bc-4a89-a501-d87c6987dca5",
+    "name": "Early Lemon Berry RBX",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:22:41.412Z",
+    "updated_at": "2026-07-20T19:22:41.412Z"
+  },
+  {
+    "id": "ea643534-14f0-4ae0-8d45-042b2286ef26",
+    "name": "Easy Button",
+    "breeder": "Happy Valley Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:23:57.343Z",
+    "updated_at": "2026-07-20T19:23:57.343Z"
+  },
+  {
+    "id": "6103b3f6-f95a-4750-a22e-82d278bde77e",
+    "name": "Electric Koolaid",
+    "breeder": "Grateful Seeds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:01:46.489Z",
+    "updated_at": "2026-07-20T19:01:46.489Z"
+  },
+  {
+    "id": "707e8b94-5d48-4962-a304-147659a88d57",
+    "name": "Electroshocker",
+    "breeder": "Black Tuna",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:25:14.053Z",
+    "updated_at": "2026-07-20T19:25:14.053Z"
+  },
+  {
+    "id": "3a365cdd-90cf-4f2f-8cc4-8f9fba53f8d8",
+    "name": "Elements Pink Aluminium Grinder Large 4-Piece 61mm",
+    "breeder": "Gas Station LU",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:10:57.037Z",
+    "updated_at": "2026-07-20T19:10:57.037Z"
+  },
+  {
+    "id": "9c8d4594-8761-4e42-a705-443211c779d8",
+    "name": "End Game #5 Multipack",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:31:37.474Z",
+    "updated_at": "2026-07-20T19:31:37.474Z"
+  },
+  {
+    "id": "75c210eb-5438-405e-b9b6-20a3633637ce",
+    "name": "End Game RBX \"The Punch Line\"",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:22:39.604Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "313cc89a-5d5b-4f09-801e-00726a88d20b",
+    "name": "Ethos Apex R1",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:23:37.554Z",
+    "updated_at": "2026-07-20T19:23:37.554Z"
+  },
+  {
+    "id": "f676b949-f66f-460a-8a8f-8c40cfebd5a0",
+    "name": "Ethos Cookies #16 aka The Krux Multipack",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:31:35.587Z",
+    "updated_at": "2026-07-20T19:31:35.587Z"
+  },
+  {
+    "id": "14d60ea7-286e-4f96-819b-930ba444cbfb",
+    "name": "Ethos Cookies R2",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:22:35.906Z",
+    "updated_at": "2026-07-20T19:22:35.906Z"
+  },
+  {
+    "id": "282a2302-dcf5-42dd-bd3b-c729c0cd64da",
+    "name": "Everglazed",
+    "breeder": "James Loud",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:21:53.722Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "79eb7813-5ae6-4208-afa1-832a2c86e43e",
+    "name": "FIRECANE 8",
+    "breeder": "Reverse Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:20:44.155Z",
+    "updated_at": "2026-07-20T19:20:44.155Z"
+  },
+  {
+    "id": "3a673243-1b2a-448f-8073-52e5f4aefcd8",
+    "name": "FREAKSHOW",
+    "breeder": "Humboldt Seed Company",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:31:53.726Z",
+    "updated_at": "2026-07-20T19:31:53.726Z"
+  },
+  {
+    "id": "8ee7031c-c661-4bc1-a5e8-e65a2ec515db",
+    "name": "FUNKY DRIP",
+    "breeder": "NineWeeksHarvest",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:13:47.743Z",
+    "updated_at": "2026-07-20T19:13:47.743Z"
+  },
+  {
+    "id": "0cee7421-c7c3-4b35-a819-be72ca1b97ef",
+    "name": "Familiar Fruit THC/CBD",
+    "breeder": "Green Luster Phenos",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:16:52.276Z",
+    "updated_at": "2026-07-20T19:16:52.276Z"
+  },
+  {
+    "id": "2084ffeb-9ab0-427d-a1c5-a654231a506c",
+    "name": "Fanta Sea RBX",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:41:42.217Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "ccf476f5-d04a-41df-980a-275e91835cca",
+    "name": "Feel the Rainbow [RS11 x ZBX]",
+    "breeder": "James Loud",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:21:57.381Z",
+    "updated_at": "2026-07-20T19:21:57.381Z"
+  },
+  {
+    "id": "9d7ab613-e155-4bd6-beda-bf3212a86c71",
+    "name": "Fig Newtonz",
+    "breeder": "Black Tuna",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:24:55.883Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "b03fa205-f7b0-438f-8535-2485ef00054a",
+    "name": "Fine Print",
+    "breeder": "Wizard Trees",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:22:50.428Z",
+    "updated_at": "2026-07-20T19:22:50.428Z"
+  },
+  {
+    "id": "f2957a0f-2e38-42ff-a788-1929f7644a71",
+    "name": "Fire'n Ice",
+    "breeder": "Elev8 Seeds Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:51.059Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "5f8a8d70-d29a-4503-902c-968fbd780ae7",
+    "name": "Foam Party",
+    "breeder": "James Loud",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:14:32.673Z",
+    "updated_at": "2026-07-20T19:14:32.673Z"
+  },
+  {
+    "id": "ae88bcb9-42e5-4c65-b0cd-85912b6c585a",
+    "name": "Fog Dog",
+    "breeder": "Atlas Seed",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:14:05.589Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "41ab07ba-43e1-4a51-83fe-3403a3d7d60f",
+    "name": "Forbidden Applez",
+    "breeder": "Black Tuna",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:25:01.254Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "4d0c969b-d47c-4774-bb8f-c24f6bc8bc53",
+    "name": "Forbidden Boogie - Tiki Madman Collab",
+    "breeder": "Mosca Seeds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:16:23.861Z",
+    "updated_at": "2026-07-20T19:16:23.861Z"
+  },
+  {
+    "id": "5f86a6b5-e72b-4a4a-8df4-4bf9e0c6ac65",
+    "name": "Forbidden Zkittlez",
+    "breeder": "Tiki Madman",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:20:01.707Z",
+    "updated_at": "2026-07-20T19:20:01.707Z"
+  },
+  {
+    "id": "1b399801-cc47-4343-afd0-3e65adb0f638",
+    "name": "Forbidos",
+    "breeder": "In House Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:16:45.162Z",
+    "updated_at": "2026-07-20T19:16:45.162Z"
+  },
+  {
+    "id": "cc6b341b-44ea-4445-aa3d-be81d73d9c9c",
+    "name": "Froot Loot",
+    "breeder": "Cipher Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:26:35.582Z",
+    "updated_at": "2026-07-20T19:26:35.582Z"
+  },
+  {
+    "id": "089d47b3-3e33-4951-a54f-79ea8ae8ba0f",
+    "name": "Frostade",
+    "breeder": "Umami Seed Company",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:31:10.899Z",
+    "updated_at": "2026-07-20T19:31:10.899Z"
+  },
+  {
+    "id": "1f70bdb6-9cc7-4706-bbcb-e84a5cd810e5",
+    "name": "Frosted Biscotti",
+    "breeder": "James Loud",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:21:48.365Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "33b0cd10-455f-4afd-a1c4-e4043c3b66cb",
+    "name": "Frosted Enigma",
+    "breeder": "BeLeaf",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:30:27.307Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "f9f2d7b3-8d22-4fce-8712-0b033238ecd7",
+    "name": "Frozen Havana",
+    "breeder": "Floraganix",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:17:38.967Z",
+    "updated_at": "2026-07-20T19:17:38.967Z"
+  },
+  {
+    "id": "7d037a81-2769-4197-b624-3b7cc0422642",
+    "name": "Fruit Fuel",
+    "breeder": "NineWeeksHarvest",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:15:53.787Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "4bc963b8-3819-4bf0-8021-d0b0f90b9770",
+    "name": "Fruit Riot",
+    "breeder": "Compound Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:25:53.282Z",
+    "updated_at": "2026-07-20T19:25:53.282Z"
+  },
+  {
+    "id": "8d9d7197-ca7b-4e30-963b-63d5d43fde7a",
+    "name": "Fruit Salad 1 seed",
+    "breeder": "Others",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:18:07.964Z",
+    "updated_at": "2026-07-20T19:18:07.964Z"
+  },
+  {
+    "id": "9ee55a6e-60ee-4265-b5bb-28a268b2ecb0",
+    "name": "Fruzy",
+    "breeder": "Nasha Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:23:28.365Z",
+    "updated_at": "2026-07-20T19:23:28.365Z"
+  },
+  {
+    "id": "f7274bdf-8073-4b03-8ffe-e5bcd54987a9",
+    "name": "G.R.E.A.M",
+    "breeder": "Solfire Gardens",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:32:06.387Z",
+    "updated_at": "2026-07-20T19:32:06.387Z"
+  },
+  {
+    "id": "b2b1ee64-ba00-45dc-aae9-a42eab4fa861",
+    "name": "GEN 1 DUET 2x Fast flower",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:17:46.145Z",
+    "updated_at": "2026-07-20T19:17:46.145Z"
+  },
+  {
+    "id": "a88c6f06-4d24-447c-9c98-98b660fdab17",
+    "name": "GMO X HOLLYWOOD",
+    "breeder": "Cookies Seedbank",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:34:36.455Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "2fb2b222-4f04-43e1-a2ed-b56f6398a3e4",
+    "name": "GRAPE Z x HOLLYWOOD",
+    "breeder": "Cookies Seedbank",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:32:44.144Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "f160ed79-34aa-4a9e-98fe-5c2bbaf49a92",
+    "name": "GUSHLATO 41",
+    "breeder": "Nasha Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:38:42.435Z",
+    "updated_at": "2026-07-20T19:38:42.435Z"
+  },
+  {
+    "id": "4bb9b578-c2aa-4f22-afc6-534a6c36f91e",
+    "name": "Galactic Rainbow",
+    "breeder": "Wizard Trees",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:36:25.094Z",
+    "updated_at": "2026-07-20T19:36:25.094Z"
+  },
+  {
+    "id": "ca52b4af-fc73-4ea2-9407-ec416f39c4a1",
+    "name": "Game Over",
+    "breeder": "Happy Valley Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:31:05.484Z",
+    "updated_at": "2026-07-20T19:31:05.484Z"
+  },
+  {
+    "id": "7a3eb491-3a7b-4f8f-9f1a-7215c1ae9036",
+    "name": "Garden High Pro Indoor Thermometer with hygrometer",
+    "breeder": "Headshop",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:15:12.382Z",
+    "updated_at": "2026-07-20T19:15:12.382Z"
+  },
+  {
+    "id": "f0aca4fb-058d-46a2-a679-621ffe239e18",
+    "name": "Garlic Storm",
+    "breeder": "In House Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:16:46.966Z",
+    "updated_at": "2026-07-20T19:16:46.966Z"
+  },
+  {
+    "id": "fde70032-638d-459e-b1f9-9e4902c36846",
+    "name": "Garlic dip",
+    "breeder": "Floraganix",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:17:40.772Z",
+    "updated_at": "2026-07-20T19:17:40.772Z"
+  },
+  {
+    "id": "f8bc7a00-074f-461b-8448-53a6aff7a826",
+    "name": "Gary Burger",
+    "breeder": "Elev8 Seeds Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:54.615Z",
+    "updated_at": "2026-07-20T19:19:54.615Z"
+  },
+  {
+    "id": "24e3df3c-237a-4ca8-87eb-3302766d2407",
+    "name": "Gary Patron",
+    "breeder": "NineWeeksHarvest",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:36:15.573Z",
+    "updated_at": "2026-07-20T19:36:15.573Z"
+  },
+  {
+    "id": "fed440cd-0952-4850-910a-76ce4d9b9982",
+    "name": "Gary Satan",
+    "breeder": "Tiki Madman",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:16:29.195Z",
+    "updated_at": "2026-07-20T19:16:29.195Z"
+  },
+  {
+    "id": "93043baf-847b-4f25-a5be-085b55535a4d",
+    "name": "Gas Bomb",
+    "breeder": "Nasha Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:23:26.547Z",
+    "updated_at": "2026-07-20T19:23:26.547Z"
+  },
+  {
+    "id": "82dd8873-6650-472e-af3e-2a2d63b1c923",
+    "name": "Gas Junky BX1",
+    "breeder": "Nasha Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:23:24.491Z",
+    "updated_at": "2026-07-20T19:23:24.491Z"
+  },
+  {
+    "id": "e43d5db6-5e40-4599-a590-8b5130e5d9fe",
+    "name": "Gelato Kiss",
+    "breeder": "Elev8 Seeds Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:15:42.973Z",
+    "updated_at": "2026-07-20T19:15:42.973Z"
+  },
+  {
+    "id": "13552736-4638-4699-aecc-b811a2a64b34",
+    "name": "Gelato Punch",
+    "breeder": "Elev8 Seeds Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:20:22.217Z",
+    "updated_at": "2026-07-20T19:20:22.217Z"
+  },
+  {
+    "id": "92897e5e-f5da-484b-b4f6-32528b227477",
+    "name": "Gelato Sundae",
+    "breeder": "Elev8 Seeds Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:47.424Z",
+    "updated_at": "2026-07-20T19:19:47.424Z"
+  },
+  {
+    "id": "a54d8c6a-1ee9-4cb0-a6d3-ff7bd616ffcc",
+    "name": "Get Lei'd R1",
+    "breeder": "BeLeaf",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:18.045Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "e66047c7-d8a0-47ca-96d1-45ed33647f61",
+    "name": "Ghost Face Truffle",
+    "breeder": "BeLeaf",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:25.608Z",
+    "updated_at": "2026-07-20T19:19:25.608Z"
+  },
+  {
+    "id": "424af2f0-99b4-40b8-8cea-5761d2f56ce2",
+    "name": "Gifted CBD",
+    "breeder": "Others",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:18:21.056Z",
+    "updated_at": "2026-07-20T19:18:21.056Z"
+  },
+  {
+    "id": "252e0c2a-fd22-42bb-b278-9bc79b82df94",
+    "name": "Giggin' Grapes",
+    "breeder": "Compound Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:25:51.497Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "62370b77-c850-487a-8a98-7d69abadb982",
+    "name": "Girl Scout Cookies - Nirvana",
+    "breeder": "Others",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:14:00.228Z",
+    "updated_at": "2026-07-20T19:14:00.228Z"
+  },
+  {
+    "id": "4a154a2f-517d-429e-8466-be108b9a113a",
+    "name": "Golden Haze",
+    "breeder": "Green Bodhi",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:15:39.395Z",
+    "updated_at": "2026-07-20T19:15:39.395Z"
+  },
+  {
+    "id": "1ba5a200-0f62-4f85-8285-047ae7ee89a3",
+    "name": "Gorilla Gohan",
+    "breeder": "Elev8 Seeds Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:20:03.587Z",
+    "updated_at": "2026-07-20T19:20:03.587Z"
+  },
+  {
+    "id": "94ce201c-403b-4c45-8561-289a7ca7b85e",
+    "name": "Gorilla Sherbet Fast 5",
+    "breeder": "Sweet Seeds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:17:04.816Z",
+    "updated_at": "2026-07-20T19:17:04.816Z"
+  },
+  {
+    "id": "6444e855-5ba8-4d37-83ee-be26cd0a7594",
+    "name": "Grandpa's Stash R2",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:41:38.538Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "84f3a014-13bf-4815-8393-36dd42442c6f",
+    "name": "Grandpas Stash Multipack",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:31:31.761Z",
+    "updated_at": "2026-07-20T19:31:31.761Z"
+  },
+  {
+    "id": "52a1cfe7-aa93-4591-aea5-2f8e0e9692c1",
+    "name": "Grape Balls of Fire RBX",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:41:45.827Z",
+    "updated_at": "2026-07-20T19:41:45.827Z"
+  },
+  {
+    "id": "322270e6-c503-467b-85c5-dab92e6aa072",
+    "name": "Grape Cream Cake x Josh D Sour D",
+    "breeder": "Gas Station - Made in USA",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:25:33.366Z",
+    "updated_at": "2026-07-20T19:25:33.366Z"
+  },
+  {
+    "id": "8fb68739-07fd-468f-a91a-bf30ac3c0000",
+    "name": "Grape Diamonds R2",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:41:40.391Z",
+    "updated_at": "2026-07-20T19:41:40.391Z"
+  },
+  {
+    "id": "fc29db43-d4c1-4fd0-b06a-7f615c6da842",
+    "name": "Grape Lobster",
+    "breeder": "Cipher Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:26:37.377Z",
+    "updated_at": "2026-07-20T19:26:37.378Z"
+  },
+  {
+    "id": "1cc034ed-b87a-4df2-8906-1dbff013cc14",
+    "name": "Grape Pak",
+    "breeder": "NineWeeksHarvest",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:28:16.929Z",
+    "updated_at": "2026-07-20T19:28:16.929Z"
+  },
+  {
+    "id": "9d930c35-6a11-4757-a37f-9e443fe38dfa",
+    "name": "Grape Pizza",
+    "breeder": "Terphogz Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:01:39.271Z",
+    "updated_at": "2026-07-20T19:01:39.271Z"
+  },
+  {
+    "id": "b34c2264-5a96-417a-8d67-008c0b9f9da5",
+    "name": "Grape Venom",
+    "breeder": "Black Tuna",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:24:59.471Z",
+    "updated_at": "2026-07-20T19:24:59.471Z"
+  },
+  {
+    "id": "0c09391b-c5a2-48af-945a-ffe9f148b0fe",
+    "name": "Grape Zenzu",
+    "breeder": "Elev8 Seeds Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:59.922Z",
+    "updated_at": "2026-07-20T19:19:59.922Z"
+  },
+  {
+    "id": "3086afde-e416-4519-800e-5dfbfa0c8c18",
+    "name": "Grapplez",
+    "breeder": "Black Tuna",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:24:46.944Z",
+    "updated_at": "2026-07-20T19:24:46.944Z"
+  },
+  {
+    "id": "fd7d5377-47da-45be-9a4f-eb3fcea8b159",
+    "name": "Green Poison XL",
+    "breeder": "Sweet Seeds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:17:15.686Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "c6479d54-e6e3-4338-97c5-060c6dd0d323",
+    "name": "Greenception GC Pure",
+    "breeder": "Gas Station LU",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:32:28.642Z",
+    "updated_at": "2026-07-20T19:32:28.642Z"
+  },
+  {
+    "id": "c6d5eb8c-bf7a-4075-af75-77129271729c",
+    "name": "Guava Slushy",
+    "breeder": "Green Bodhi",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:17:23.033Z",
+    "updated_at": "2026-07-20T19:17:23.033Z"
+  },
+  {
+    "id": "23a439b9-0e2d-4134-8aaa-b444723e5d22",
+    "name": "Gummy Bears",
+    "breeder": "Mosca Seeds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:14:21.901Z",
+    "updated_at": "2026-07-20T19:14:21.901Z"
+  },
+  {
+    "id": "9edd4796-cd0e-41dd-a979-ea8edb9b354e",
+    "name": "Gushers Bx F2",
+    "breeder": "Tiki Madman",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:20:18.574Z",
+    "updated_at": "2026-07-20T19:20:18.574Z"
+  },
+  {
+    "id": "ddfe6e94-8104-46ee-921c-7c3b143f3d9d",
+    "name": "Gusherz x Triangle Kush",
+    "breeder": "Gas Station - Made in USA",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:14:57.829Z",
+    "updated_at": "2026-07-20T19:14:57.829Z"
+  },
+  {
+    "id": "c73b8874-5391-45cf-a63c-09fcb85339a1",
+    "name": "HASH DRIP",
+    "breeder": "NineWeeksHarvest",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:15:51.976Z",
+    "updated_at": "2026-07-20T19:15:51.976Z"
+  },
+  {
+    "id": "543a2ab5-57a9-438e-9aa7-076b297431c0",
+    "name": "HOLLYWOOD",
+    "breeder": "Cookies Seedbank",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:34:34.653Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "b73b2433-97dc-4f73-b7aa-053474ff561c",
+    "name": "Happy Lora",
+    "breeder": "Black Tuna",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:24:48.734Z",
+    "updated_at": "2026-07-20T19:24:48.734Z"
+  },
+  {
+    "id": "d905bc99-c0b4-4cac-ae54-020088f2a98d",
+    "name": "Hawaiian Siren R1 5",
+    "breeder": "BeLeaf",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:20.021Z",
+    "updated_at": "2026-07-20T19:19:20.021Z"
+  },
+  {
+    "id": "c1483c3d-6c66-497d-9116-1f706e65ec68",
+    "name": "Hawaiian Sunkist",
+    "breeder": "Compound Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:08.802Z",
+    "updated_at": "2026-07-20T19:19:08.802Z"
+  },
+  {
+    "id": "072240b5-c488-4a59-bfb9-46f63c1d1771",
+    "name": "Hazy Girl",
+    "breeder": "Green Bodhi",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:17:28.372Z",
+    "updated_at": "2026-07-20T19:17:28.372Z"
+  },
+  {
+    "id": "f623e23f-fc3e-41be-8830-183535321d87",
+    "name": "Hazy Voyage",
+    "breeder": "Green Bodhi",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:17:24.826Z",
+    "updated_at": "2026-07-20T19:17:24.826Z"
+  },
+  {
+    "id": "294406e1-dedc-4474-b060-267bd2ac4bb0",
+    "name": "Head Knock",
+    "breeder": "Sensi x DNA Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T11:23:48.456Z",
+    "updated_at": "2026-07-20T11:23:48.456Z"
+  },
+  {
+    "id": "98192a2f-5a16-44fb-8add-d0b198e228fe",
+    "name": "Head Rush",
+    "breeder": "Josh D",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:14:38.125Z",
+    "updated_at": "2026-07-20T19:14:38.125Z"
+  },
+  {
+    "id": "1b799400-5656-4e60-a7ff-bfd0fbbaeb3f",
+    "name": "Heavy Z [Z x ZBX]",
+    "breeder": "James Loud",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:20:40.543Z",
+    "updated_at": "2026-07-20T19:20:40.543Z"
+  },
+  {
+    "id": "4ef9bd8c-3020-426e-a5fc-a6315615abbb",
+    "name": "Hell Diver",
+    "breeder": "Tiki Madman",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:16:30.949Z",
+    "updated_at": "2026-07-20T19:16:30.949Z"
+  },
+  {
+    "id": "7e20d450-5e63-481a-9ce6-df4dc93c2eeb",
+    "name": "Herb Shuttles Spiral Glas tip 10mm",
+    "breeder": "Headshop",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:15:21.559Z",
+    "updated_at": "2026-07-20T19:15:21.559Z"
+  },
+  {
+    "id": "1d195d07-f637-47fc-b285-aa91194027e1",
+    "name": "Herbgarden jungle bag fabric pot 11l",
+    "breeder": "Headshop",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:20:26.136Z",
+    "updated_at": "2026-07-20T19:20:26.136Z"
+  },
+  {
+    "id": "519d50bc-5baf-4ccd-9e7e-023c80840929",
+    "name": "High Society",
+    "breeder": "Compound Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:12.499Z",
+    "updated_at": "2026-07-20T19:19:12.499Z"
+  },
+  {
+    "id": "128583d7-dc2b-40c8-b433-51915fc64399",
+    "name": "Hot Wheelz",
+    "breeder": "NineWeeksHarvest",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:35:30.174Z",
+    "updated_at": "2026-07-20T19:35:30.174Z"
+  },
+  {
+    "id": "b74aaeae-a37c-4a24-8f68-28261da31196",
+    "name": "Huckleberry Punch",
+    "breeder": "Elev8 Seeds Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:58.122Z",
+    "updated_at": "2026-07-20T19:19:58.122Z"
+  },
+  {
+    "id": "ad3ae88c-c127-4481-bb73-8b388ac8b48a",
+    "name": "HulkBerry aka Bruce Banner",
+    "breeder": "Royal Queen Seeds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:42:09.188Z",
+    "updated_at": "2026-07-20T19:42:09.188Z"
+  },
+  {
+    "id": "5e067dce-9075-457c-88f9-baafdb8a0c84",
+    "name": "Ice Cold",
+    "breeder": "Solfire Gardens",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:32:04.570Z",
+    "updated_at": "2026-07-20T19:32:04.570Z"
+  },
+  {
+    "id": "b7c86a3e-25cb-4fc1-9458-69bd7d5a6332",
+    "name": "Ice Cream Cake",
+    "breeder": "Tiki Madman",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:20:09.212Z",
+    "updated_at": "2026-07-20T19:20:09.212Z"
+  },
+  {
+    "id": "19b178bd-b700-401f-8de7-aa7693aae702",
+    "name": "Ice Pop",
+    "breeder": "NineWeeksHarvest",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:21:34.006Z",
+    "updated_at": "2026-07-20T19:21:34.006Z"
+  },
+  {
+    "id": "94714f7b-ec76-410b-b188-795cbd69d163",
+    "name": "Impecable",
+    "breeder": "Black Tuna",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:25:12.272Z",
+    "updated_at": "2026-07-20T19:25:12.272Z"
+  },
+  {
+    "id": "83a86cb7-6c9b-4b88-a644-b51a48a04540",
+    "name": "Island Punch",
+    "breeder": "Cali Connection",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:23:51.949Z",
+    "updated_at": "2026-07-20T19:23:51.949Z"
+  },
+  {
+    "id": "0ca3abd8-756b-451f-80bc-d6029b95df16",
+    "name": "Jamz",
+    "breeder": "In House Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:16:39.873Z",
+    "updated_at": "2026-07-20T19:16:39.873Z"
+  },
+  {
+    "id": "a0bfb6a5-f90e-4717-84cc-02570da34185",
+    "name": "Jelly Sickle",
+    "breeder": "In House Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:16:41.599Z",
+    "updated_at": "2026-07-20T19:16:41.599Z"
+  },
+  {
+    "id": "10b4de3d-e471-45c0-821c-947b275811a9",
+    "name": "Joshs CS3 Digital Scale",
+    "breeder": "Headshop",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:15:25.158Z",
+    "updated_at": "2026-07-20T19:15:25.158Z"
+  },
+  {
+    "id": "5f0e5499-dec9-4312-b014-2fca4be5a56e",
+    "name": "Juicy Hemp Wraps Tropical",
+    "breeder": "Headshop",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:23:02.933Z",
+    "updated_at": "2026-07-20T19:23:02.933Z"
+  },
+  {
+    "id": "959ad91b-e490-4b81-8c82-ec3430ae6fda",
+    "name": "Julian's Black Tee Tangie",
+    "breeder": "Brother's Grimm",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:13:00.891Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "5330e120-52e6-4879-ad7a-562a1ea8d674",
+    "name": "Jungle Diamonds",
+    "breeder": "In House Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:16:43.404Z",
+    "updated_at": "2026-07-20T19:16:43.404Z"
+  },
+  {
+    "id": "d1e4ae1d-18c5-4a33-9be1-5776fbb7d0b9",
+    "name": "Junky Rainbowz",
+    "breeder": "Nasha Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:23:30.180Z",
+    "updated_at": "2026-07-20T19:23:30.180Z"
+  },
+  {
+    "id": "a8b6878a-3273-44b2-8d59-d3bc910e5b0a",
+    "name": "Kali Sour Kiss",
+    "breeder": "Josh D",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:14:48.807Z",
+    "updated_at": "2026-07-20T19:14:48.807Z"
+  },
+  {
+    "id": "509da077-1d9e-482c-b620-baa436e51db1",
+    "name": "Kandiz",
+    "breeder": "Sensi x Fat Beans",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:44:55.806Z",
+    "updated_at": "2026-07-20T19:44:55.806Z"
+  },
+  {
+    "id": "a00845db-d001-45ff-afa3-3539249c92fa",
+    "name": "Karma Sour Diesel x Devil Driver",
+    "breeder": "Tiki Madman",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:16:17.499Z",
+    "updated_at": "2026-07-20T19:16:17.499Z"
+  },
+  {
+    "id": "b62367f2-f7df-492a-8f5e-71bcee600095",
+    "name": "Khalifa Kush S1",
+    "breeder": "Copycat Genetix",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:31:14.607Z",
+    "updated_at": "2026-07-20T19:31:14.607Z"
+  },
+  {
+    "id": "9566362b-dcc9-4f86-9f79-1d1f9205c750",
+    "name": "Knockout",
+    "breeder": "Happy Valley Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:31:03.693Z",
+    "updated_at": "2026-07-20T19:31:03.693Z"
+  },
+  {
+    "id": "e9cedd3a-9c00-472e-86db-df963b2937ef",
+    "name": "Kosher Pie",
+    "breeder": "DNA Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:15:37.651Z",
+    "updated_at": "2026-07-20T19:15:37.651Z"
+  },
+  {
+    "id": "88e63c5a-6ef0-4870-beeb-57dcca0d3ec0",
+    "name": "Krush grindrr",
+    "breeder": "Gas Station LU",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:27:50.079Z",
+    "updated_at": "2026-07-20T19:27:50.079Z"
+  },
+  {
+    "id": "9a1f7cab-08c2-43f2-89b5-977ef391c53c",
+    "name": "Kumamotoz X PAVÈ",
+    "breeder": "Compound Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:14:09.184Z",
+    "updated_at": "2026-07-20T19:14:09.184Z"
+  },
+  {
+    "id": "fe1fbdb8-470b-4821-98dc-2a1a62d431df",
+    "name": "Kush ‘N Keyz R1",
+    "breeder": "Floraganix",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:17:37.209Z",
+    "updated_at": "2026-07-20T19:17:37.209Z"
+  },
+  {
+    "id": "d4d87ca9-30bd-459e-9e5c-63628092aa2c",
+    "name": "L.I.I.T",
+    "breeder": "Wizard Trees",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:01:27.295Z",
+    "updated_at": "2026-07-20T19:01:27.295Z"
+  },
+  {
+    "id": "2355694f-7e39-4ca5-8ec5-f2c1a3bc541d",
+    "name": "LEMON CHERRY POP",
+    "breeder": "Cookies Seedbank",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:32:49.575Z",
+    "updated_at": "2026-07-20T19:32:49.575Z"
+  },
+  {
+    "id": "8dcc68df-0cf0-4973-90ce-5ab1e18d9de0",
+    "name": "LEMON CHERRY SHERB",
+    "breeder": "Cookies Seedbank",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:34:45.596Z",
+    "updated_at": "2026-07-20T19:34:45.596Z"
+  },
+  {
+    "id": "6d85b57a-de9d-4bb2-b5ca-a92ef4316e95",
+    "name": "LHB",
+    "breeder": "Cannarado",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T18:59:31.911Z",
+    "updated_at": "2026-07-20T18:59:31.911Z"
+  },
+  {
+    "id": "7e76e030-f903-4ff6-8751-b6c20e97ca27",
+    "name": "La Bomba",
+    "breeder": "Compound Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:14.261Z",
+    "updated_at": "2026-07-20T19:19:14.261Z"
+  },
+  {
+    "id": "cf292287-2b2d-4518-ae46-1c1257f07800",
+    "name": "Last Pour",
+    "breeder": "Wizard Trees",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:01:26.742Z",
+    "updated_at": "2026-07-20T19:01:26.742Z"
+  },
+  {
+    "id": "3ff7ed4d-1bef-4cdc-aa55-56b434399304",
+    "name": "Lemon Cherry Gelato",
+    "breeder": "Tiki Madman",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:20:16.690Z",
+    "updated_at": "2026-07-20T19:20:16.690Z"
+  },
+  {
+    "id": "c2d7d7b5-ad3e-493c-b9e0-5e04f6930c0a",
+    "name": "Lemon Cherry Pavè",
+    "breeder": "Compound Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:14:10.931Z",
+    "updated_at": "2026-07-20T19:14:10.931Z"
+  },
+  {
+    "id": "83a3945b-fd8d-4206-ac26-1dfd6734c822",
+    "name": "Lemon Curd",
+    "breeder": "Perfect Tree",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:32:26.694Z",
+    "updated_at": "2026-07-20T19:32:26.694Z"
+  },
+  {
+    "id": "8c15671f-c337-4ef9-84c6-ea72683713b8",
+    "name": "LemonGrass",
+    "breeder": "Cookies Seedbank",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:35:09.362Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "b57ab178-ffcd-4fde-99cf-c337b72e3d87",
+    "name": "Lemongrass",
+    "breeder": "Humboldt Seed Company",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:25:55.070Z",
+    "updated_at": "2026-07-20T19:25:55.070Z"
+  },
+  {
+    "id": "018112cd-4c10-4462-83a8-e772f544560d",
+    "name": "Lilac Diesel",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:38:44.268Z",
+    "updated_at": "2026-07-20T19:38:44.268Z"
+  },
+  {
+    "id": "d29469d2-dfa4-4e1b-8709-3eda3e7d4eac",
+    "name": "Lilac Diesel #22 Multipack",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:31:33.801Z",
+    "updated_at": "2026-07-20T19:31:33.801Z"
+  },
+  {
+    "id": "6c9d0b70-b436-443b-951a-6eb5fe5d74ae",
+    "name": "Lilac Diesel RBX2",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:41:44.013Z",
+    "updated_at": "2026-07-20T19:41:44.013Z"
+  },
+  {
+    "id": "c5a27641-82d3-42e1-9928-c845dae449c9",
+    "name": "Lime OG",
+    "breeder": "Grounded Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:22:30.517Z",
+    "updated_at": "2026-07-20T19:22:30.517Z"
+  },
+  {
+    "id": "79e4d31b-ab8f-4eb7-a3d9-a7cc18bcc7aa",
+    "name": "Lime Slurpi",
+    "breeder": "Grounded Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:22:34.148Z",
+    "updated_at": "2026-07-20T19:22:34.148Z"
+  },
+  {
+    "id": "62372ba4-29ea-4044-bbb2-4f4dc984cedb",
+    "name": "Lime Verbena",
+    "breeder": "Doja",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T18:59:31.288Z",
+    "updated_at": "2026-07-20T18:59:31.288Z"
+  },
+  {
+    "id": "8519283f-3e42-4f10-be3f-cf19bc3db936",
+    "name": "Lime Zerb",
+    "breeder": "Grounded Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:22:26.747Z",
+    "updated_at": "2026-07-20T19:22:26.747Z"
+  },
+  {
+    "id": "b866ec5c-38eb-4358-9c54-1e9e0987c8ed",
+    "name": "Limited Amaretto Sour",
+    "breeder": "Seed Junky Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:28:07.411Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "cf60faea-c956-4c98-8507-bd8be5c6a651",
+    "name": "Limited Animal Face x Kush Mints #11",
+    "breeder": "Seed Junky Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:28:01.879Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "3b8e577a-34d7-4d9f-84af-f5647ff56e79",
+    "name": "Limited Animal Mints Bx1",
+    "breeder": "Seed Junky Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:28:05.506Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "40feaeae-f2e6-4996-a22a-8631313e824d",
+    "name": "Limited LA Kush Cake",
+    "breeder": "Seed Junky Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:28:09.222Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "6874ab01-21c8-40c0-b66d-c08c1ab9fa7d",
+    "name": "Limited Wedding Cake F2 x Kush Mints #11",
+    "breeder": "Seed Junky Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:28:03.700Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "bad192fb-523e-44bd-a7e7-c73cac3769a5",
+    "name": "Limonada de Mango F2",
+    "breeder": "Black Tuna",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:24:41.526Z",
+    "updated_at": "2026-07-20T19:24:41.526Z"
+  },
+  {
+    "id": "a313fe7d-da06-497f-aa42-94d394560fa5",
+    "name": "Limonario",
+    "breeder": "Black Tuna",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:25:17.721Z",
+    "updated_at": "2026-07-20T19:25:17.721Z"
+  },
+  {
+    "id": "1a7ca8fd-8857-42ad-a159-266e9079fac7",
+    "name": "Lobzter",
+    "breeder": "Cipher Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:26:39.187Z",
+    "updated_at": "2026-07-20T19:26:39.187Z"
+  },
+  {
+    "id": "b619c4c4-6f1a-45d0-839d-83d0e774e4f3",
+    "name": "London Lobster",
+    "breeder": "Cipher Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:26:40.974Z",
+    "updated_at": "2026-07-20T19:26:40.974Z"
+  },
+  {
+    "id": "99f8067c-4ed4-4c13-8571-9ae551ee8649",
+    "name": "Loukoum",
+    "breeder": "Perfect Tree",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:35:18.933Z",
+    "updated_at": "2026-07-20T19:35:18.933Z"
+  },
+  {
+    "id": "3d4b670c-f533-4c6f-a817-dee6e48066c5",
+    "name": "Love Lÿfe",
+    "breeder": "Josh D",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:14:47.054Z",
+    "updated_at": "2026-07-20T19:14:47.054Z"
+  },
+  {
+    "id": "9f5af03b-d155-4ff0-8edc-b8483875a11a",
+    "name": "Lung Buster",
+    "breeder": "Solfire Gardens",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:31:55.561Z",
+    "updated_at": "2026-07-20T19:31:55.561Z"
+  },
+  {
+    "id": "f757fdfe-abf2-4dc3-af1f-55f46232a6bf",
+    "name": "Luxar-Dos",
+    "breeder": "Compound Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:04.996Z",
+    "updated_at": "2026-07-20T19:19:04.996Z"
+  },
+  {
+    "id": "ff4222a2-05b6-489f-bc80-aad85f6ab593",
+    "name": "M.C. Nuggets R1",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:18:54.073Z",
+    "updated_at": "2026-07-20T19:18:54.073Z"
+  },
+  {
+    "id": "e4350587-dfd0-4007-baff-b1445268cd1c",
+    "name": "MAC MARKER #51",
+    "breeder": "Nasha Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:32:30.469Z",
+    "updated_at": "2026-07-20T19:32:30.469Z"
+  },
+  {
+    "id": "ec6d5c74-66d0-4830-9904-4f81eedd6327",
+    "name": "MIAMI YAYO",
+    "breeder": "Cookies Seedbank",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:35:07.466Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "56ad239e-274a-442b-89b3-dd0905cb151b",
+    "name": "MIND FUCK",
+    "breeder": "Cookies Seedbank",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:32:42.346Z",
+    "updated_at": "2026-07-20T19:32:42.346Z"
+  },
+  {
+    "id": "0acbc964-9969-4f0d-9741-435a0ae8943a",
+    "name": "MOTOR CITY",
+    "breeder": "Cookies Seedbank",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:34:43.789Z",
+    "updated_at": "2026-07-20T19:34:43.789Z"
+  },
+  {
+    "id": "6e00a59e-5f72-42c6-921f-6135b011fc1b",
+    "name": "MURDER HORNET",
+    "breeder": "Cookies Seedbank",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:32:40.557Z",
+    "updated_at": "2026-07-20T19:32:40.557Z"
+  },
+  {
+    "id": "c82535ae-70b5-4984-866a-3dd0fe765e85",
+    "name": "Mac's Cap 3n-s1",
+    "breeder": "Copycat Genetix",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:23:01.127Z",
+    "updated_at": "2026-07-20T19:23:01.127Z"
+  },
+  {
+    "id": "b8f0b01e-58bc-4373-8024-9c31dedb35b1",
+    "name": "Mamba Negra",
+    "breeder": "Others",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:18:17.143Z",
+    "updated_at": "2026-07-20T19:18:17.143Z"
+  },
+  {
+    "id": "caa49132-2c61-4d4e-be2e-50335935814d",
+    "name": "Mandarin Cookies V2",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:41:51.169Z",
+    "updated_at": "2026-07-20T19:41:51.169Z"
+  },
+  {
+    "id": "905c0007-500d-4edf-8f6b-b4b03382f422",
+    "name": "Mandarine Zkittlez Fast 5",
+    "breeder": "Sweet Seeds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:17:06.591Z",
+    "updated_at": "2026-07-20T19:17:06.591Z"
+  },
+  {
+    "id": "67e9426a-d9e4-4e4d-bc5d-2b473cecc5ae",
+    "name": "Mandarine Zkittlez XL 5",
+    "breeder": "Sweet Seeds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:17:12.038Z",
+    "updated_at": "2026-07-20T19:17:12.038Z"
+  },
+  {
+    "id": "e0fb6fe4-a3aa-4a36-b8ec-dbd621aef74a",
+    "name": "Mangozzteen",
+    "breeder": "Perfect Tree",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:15:34.089Z",
+    "updated_at": "2026-07-20T19:15:34.089Z"
+  },
+  {
+    "id": "0d6537e2-2cff-4a62-8f08-6ac2d5162311",
+    "name": "Marshmallow OG",
+    "breeder": "Compound Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:07.006Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "ec5a081f-75af-4d59-a8a0-c8b8de9dc4a9",
+    "name": "Mascarpone",
+    "breeder": "NineWeeksHarvest",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:35:26.407Z",
+    "updated_at": "2026-07-20T19:35:26.407Z"
+  },
+  {
+    "id": "47c8830b-a582-4b45-b44f-50ce09ff6a52",
+    "name": "Masterpiece 3",
+    "breeder": "In House Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:18:57.629Z",
+    "updated_at": "2026-07-20T19:18:57.629Z"
+  },
+  {
+    "id": "145b5141-f9ff-4cfb-b64e-b93200d9b94e",
+    "name": "Maui Lobster",
+    "breeder": "Cipher Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:26:44.580Z",
+    "updated_at": "2026-07-20T19:26:44.580Z"
+  },
+  {
+    "id": "5a99bc5b-68b0-4e6f-b5dc-4a3b3877af4c",
+    "name": "Mega Mind",
+    "breeder": "Solfire Gardens",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:32:02.766Z",
+    "updated_at": "2026-07-20T19:32:02.766Z"
+  },
+  {
+    "id": "476fe86b-7a41-410d-aa1c-96154b76c46c",
+    "name": "Melon Maki",
+    "breeder": "Elev8 Seeds Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:20:12.924Z",
+    "updated_at": "2026-07-20T19:20:12.924Z"
+  },
+  {
+    "id": "c648cb25-680f-4efe-bd44-373135d67dfc",
+    "name": "Merengón",
+    "breeder": "Black Tuna",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:24:43.302Z",
+    "updated_at": "2026-07-20T19:24:43.302Z"
+  },
+  {
+    "id": "bf562ac2-a31e-4be6-8883-bcee45f157e5",
+    "name": "Metamorpheus F2",
+    "breeder": "Josh D",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:14:41.696Z",
+    "updated_at": "2026-07-20T19:14:41.696Z"
+  },
+  {
+    "id": "206b11a2-26cb-431c-8be1-eff9e9fcb554",
+    "name": "Miami Mami",
+    "breeder": "Solfire Gardens",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:25:42.496Z",
+    "updated_at": "2026-07-20T19:25:42.496Z"
+  },
+  {
+    "id": "3c95d625-d27c-49a6-9317-6c0970321665",
+    "name": "Microscope 60-100x",
+    "breeder": "Headshop",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:27:42.805Z",
+    "updated_at": "2026-07-20T19:27:42.805Z"
+  },
+  {
+    "id": "e395b9f0-c088-49ab-aedf-74019f4ef0b8",
+    "name": "Midnight Sunset",
+    "breeder": "Perfect Tree",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:30:40.137Z",
+    "updated_at": "2026-07-20T19:30:40.137Z"
+  },
+  {
+    "id": "42549e39-69e3-47e5-b669-9194b624ce33",
+    "name": "Mimozz",
+    "breeder": "Perfect Tree",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:01:32.742Z",
+    "updated_at": "2026-07-20T19:38:36.868Z"
+  },
+  {
+    "id": "b403f077-5436-4469-a41a-a67ee2ffb7ce",
+    "name": "Montel's Dream Widow",
+    "breeder": "Brother's Grimm",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:12:59.094Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "dacf0943-ad07-4148-afbc-880714f9c4d6",
+    "name": "Mookie B R1",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:41:25.352Z",
+    "updated_at": "2026-07-20T19:41:25.352Z"
+  },
+  {
+    "id": "4d8490b3-b496-41d2-8793-007ef16a721a",
+    "name": "Mr Jones",
+    "breeder": "Compound Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:01.187Z",
+    "updated_at": "2026-07-20T19:19:01.187Z"
+  },
+  {
+    "id": "73656c40-ab84-4327-a7ba-b1e98cc4e43c",
+    "name": "Mr. Big Runtz S1",
+    "breeder": "Copycat Genetix",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:31:48.346Z",
+    "updated_at": "2026-07-20T19:31:48.346Z"
+  },
+  {
+    "id": "fe43a708-b56d-4b76-8683-2a1b4c28c9b2",
+    "name": "Mylar Magic",
+    "breeder": "NineWeeksHarvest",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:35:28.259Z",
+    "updated_at": "2026-07-20T19:35:28.259Z"
+  },
+  {
+    "id": "3126753a-f15a-474c-a3ca-d5c19b920e8b",
+    "name": "Mylar Magic 2.0",
+    "breeder": "NineWeeksHarvest",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:36:13.725Z",
+    "updated_at": "2026-07-20T19:36:13.725Z"
+  },
+  {
+    "id": "6bb921a9-23d9-4c48-b0bc-c3140e20e93f",
+    "name": "Nain Rouge",
+    "breeder": "Tiki Madman",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:16:27.416Z",
+    "updated_at": "2026-07-20T19:16:27.416Z"
+  },
+  {
+    "id": "95896279-f47b-4b3e-bdcf-c096a4d49f0a",
+    "name": "Neon Runtz",
+    "breeder": "Wizard Trees",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:36:23.081Z",
+    "updated_at": "2026-07-20T19:36:23.081Z"
+  },
+  {
+    "id": "2426fd33-f102-4c3b-8fca-29f6d3bf4f51",
+    "name": "Nine Lions #1 s1",
+    "breeder": "BeLeaf",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:31.166Z",
+    "updated_at": "2026-07-20T19:19:31.166Z"
+  },
+  {
+    "id": "c39065a2-b343-4963-891c-45f7a386305a",
+    "name": "Ninth Life []",
+    "breeder": "BeLeaf",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:34.788Z",
+    "updated_at": "2026-07-20T19:19:34.788Z"
+  },
+  {
+    "id": "69a686b6-a7e0-4b7a-8abb-02d46685c589",
+    "name": "Nuggz R1",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:41:21.799Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "c38c07ca-03a8-4127-bbe6-5ab2f34873b6",
+    "name": "O'Gezuz",
+    "breeder": "Sensi x Humboldt Seed Co",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:44:55.517Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "085dca2f-27bf-4e5c-b56e-6ef5e0c21672",
+    "name": "OGKB/Gushers x Rainbow Crushers",
+    "breeder": "Cannarado",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T18:59:32.433Z",
+    "updated_at": "2026-07-20T18:59:32.433Z"
+  },
+  {
+    "id": "a6659c56-6264-4fa8-ba5a-4b784fd94438",
+    "name": "ORANGE CAKE",
+    "breeder": "Cookies Seedbank",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:35:05.623Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "e88d9d0d-baa6-4fc5-b329-6335207f046c",
+    "name": "Ocean Rosa",
+    "breeder": "Square One Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:15:57.330Z",
+    "updated_at": "2026-07-20T19:15:57.330Z"
+  },
+  {
+    "id": "10024c65-d26c-4313-b05a-e971243ff86d",
+    "name": "Ocean Spray",
+    "breeder": "Black Tuna",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:24:45.136Z",
+    "updated_at": "2026-07-20T19:24:45.136Z"
+  },
+  {
+    "id": "ad042970-6502-43dd-ad80-e357419e658c",
+    "name": "Ocean Truffle",
+    "breeder": "Robin Hood Seeds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:15:59.136Z",
+    "updated_at": "2026-07-20T19:15:59.136Z"
+  },
+  {
+    "id": "45fdde1e-1677-47e7-b1eb-5fda76a114a4",
+    "name": "Octane Candy",
+    "breeder": "Floraganix",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:17:30.136Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "40ac3def-c6f4-45f2-8b77-13850b08bdc2",
+    "name": "Odo Baggins fems",
+    "breeder": "BeLeaf",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:27.489Z",
+    "updated_at": "2026-07-20T19:19:27.489Z"
+  },
+  {
+    "id": "a1907ceb-3c5b-48ab-b03d-807b37315a82",
+    "name": "Odo Wan Kanobi #50 S1",
+    "breeder": "BeLeaf",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:26:16.845Z",
+    "updated_at": "2026-07-20T19:26:16.845Z"
+  },
+  {
+    "id": "d81e1d60-e4fc-4fb4-8cee-71ff1db31ca4",
+    "name": "Ojos Locos",
+    "breeder": "Josh D",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:14:34.550Z",
+    "updated_at": "2026-07-20T19:14:34.550Z"
+  },
+  {
+    "id": "ed4978a1-4ba3-406b-894f-2768491c1ace",
+    "name": "Orange Creampop",
+    "breeder": "Humboldt Seed Company",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:24:54.053Z",
+    "updated_at": "2026-07-20T19:24:54.053Z"
+  },
+  {
+    "id": "901cb300-fe97-4bb9-aa96-15c338e5f147",
+    "name": "Orange Velvet Underground RBX",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:23:10.265Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "70529ee9-fb3c-4bdc-99c5-280619e1fb12",
+    "name": "Oregon Apple Trail",
+    "breeder": "Elev8 Seeds Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:49.221Z",
+    "updated_at": "2026-07-20T19:19:49.221Z"
+  },
+  {
+    "id": "753bf13a-c391-4358-99c1-3399d7baa7d6",
+    "name": "P0WER s1",
+    "breeder": "Copycat Genetix",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:31:46.564Z",
+    "updated_at": "2026-07-20T19:31:46.564Z"
+  },
+  {
+    "id": "d7dbe8e2-9a70-46a8-be1b-a155cc4cae76",
+    "name": "PAPAYA x HOLLYWOOD",
+    "breeder": "Cookies Seedbank",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:32:47.728Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "417e7d6c-21c2-4c46-b389-b1c88954b04d",
+    "name": "PIE PISS [ X]",
+    "breeder": "Cookies Seedbank",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:34:41.894Z",
+    "updated_at": "2026-07-20T19:34:41.894Z"
+  },
+  {
+    "id": "71d207fa-9d1d-4aa5-8613-0eb6c6f97038",
+    "name": "PINK MILK",
+    "breeder": "Solfire Gardens",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:15:16.005Z",
+    "updated_at": "2026-07-20T19:15:16.005Z"
+  },
+  {
+    "id": "c7d185b0-d8bc-448d-acd1-382c71f9bc5a",
+    "name": "PINK PASSION FRUIT",
+    "breeder": "Cookies Seedbank",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:32:45.926Z",
+    "updated_at": "2026-07-20T19:32:45.926Z"
+  },
+  {
+    "id": "29bb4bf3-291c-47a5-a96e-b105224dfb3d",
+    "name": "Pablo's Pineapple",
+    "breeder": "Tiki Madman",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:16:21.997Z",
+    "updated_at": "2026-07-20T19:16:21.997Z"
+  },
+  {
+    "id": "035d7cc6-7b40-4970-85bf-4f1662aaa0ea",
+    "name": "Pablo's Revenge",
+    "breeder": "Tiki Madman",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:56.381Z",
+    "updated_at": "2026-07-20T19:19:56.381Z"
+  },
+  {
+    "id": "26d01ac2-56e5-462a-afdf-62139d0637ab",
+    "name": "Paket-Deal",
+    "breeder": "Dutch Passion",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:48:30.854Z",
+    "updated_at": "2026-07-20T19:48:30.854Z"
+  },
+  {
+    "id": "6c6cf4cd-3671-4e06-9ff8-8b35ab4209ee",
+    "name": "Pancakes x Triangle Kush",
+    "breeder": "Gas Station - Made in USA",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:30:49.247Z",
+    "updated_at": "2026-07-20T19:30:49.247Z"
+  },
+  {
+    "id": "8288c7fd-e309-4c9d-b027-c07e59a17029",
+    "name": "Papaya Puffs",
+    "breeder": "NineWeeksHarvest",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:28:20.625Z",
+    "updated_at": "2026-07-20T19:28:20.625Z"
+  },
+  {
+    "id": "0d7c480b-4852-4f87-81af-12411a066434",
+    "name": "Papaya Zorroz 3",
+    "breeder": "NineWeeksHarvest",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:18:59.405Z",
+    "updated_at": "2026-07-20T19:18:59.405Z"
+  },
+  {
+    "id": "13008e47-08a7-49f2-9e22-08e18f6b45ed",
+    "name": "Permanent Haze",
+    "breeder": "Happy Valley Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:11:13.251Z",
+    "updated_at": "2026-07-20T19:11:13.251Z"
+  },
+  {
+    "id": "8f5c2e95-55db-4b77-9809-c89208fe0051",
+    "name": "Picchu",
+    "breeder": "Perfect Tree",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:23:46.562Z",
+    "updated_at": "2026-07-20T19:23:46.562Z"
+  },
+  {
+    "id": "caf11465-e206-49fa-bbf2-999926316cda",
+    "name": "Pineapple Punk - Tiki Madman Collab",
+    "breeder": "Mosca Seeds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:15:26.938Z",
+    "updated_at": "2026-07-20T19:15:26.938Z"
+  },
+  {
+    "id": "2c82b70d-35d3-4208-8eae-55a7412ec08d",
+    "name": "Pineapple Runtz",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:42:50.397Z",
+    "updated_at": "2026-07-20T19:42:50.397Z"
+  },
+  {
+    "id": "c60dad60-f262-46ca-846d-0bd781bddeae",
+    "name": "Pineapple Whip S1 - Tiki Madman Collab",
+    "breeder": "Mosca Seeds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:15:30.511Z",
+    "updated_at": "2026-07-20T19:15:30.511Z"
+  },
+  {
+    "id": "c6212280-48fa-4f02-a5e4-7ae1166c6abc",
+    "name": "Pink Diamond s1",
+    "breeder": "Copycat Genetix",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:31:29.894Z",
+    "updated_at": "2026-07-20T19:31:29.894Z"
+  },
+  {
+    "id": "0b324c6e-b068-4e7b-836e-dd8ddd25c7c8",
+    "name": "Pink Gasoline",
+    "breeder": "Perfect Tree",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:41:32.678Z",
+    "updated_at": "2026-07-20T19:41:32.678Z"
+  },
+  {
+    "id": "ae938b08-d1b0-4102-842a-29e3c5c3c9ac",
+    "name": "Pink Giraffe",
+    "breeder": "Grounded Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:22:04.668Z",
+    "updated_at": "2026-07-20T19:22:04.668Z"
+  },
+  {
+    "id": "d0b23b04-2346-40a3-982f-e49bcbdbae62",
+    "name": "Pink Mints",
+    "breeder": "Concious Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:01:42.534Z",
+    "updated_at": "2026-07-20T19:01:42.534Z"
+  },
+  {
+    "id": "de76d2af-4452-461d-8285-5d6530f736ee",
+    "name": "Pink Piña",
+    "breeder": "Grounded Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:22:28.640Z",
+    "updated_at": "2026-07-20T19:22:28.640Z"
+  },
+  {
+    "id": "dc8d1e66-3a5b-4202-9510-aabc4f761223",
+    "name": "Pink Sherb",
+    "breeder": "Karma Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:01:40.649Z",
+    "updated_at": "2026-07-20T19:01:40.649Z"
+  },
+  {
+    "id": "ba6d3713-4f2f-45af-89f7-d2609eba97c6",
+    "name": "Pink Waferz 2.0",
+    "breeder": "Concious Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:01:43.901Z",
+    "updated_at": "2026-07-20T19:01:43.901Z"
+  },
+  {
+    "id": "ccbdc108-174b-4059-bd65-bef49c291153",
+    "name": "Plagron Perlite 10L",
+    "breeder": "Gas Station LU",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:15:08.805Z",
+    "updated_at": "2026-07-20T19:15:08.805Z"
+  },
+  {
+    "id": "a40b3921-843f-445b-9568-24abda7966bd",
+    "name": "Planet of the Grapes RBX",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:41:52.978Z",
+    "updated_at": "2026-07-20T19:41:52.978Z"
+  },
+  {
+    "id": "457501bd-bf14-405c-957e-fb4802b2a0ca",
+    "name": "Platinum IX 3",
+    "breeder": "In House Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:16:48.719Z",
+    "updated_at": "2026-07-20T19:16:48.719Z"
+  },
+  {
+    "id": "8fe14452-5e3c-451d-83e6-48dd76d1a7c4",
+    "name": "Platinum Kush Breath",
+    "breeder": "In House Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:17:49.743Z",
+    "updated_at": "2026-07-20T19:17:49.743Z"
+  },
+  {
+    "id": "8553d85f-0ea2-40d0-882d-3c995630c19b",
+    "name": "Platinumz 3",
+    "breeder": "In House Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:14:52.409Z",
+    "updated_at": "2026-07-20T19:14:52.409Z"
+  },
+  {
+    "id": "55268a06-9762-45c9-903e-dd6365673ab2",
+    "name": "Propa Candy",
+    "breeder": "Wizard Trees",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:22:37.822Z",
+    "updated_at": "2026-07-20T19:22:37.822Z"
+  },
+  {
+    "id": "1998ecaa-deb6-4b63-86d1-dc77e7e974ff",
+    "name": "Pruno",
+    "breeder": "NineWeeksHarvest",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:16:06.540Z",
+    "updated_at": "2026-07-20T19:16:06.540Z"
+  },
+  {
+    "id": "9c43a65b-bd3f-4b83-a5e8-3f72f45b7579",
+    "name": "Psy-Op R1",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:23:12.208Z",
+    "updated_at": "2026-07-20T19:23:12.208Z"
+  },
+  {
+    "id": "27d15161-f7db-4b7b-9d5b-524521479625",
+    "name": "Puff Mints",
+    "breeder": "Perfect Tree",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:41:34.601Z",
+    "updated_at": "2026-07-20T19:41:34.601Z"
+  },
+  {
+    "id": "b2005eea-f005-462d-90ac-0e1f43f59c5b",
+    "name": "Purple Limeade",
+    "breeder": "Umami Seed Company",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:30:32.876Z",
+    "updated_at": "2026-07-20T19:30:32.876Z"
+  },
+  {
+    "id": "bd0d50f5-6909-4b52-aa56-c2b6f8815212",
+    "name": "Purple Preserves",
+    "breeder": "Compound Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:25:49.650Z",
+    "updated_at": "2026-07-20T19:25:49.650Z"
+  },
+  {
+    "id": "ede85112-f853-404e-a9b6-a2cc77c773a8",
+    "name": "Purple Sunset RBX2",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:23:39.367Z",
+    "updated_at": "2026-07-20T19:23:39.367Z"
+  },
+  {
+    "id": "5a5b45be-b8ae-4fd5-9493-1c9bb71c5507",
+    "name": "Push OG",
+    "breeder": "Green Luster Phenos",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:16:57.616Z",
+    "updated_at": "2026-07-20T19:16:57.616Z"
+  },
+  {
+    "id": "7c2c436b-13fd-42db-912f-c837bff3c044",
+    "name": "RAW Lighter",
+    "breeder": "Headshop",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:21:46.607Z",
+    "updated_at": "2026-07-20T19:21:46.607Z"
+  },
+  {
+    "id": "363781e3-ffb0-4374-ab60-93a6cb0c3408",
+    "name": "RAW Ruby Red Glass Ashtray",
+    "breeder": "Gas Station LU",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:10:58.864Z",
+    "updated_at": "2026-07-20T19:10:58.864Z"
+  },
+  {
+    "id": "0cd5267d-f6db-4b7b-841f-73c58544fc95",
+    "name": "RIPE",
+    "breeder": "Solfire Gardens",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:15:14.143Z",
+    "updated_at": "2026-07-20T19:15:14.143Z"
+  },
+  {
+    "id": "c918c451-27c1-437a-8127-12c395ac5de8",
+    "name": "RS Junky",
+    "breeder": "Nasha Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:23:33.920Z",
+    "updated_at": "2026-07-20T19:23:33.920Z"
+  },
+  {
+    "id": "4b407fa4-1226-4f4c-8274-6732b248fc4b",
+    "name": "Rainbow Gelato",
+    "breeder": "Wizard Trees",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:36:21.247Z",
+    "updated_at": "2026-07-20T19:36:21.247Z"
+  },
+  {
+    "id": "27c3e1af-e545-46ce-bde2-c8d6c3376396",
+    "name": "Rainbow Guavè",
+    "breeder": "Compound Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:14:14.553Z",
+    "updated_at": "2026-07-20T19:14:14.553Z"
+  },
+  {
+    "id": "db91c6c6-dea1-4c68-8e8c-11e7f1b175c9",
+    "name": "Rainbow Sherbet #11",
+    "breeder": "Gas Station - Made in USA",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:21:35.784Z",
+    "updated_at": "2026-07-20T19:21:35.784Z"
+  },
+  {
+    "id": "1f9cb09d-d147-494a-9649-f84992a2e514",
+    "name": "Rainbow Swirl",
+    "breeder": "Wizard Trees",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:30:54.671Z",
+    "updated_at": "2026-07-20T19:30:54.671Z"
+  },
+  {
+    "id": "b254065c-6fe9-411d-8066-024d619777e8",
+    "name": "Raw Classic Rolls 5m",
+    "breeder": "Headshop",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:27:39.207Z",
+    "updated_at": "2026-07-20T19:27:39.207Z"
+  },
+  {
+    "id": "79a3ea6d-5a2b-4e50-8813-fae67ae6968b",
+    "name": "Red Hot Cookies",
+    "breeder": "Sweet Seeds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:17:17.494Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "c7cbfc73-3970-4075-bc8d-27fa69026633",
+    "name": "Red Hot GMO",
+    "breeder": "Robin Hood Seeds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:14:18.220Z",
+    "updated_at": "2026-07-20T19:14:18.220Z"
+  },
+  {
+    "id": "a3cd69af-f357-44aa-920b-75b8fab95185",
+    "name": "Red Hot Ocean",
+    "breeder": "Robin Hood Seeds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:11:06.049Z",
+    "updated_at": "2026-07-20T19:11:06.049Z"
+  },
+  {
+    "id": "5443616c-6d6b-4b27-8287-77e87b8b6d09",
+    "name": "Red Mandarine Fast 5",
+    "breeder": "Sweet Seeds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:17:10.192Z",
+    "updated_at": "2026-07-20T19:17:10.192Z"
+  },
+  {
+    "id": "2f4fcd4c-e8e3-4473-9d1d-a8c7dd3eb657",
+    "name": "Red Red Wine",
+    "breeder": "Perfect Tree",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:35:20.912Z",
+    "updated_at": "2026-07-20T19:35:20.912Z"
+  },
+  {
+    "id": "90983b30-2a57-44cd-bfef-e14b7597ee86",
+    "name": "Red Strawberry Banana 5",
+    "breeder": "Sweet Seeds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:17:08.398Z",
+    "updated_at": "2026-07-20T19:17:08.398Z"
+  },
+  {
+    "id": "05691084-bb7a-43c3-86b5-cd3b0ecdec6e",
+    "name": "Return of the MAC",
+    "breeder": "DNA Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:21:42.903Z",
+    "updated_at": "2026-07-20T19:21:42.903Z"
+  },
+  {
+    "id": "c6c553ea-f520-450a-b662-b4a2021452a6",
+    "name": "Rhonda's Wrath",
+    "breeder": "Sensi x DNA Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T11:23:48.742Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "4225988b-0894-4b2a-a0ce-a986e0f595ce",
+    "name": "Ricky's Hash Plant",
+    "breeder": "Brother's Grimm",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:15:46.559Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "1abb5b4d-9adc-4e1b-890e-041203a0c873",
+    "name": "Riviera Drip",
+    "breeder": "NineWeeksHarvest",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:16:10.179Z",
+    "updated_at": "2026-07-20T19:16:10.179Z"
+  },
+  {
+    "id": "055e0ec7-699b-4457-aff6-0541d46d537a",
+    "name": "Rotten Rosa",
+    "breeder": "Robin Hood Seeds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:22:24.986Z",
+    "updated_at": "2026-07-20T19:22:24.986Z"
+  },
+  {
+    "id": "74fce5ba-d58a-4bf4-8bda-725f9363156e",
+    "name": "Route 65",
+    "breeder": "Wizard Trees",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:28:11.138Z",
+    "updated_at": "2026-07-20T19:28:11.138Z"
+  },
+  {
+    "id": "a6fbcddb-ca4d-4b32-b17c-25588bc84664",
+    "name": "Royal Bluematic aka Blueberry",
+    "breeder": "Royal Queen Seeds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:39:51.858Z",
+    "updated_at": "2026-07-20T19:39:51.858Z"
+  },
+  {
+    "id": "023974d2-7b03-4473-9f7f-13c3727d80aa",
+    "name": "Royal Creamatic",
+    "breeder": "Royal Queen Seeds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:39:37.318Z",
+    "updated_at": "2026-07-20T19:39:37.318Z"
+  },
+  {
+    "id": "91dfce01-d35a-4e25-86be-3ce205fffa94",
+    "name": "Royal Critical",
+    "breeder": "Royal Queen Seeds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:39:39.145Z",
+    "updated_at": "2026-07-20T19:39:39.145Z"
+  },
+  {
+    "id": "6d57acca-3638-4ec8-b375-30eb7bacc3b0",
+    "name": "Royal Jack",
+    "breeder": "Royal Queen Seeds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:39:29.643Z",
+    "updated_at": "2026-07-20T19:39:29.643Z"
+  },
+  {
+    "id": "167e8414-087c-4a40-9718-feaf91670599",
+    "name": "STEVE JOBZ",
+    "breeder": "Nasha Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:37:38.631Z",
+    "updated_at": "2026-07-20T19:37:38.632Z"
+  },
+  {
+    "id": "46877a97-0b33-4e82-b02f-e44a9d88536b",
+    "name": "STRAWZILLA",
+    "breeder": "Umami Seed Company",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:11:15.035Z",
+    "updated_at": "2026-07-20T19:11:15.035Z"
+  },
+  {
+    "id": "af615b6d-1a77-40de-b2be-b1c0d92c0634",
+    "name": "SUGAR TREE 6",
+    "breeder": "In House Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:24:36.179Z",
+    "updated_at": "2026-07-20T19:24:36.179Z"
+  },
+  {
+    "id": "ee7ad252-70fd-4709-8f08-5669007e6e9a",
+    "name": "SUGOI ZUSHI",
+    "breeder": "In House Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:24:37.979Z",
+    "updated_at": "2026-07-20T19:24:37.979Z"
+  },
+  {
+    "id": "c158049f-c79b-4428-8c58-ccea0be66253",
+    "name": "SUNSET SHERB X HOLLYWOOD",
+    "breeder": "Cookies Seedbank",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:34:32.505Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "de7f4efa-d371-4cbb-b0be-1ea53a425ea7",
+    "name": "SURF WAX",
+    "breeder": "Umami Seed Company",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:11:16.959Z",
+    "updated_at": "2026-07-20T19:11:16.959Z"
+  },
+  {
+    "id": "6fc3cd8d-1d97-48b5-b199-2e6279f93863",
+    "name": "San Fernando Lemon Kush 5",
+    "breeder": "Sweet Seeds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:17:03.060Z",
+    "updated_at": "2026-07-20T19:17:03.060Z"
+  },
+  {
+    "id": "5b1d24c0-5f89-4e6e-bfaa-cd286e5c458e",
+    "name": "Savage Cherries",
+    "breeder": "Perfect Tree",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:15:35.880Z",
+    "updated_at": "2026-07-20T19:15:35.880Z"
+  },
+  {
+    "id": "86e55ff8-a1b1-4ad0-8c3d-b55789e345d1",
+    "name": "Section A",
+    "breeder": "Solfire Gardens",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:01:41.581Z",
+    "updated_at": "2026-07-20T19:01:41.581Z"
+  },
+  {
+    "id": "51b9bace-9bf8-44ec-965f-a90b1df5b8ed",
+    "name": "Sello",
+    "breeder": "Mosca Seeds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:14:25.461Z",
+    "updated_at": "2026-07-20T19:14:25.461Z"
+  },
+  {
+    "id": "91c66545-36c7-4156-8c0b-c8c2613ef365",
+    "name": "Sherb Cake x Trop Cookies",
+    "breeder": "Tiki Madman",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:16:32.736Z",
+    "updated_at": "2026-07-20T19:16:32.736Z"
+  },
+  {
+    "id": "6defcf94-6077-486c-a709-597314bfdd68",
+    "name": "Shogun sumi active boost 5l",
+    "breeder": "Gas Station LU",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:23:44.701Z",
+    "updated_at": "2026-07-20T19:23:44.701Z"
+  },
+  {
+    "id": "1848368a-92d1-437a-bfaf-803cfc229c22",
+    "name": "Shortcut",
+    "breeder": "Happy Valley Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:23:59.171Z",
+    "updated_at": "2026-07-20T19:23:59.171Z"
+  },
+  {
+    "id": "7d6b598e-7532-4786-b0ff-0b844779c04e",
+    "name": "Shot Caller",
+    "breeder": "Solfire Gardens",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:32:00.969Z",
+    "updated_at": "2026-07-20T19:32:00.969Z"
+  },
+  {
+    "id": "7c4283c3-8c7c-43eb-8d35-bd637239940e",
+    "name": "Sinferno",
+    "breeder": "Solfire Gardens",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:11:09.627Z",
+    "updated_at": "2026-07-20T19:11:09.627Z"
+  },
+  {
+    "id": "1894804e-f943-443a-b53a-cb9c8734509f",
+    "name": "Skkrt Berry Zauva",
+    "breeder": "Terphogz Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:01:36.201Z",
+    "updated_at": "2026-07-20T19:01:36.201Z"
+  },
+  {
+    "id": "0434cbe2-e526-465a-926c-187b0853a437",
+    "name": "Skull Crusher",
+    "breeder": "Josh D",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:14:36.375Z",
+    "updated_at": "2026-07-20T19:14:36.375Z"
+  },
+  {
+    "id": "1ddc1375-99b4-474e-a994-990ec77034a9",
+    "name": "Skunk Hero RBX1",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:23:14.094Z",
+    "updated_at": "2026-07-20T19:23:14.094Z"
+  },
+  {
+    "id": "55565e37-e62f-458e-b771-ce8a0992b8e3",
+    "name": "Skywalker Kush",
+    "breeder": "DNA Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:21:44.727Z",
+    "updated_at": "2026-07-20T19:21:44.727Z"
+  },
+  {
+    "id": "14f94547-218b-43d6-96e5-5d00fed9b0e4",
+    "name": "Sleepy Joe S1",
+    "breeder": "Copycat Genetix",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:31:44.726Z",
+    "updated_at": "2026-07-20T19:31:44.726Z"
+  },
+  {
+    "id": "6b9382df-4889-4a7b-b4e9-675ba4e5d04a",
+    "name": "Slipstream",
+    "breeder": "Compound Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:14:55.998Z",
+    "updated_at": "2026-07-20T19:14:55.998Z"
+  },
+  {
+    "id": "02cf5b3e-287c-4c58-b1d7-55738d870d63",
+    "name": "Slurricane BX",
+    "breeder": "Tiki Madman",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:21:24.498Z",
+    "updated_at": "2026-07-20T19:21:24.498Z"
+  },
+  {
+    "id": "a36daf53-7140-46d0-94c4-3719bbd53079",
+    "name": "Snowberry Zushi",
+    "breeder": "Elev8 Seeds Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:20:05.376Z",
+    "updated_at": "2026-07-20T19:20:05.376Z"
+  },
+  {
+    "id": "4fae54b5-e319-40d3-b146-13bfcc2ecd65",
+    "name": "Snowman x Devil Driver",
+    "breeder": "Tiki Madman",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:16:34.541Z",
+    "updated_at": "2026-07-20T19:16:34.541Z"
+  },
+  {
+    "id": "2d59610a-aca4-4200-9f40-aac696a57b8a",
+    "name": "Sour Garlic Grapes",
+    "breeder": "Gas Station - Made in USA",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:30:47.445Z",
+    "updated_at": "2026-07-20T19:30:47.445Z"
+  },
+  {
+    "id": "3fc225da-63d9-4b8e-b109-707741346174",
+    "name": "Sour Gas",
+    "breeder": "Nasha Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:23:32.019Z",
+    "updated_at": "2026-07-20T19:23:32.019Z"
+  },
+  {
+    "id": "281931c6-7273-443b-85f0-4061d4ac0f8f",
+    "name": "Sour Grape Diesel",
+    "breeder": "James Loud",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:21:55.606Z",
+    "updated_at": "2026-07-20T19:21:55.606Z"
+  },
+  {
+    "id": "803305a8-6b86-4b54-afc8-82e51e128870",
+    "name": "Space Gello x Zuchi",
+    "breeder": "Tiki Madman",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:36.583Z",
+    "updated_at": "2026-07-20T19:19:36.583Z"
+  },
+  {
+    "id": "bc044b87-5572-4fcd-a37a-2e3c0c9ba451",
+    "name": "Spritz",
+    "breeder": "Perfect Tree",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:38:34.977Z",
+    "updated_at": "2026-07-20T19:38:34.977Z"
+  },
+  {
+    "id": "2f478dcc-655c-4aa6-8c21-83dc7b747064",
+    "name": "Storz & Bickel Grinder XL 90mm",
+    "breeder": "Headshop",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:27:46.434Z",
+    "updated_at": "2026-07-20T19:27:46.434Z"
+  },
+  {
+    "id": "23e6a18d-081c-4ca2-892d-25244a21f8ca",
+    "name": "Strain Hunters Grinder white/black",
+    "breeder": "Headshop",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:23:06.531Z",
+    "updated_at": "2026-07-20T19:23:06.531Z"
+  },
+  {
+    "id": "195e1716-5874-4d42-9f57-139e138f1e64",
+    "name": "Strawberry Banana S1",
+    "breeder": "DNA Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:17:19.305Z",
+    "updated_at": "2026-07-20T19:17:19.305Z"
+  },
+  {
+    "id": "90e68221-1b34-483b-b1a8-ce53c3979e78",
+    "name": "Strawberry Banana x Zkittlez",
+    "breeder": "Gas Station - Made in USA",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:30:51.057Z",
+    "updated_at": "2026-07-20T19:30:51.057Z"
+  },
+  {
+    "id": "23e319aa-8283-4181-b120-6531067aff59",
+    "name": "Strawberry Lobster",
+    "breeder": "Cipher Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:26:49.933Z",
+    "updated_at": "2026-07-20T19:26:49.933Z"
+  },
+  {
+    "id": "b87f656f-ef26-469e-ba42-aa47f3de7e9a",
+    "name": "Strawberry OG Cookies R1",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:41:23.547Z",
+    "updated_at": "2026-07-20T19:41:23.547Z"
+  },
+  {
+    "id": "501c0533-8e42-4db8-bfcf-2b4fbeeea726",
+    "name": "Stress Killer CBD",
+    "breeder": "Royal Queen Seeds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:42:43.168Z",
+    "updated_at": "2026-07-20T19:42:43.168Z"
+  },
+  {
+    "id": "238f8c33-7f0d-4665-9d79-8d54fbdee8ba",
+    "name": "Sugah Stix",
+    "breeder": "Floraganix",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:17:35.458Z",
+    "updated_at": "2026-07-20T19:17:35.458Z"
+  },
+  {
+    "id": "a7770226-a89e-4bec-8249-dbea0c4ac46b",
+    "name": "Sunkiss",
+    "breeder": "Josh D",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:14:45.281Z",
+    "updated_at": "2026-07-20T19:14:45.281Z"
+  },
+  {
+    "id": "0f4c7cb9-d65a-4cdd-bb30-8e4f5a69c99d",
+    "name": "Sunset Cherries",
+    "breeder": "Perfect Tree",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:30:36.504Z",
+    "updated_at": "2026-07-20T19:30:36.504Z"
+  },
+  {
+    "id": "e748d6ce-c969-436e-ab07-2ab60a0e8c38",
+    "name": "Sunset Cherrys",
+    "breeder": "Perfect Tree",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:01:29.327Z",
+    "updated_at": "2026-07-20T19:01:29.327Z"
+  },
+  {
+    "id": "619790c5-ad92-472e-833a-851db4162d56",
+    "name": "Sunset Purr",
+    "breeder": "NineWeeksHarvest",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:36:11.896Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "e5d47112-b064-4a72-b789-e386ecdbbd70",
+    "name": "Sunset Sherb",
+    "breeder": "Lost In Translation - LIT Farms",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:15:28.701Z",
+    "updated_at": "2026-07-20T19:15:28.701Z"
+  },
+  {
+    "id": "62c11ed4-6773-4849-b390-38818e38ac91",
+    "name": "Super Belts",
+    "breeder": "Happy Valley Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:13:02.708Z",
+    "updated_at": "2026-07-20T19:13:02.708Z"
+  },
+  {
+    "id": "5b3f70c8-3b45-43e4-9c82-403ad9c962eb",
+    "name": "Super Blue Haze",
+    "breeder": "Green Bodhi",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:17:26.618Z",
+    "updated_at": "2026-07-20T19:17:26.618Z"
+  },
+  {
+    "id": "4889913c-e3e5-4700-bb96-75e50a802f48",
+    "name": "Super Drip",
+    "breeder": "NineWeeksHarvest",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:22:48.627Z",
+    "updated_at": "2026-07-20T19:22:48.627Z"
+  },
+  {
+    "id": "84de8169-4fa7-44a8-a081-d2e1de10a081",
+    "name": "Super Lemon Haze RBX3",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:23:35.718Z",
+    "updated_at": "2026-07-20T19:23:35.718Z"
+  },
+  {
+    "id": "aead1cd4-a88a-4aa9-9693-9ff4a1e5f195",
+    "name": "T.A. pH Down 275g",
+    "breeder": "Gas Station LU",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:15:10.591Z",
+    "updated_at": "2026-07-20T19:15:10.591Z"
+  },
+  {
+    "id": "0d699332-376c-436b-a313-b8f416912cf0",
+    "name": "THE CREATURE S1",
+    "breeder": "BeLeaf",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:30:25.428Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "185e690b-ca87-4d49-8930-af4c05a77cd7",
+    "name": "THE FROSTITUTE 8",
+    "breeder": "Reverse Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:02.959Z",
+    "updated_at": "2026-07-20T19:19:02.959Z"
+  },
+  {
+    "id": "6eb2e939-6422-46c1-8202-8d1eff7ea716",
+    "name": "THE WOLF",
+    "breeder": "Cookies Seedbank",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:35:03.791Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "dfd13c48-a7f6-4b01-830e-08c5279e42b5",
+    "name": "TIGER PAW",
+    "breeder": "Cookies Seedbank",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:35:01.929Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "3dee56fe-fdf2-4557-9d68-df987375c4f3",
+    "name": "Tahiti Lime",
+    "breeder": "Gas Station - Made in USA",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:21:39.334Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "e874aef2-3613-432d-92c4-3b09c6432e1a",
+    "name": "Tembleque",
+    "breeder": "Doja",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T18:59:31.568Z",
+    "updated_at": "2026-07-20T18:59:31.568Z"
+  },
+  {
+    "id": "379aa3bf-b775-4954-871a-606be45723b2",
+    "name": "Terp Daddy",
+    "breeder": "In House Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:16:50.491Z",
+    "updated_at": "2026-07-20T19:16:50.491Z"
+  },
+  {
+    "id": "9e3c4d39-5dec-436f-8bd5-276b5ce8672b",
+    "name": "Terpgasm",
+    "breeder": "Solfire Gardens",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:31:59.173Z",
+    "updated_at": "2026-07-20T19:31:59.173Z"
+  },
+  {
+    "id": "7852af68-1837-4945-856b-813412f637f7",
+    "name": "Terphogs x Conscious Genetics",
+    "breeder": "Red Skrrt Banger",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:01:33.766Z",
+    "updated_at": "2026-07-20T19:01:33.766Z"
+  },
+  {
+    "id": "7b7661f2-8f00-4c9f-9238-301d30aa683c",
+    "name": "Terple 3",
+    "breeder": "In House Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:14:50.625Z",
+    "updated_at": "2026-07-20T19:14:50.626Z"
+  },
+  {
+    "id": "288d57af-1585-4aef-9817-0a321f4862f4",
+    "name": "The G3 Dynavap with Jet Flame Clipper",
+    "breeder": "Headshop",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:22:02.892Z",
+    "updated_at": "2026-07-20T19:22:02.892Z"
+  },
+  {
+    "id": "97994c88-85a5-4dd5-83a5-d1b59dcabee9",
+    "name": "The Queen S1",
+    "breeder": "Copycat Genetix",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:31:42.941Z",
+    "updated_at": "2026-07-20T19:31:42.941Z"
+  },
+  {
+    "id": "ea6d6ef0-02e2-4223-9f15-7fcd4e7575b9",
+    "name": "The Washer S1",
+    "breeder": "Copycat Genetix",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:22:53.967Z",
+    "updated_at": "2026-07-20T19:22:53.967Z"
+  },
+  {
+    "id": "89e35683-a566-4ecd-a8aa-274bf2f30a8e",
+    "name": "Tiki Royal Gelato",
+    "breeder": "Tiki Madman",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:16:36.316Z",
+    "updated_at": "2026-07-20T19:16:36.316Z"
+  },
+  {
+    "id": "2f8c68f3-a70c-4ca0-bc51-865650192509",
+    "name": "Tiki Truffle",
+    "breeder": "Tiki Madman",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:40.190Z",
+    "updated_at": "2026-07-20T19:19:40.190Z"
+  },
+  {
+    "id": "b088c3b8-5d5c-4b38-8f0e-228f08a48a8a",
+    "name": "Toad Venom s1",
+    "breeder": "Copycat Genetix",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:10:46.413Z",
+    "updated_at": "2026-07-20T19:10:46.413Z"
+  },
+  {
+    "id": "568a72a4-c30b-4ffe-a1ee-89cb53a106fa",
+    "name": "Top Gun",
+    "breeder": "Atlas Seed",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:14:03.789Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "85984f47-afb9-429d-a355-72bf8c9439a3",
+    "name": "Triangle Lemon Cherry",
+    "breeder": "James Loud",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:20:42.325Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "87d0da22-8262-4ce1-add8-f376d2620150",
+    "name": "Trich Beast",
+    "breeder": "Solfire Gardens",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:25:40.561Z",
+    "updated_at": "2026-07-20T19:25:40.561Z"
+  },
+  {
+    "id": "b73ce2f1-e08b-489f-a278-ddb68b613d40",
+    "name": "Trich Tyson",
+    "breeder": "BeLeaf",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:32.936Z",
+    "updated_at": "2026-07-20T19:19:32.936Z"
+  },
+  {
+    "id": "38885bc1-88da-4775-b43b-78c66275d6d0",
+    "name": "Tropicana Poison \"Fast Version\"",
+    "breeder": "Sweet Seeds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:17:13.893Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "e57ad029-6939-49de-bd16-53ed2a80bbf7",
+    "name": "Tropizaï",
+    "breeder": "Perfect Tree",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:22:21.246Z",
+    "updated_at": "2026-07-20T19:22:21.246Z"
+  },
+  {
+    "id": "981b29fd-acc8-4d86-8490-875f9b36e013",
+    "name": "Truffle Jordan",
+    "breeder": "BeLeaf",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:29.373Z",
+    "updated_at": "2026-07-20T19:19:29.373Z"
+  },
+  {
+    "id": "b182fc2e-e74e-4628-a7d4-771414a5b449",
+    "name": "Truffle Jordan #13 s1",
+    "breeder": "Copycat Genetix",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:22:17.442Z",
+    "updated_at": "2026-07-20T19:22:17.442Z"
+  },
+  {
+    "id": "ce5924a3-5249-4861-9ce8-f10656483c3a",
+    "name": "Truffmosa R1",
+    "breeder": "BeLeaf",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:26:20.626Z",
+    "updated_at": "2026-07-20T19:26:20.626Z"
+  },
+  {
+    "id": "55fe5e24-7186-4091-b7c7-031c613c7e5f",
+    "name": "Tsunami Mami R1",
+    "breeder": "BeLeaf",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:26:18.818Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "296a6ea6-48d4-4f0f-b5d1-c45c5aa5b89b",
+    "name": "Turtle's Key Club",
+    "breeder": "Josh D",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:14:39.928Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "3e08e7dc-ca9d-415d-b1b6-341c0d76491c",
+    "name": "UK Runtz",
+    "breeder": "NineWeeksHarvest",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:35:32.061Z",
+    "updated_at": "2026-07-20T19:35:32.061Z"
+  },
+  {
+    "id": "a54d5e8b-ef7a-47b6-a82c-bd0f54461145",
+    "name": "US Mango Smile",
+    "breeder": "Holy Hemp",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T18:59:06.766Z",
+    "updated_at": "2026-07-20 19:55:06"
+  },
+  {
+    "id": "a3ff5c23-b61f-41fd-a70a-cb35ac5f059b",
+    "name": "US OG Kush",
+    "breeder": "Holy Hemp",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T18:59:06.763Z",
+    "updated_at": "2026-07-20 19:55:06"
+  },
+  {
+    "id": "67d4ffd0-057f-403a-96ab-1d6762291d65",
+    "name": "US Orange Glaze",
+    "breeder": "Holy Hemp",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T18:59:06.761Z",
+    "updated_at": "2026-07-20 19:55:06"
+  },
+  {
+    "id": "f5449917-71b7-41af-9daa-a73bb00a02f4",
+    "name": "VELVET CREAM",
+    "breeder": "Cookies Seedbank",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:35:00.132Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "7a1978fa-42f4-4827-8da8-a434bf0f9608",
+    "name": "Vova dry herb vaporizer",
+    "breeder": "Headshop",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:20:35.111Z",
+    "updated_at": "2026-07-20T19:20:35.111Z"
+  },
+  {
+    "id": "01a8c1db-50bf-40a8-97b2-a95b38f63917",
+    "name": "WET WET",
+    "breeder": "Cookies Seedbank",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:34:40.063Z",
+    "updated_at": "2026-07-20T19:34:40.063Z"
+  },
+  {
+    "id": "c105f652-6106-4f9b-9648-311118dea7dd",
+    "name": "WRANK MULTIPACK 6x 1 seed",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:13:06.378Z",
+    "updated_at": "2026-07-20T19:13:06.378Z"
+  },
+  {
+    "id": "9173e98f-7663-473b-8f69-4ea5e5e360aa",
+    "name": "Wasabi Lemonade",
+    "breeder": "Elev8 Seeds Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:20:07.229Z",
+    "updated_at": "2026-07-20T19:20:07.229Z"
+  },
+  {
+    "id": "f7383ec2-1973-4b77-8e01-6a17ba2f8db4",
+    "name": "Watermelon Zaza S1 - Tiki Madman Collab",
+    "breeder": "Mosca Seeds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:45.604Z",
+    "updated_at": "2026-07-20T19:19:45.604Z"
+  },
+  {
+    "id": "790c796e-f750-44ad-8fed-cf382da50064",
+    "name": "Wedding Cheesecake",
+    "breeder": "420 Fast Buds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:26:09.608Z",
+    "updated_at": "2026-07-20T19:26:09.608Z"
+  },
+  {
+    "id": "9261aa4b-d3b5-45c2-b1bf-fd58130f3413",
+    "name": "Wedding Glue",
+    "breeder": "420 Fast Buds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:26:07.749Z",
+    "updated_at": "2026-07-20T19:26:07.749Z"
+  },
+  {
+    "id": "375d992c-d627-438e-96d4-76cf32f3c7a0",
+    "name": "Weekend At Gary's",
+    "breeder": "Solfire Gardens",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:31:57.345Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "7f534120-8652-4bc9-8d40-bdceebcf57a2",
+    "name": "White Flamingo",
+    "breeder": "Floraganix",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:17:33.669Z",
+    "updated_at": "2026-07-20T19:17:33.669Z"
+  },
+  {
+    "id": "791df433-bea7-435b-95c2-8cbff5afcfc3",
+    "name": "White Inferno",
+    "breeder": "BeLeaf",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:30:23.581Z",
+    "updated_at": "2026-07-20T19:30:23.581Z"
+  },
+  {
+    "id": "f7dc3538-3471-49cd-a4c5-d41f886f21fb",
+    "name": "White Runtz x Dantes Inferno",
+    "breeder": "Tiki Madman",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:38.396Z",
+    "updated_at": "2026-07-20T19:19:38.396Z"
+  },
+  {
+    "id": "33c89a7c-a823-4c6d-8f8c-ed7811033a5f",
+    "name": "White Serpent",
+    "breeder": "Elev8 Seeds Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:19:43.827Z",
+    "updated_at": "2026-07-20T19:19:43.827Z"
+  },
+  {
+    "id": "04a2f646-3cb1-486f-a70c-dbe9d09db9b4",
+    "name": "White Truffle S1",
+    "breeder": "BeLeaf",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:30:21.687Z",
+    "updated_at": "2026-07-20T19:30:21.687Z"
+  },
+  {
+    "id": "72f2ba5a-ddf9-472e-ab35-8fc01dbce4aa",
+    "name": "White Wedding RBX",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:41:29.000Z",
+    "updated_at": "2026-07-20T19:41:29.000Z"
+  },
+  {
+    "id": "8ed33a79-b497-4cf3-8183-48655efa3b30",
+    "name": "Wizard Tree x Burning Rope Farms",
+    "breeder": "Bowshooter",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:01:28.692Z",
+    "updated_at": "2026-07-20T19:01:28.692Z"
+  },
+  {
+    "id": "71156d08-87e4-4ce3-993f-54a798f2fe90",
+    "name": "Wrank R2",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:41:27.176Z",
+    "updated_at": "2026-07-20T19:41:27.176Z"
+  },
+  {
+    "id": "0c5bd1c5-8b4d-4d91-a9d6-8d158addd9f7",
+    "name": "Yacht Party",
+    "breeder": "Solfire Gardens",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:11:11.444Z",
+    "updated_at": "2026-07-20T19:11:11.444Z"
+  },
+  {
+    "id": "f79fbe0e-03d7-4de6-b3cb-ff267dc68907",
+    "name": "ZZ4",
+    "breeder": "Cookies Seedbank",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:24:32.572Z",
+    "updated_at": "2026-07-20 19:57:02"
+  },
+  {
+    "id": "b7aa1045-7176-458f-88fa-9f5f25d21eb4",
+    "name": "Zangria S1",
+    "breeder": "Wizard Trees",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:36:19.356Z",
+    "updated_at": "2026-07-20T19:36:19.356Z"
+  },
+  {
+    "id": "c9a42813-636e-4e9c-a424-65ce50dfa99a",
+    "name": "Zeltzer",
+    "breeder": "Umami Seed Company",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:25:46.074Z",
+    "updated_at": "2026-07-20T19:25:46.074Z"
+  },
+  {
+    "id": "60ce8fc2-2ea3-46a7-96fc-73ac52cb0017",
+    "name": "Zenzation 5",
+    "breeder": "Sweet Seeds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:17:01.249Z",
+    "updated_at": "2026-07-20T19:17:01.249Z"
+  },
+  {
+    "id": "caf5514c-0d98-4832-8358-2899c7757e0b",
+    "name": "Zerdo Gordo",
+    "breeder": "Terphogz Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:01:36.813Z",
+    "updated_at": "2026-07-20T19:01:36.813Z"
+  },
+  {
+    "id": "fc92e03f-6f6b-4415-8f18-a7f2156fe5d3",
+    "name": "Zero Gravity x Dantes Inferno",
+    "breeder": "Tiki Madman",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:16:25.626Z",
+    "updated_at": "2026-07-20T19:16:25.626Z"
+  },
+  {
+    "id": "7e2fe948-8907-4568-801c-82e359feb79a",
+    "name": "Zkittlez x Sherbanger",
+    "breeder": "Gas Station - Made in USA",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:25:47.856Z",
+    "updated_at": "2026-07-20T19:25:47.856Z"
+  },
+  {
+    "id": "e5cd5288-e7b1-4a74-81bc-8003582e90f2",
+    "name": "Zour Diesel",
+    "breeder": "James Loud",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:21:51.951Z",
+    "updated_at": "2026-07-20T19:21:51.951Z"
+  },
+  {
+    "id": "a75151fb-9224-4ae6-bfa2-9b1a4943b993",
+    "name": "Ztrawberriez",
+    "breeder": "420 Fast Buds",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:26:15.082Z",
+    "updated_at": "2026-07-20T19:26:15.082Z"
+  },
+  {
+    "id": "18e21051-bdce-414f-bc0f-bc08ca6b8c8c",
+    "name": "Zuapanga",
+    "breeder": "Terphogz Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:01:34.799Z",
+    "updated_at": "2026-07-20T19:01:34.799Z"
+  },
+  {
+    "id": "406d40c5-a7ae-4773-8d68-f700582d2987",
+    "name": "Zushi Supreme",
+    "breeder": "Elev8 Seeds Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:20:14.942Z",
+    "updated_at": "2026-07-20T19:20:14.942Z"
+  },
+  {
+    "id": "43ff1250-66c7-407b-9382-789d149694eb",
+    "name": "Zushi Verde",
+    "breeder": "Elev8 Seeds Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:16:04.737Z",
+    "updated_at": "2026-07-20T19:16:04.737Z"
+  },
+  {
+    "id": "70fb2231-c893-41eb-b181-e82f0ff8dda2",
+    "name": "Zweet RBX2",
+    "breeder": "Ethos Genetics",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:13:49.470Z",
+    "updated_at": "2026-07-20T19:13:49.470Z"
+  },
+  {
+    "id": "466e96cf-ab08-4503-be8f-488944ef9462",
+    "name": "no freebie",
+    "breeder": "Gas Station LU",
+    "thc": null,
+    "seedfinder_url": null,
+    "created_at": "2026-07-20T19:35:24.635Z",
+    "updated_at": "2026-07-20T19:35:24.635Z"
+  }
+]

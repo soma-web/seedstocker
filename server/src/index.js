@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { sqlite } from './db.js';
 import { initializeDatabase } from './migrations.js';
 import { logMessage } from './scraper.js';
+import { getServerPort } from './config.js';
 import strainRoutes from './routes/strains.js';
 import scraperRoutes from './routes/scraper.js';
 import adminRoutes from './routes/admin.js';
@@ -68,7 +69,7 @@ app.setNotFoundHandler((req, reply) => {
 });
 
 // Start fastify server
-const port = 3002;
+const port = getServerPort();
 const start = async () => {
   try {
     await app.listen({ port, host: '0.0.0.0' });

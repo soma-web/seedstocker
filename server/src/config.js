@@ -60,6 +60,28 @@ export function getLocalLlmConfig() {
 }
 
 /**
+ * Get the ChatGPT API key from env or config.
+ */
+export function getChatgptApiKey() {
+  if (process.env.CHATGPT_API_KEY) {
+    return process.env.CHATGPT_API_KEY;
+  }
+  const config = getConfig();
+  return config.chatgptApiKey || null;
+}
+
+/**
+ * Get ChatGPT config.
+ */
+export function getChatgptConfig() {
+  const config = getConfig();
+  return {
+    useChatGpt: !!config.useChatGpt,
+    chatgptModel: config.chatgptModel || 'gpt-4o-mini'
+  };
+}
+
+/**
  * Get the max items per shop limit, or null for unlimited.
  */
 export function getMaxItemsLimit() {
@@ -86,6 +108,25 @@ export function getProxyConfig() {
   const config = getConfig();
   if (!config.proxy) return null;
   return config.proxy;
+}
+
+/**
+ * Get the server port from process.env.PORT, config file ("port"), or fallback default 3002.
+ */
+export function getServerPort() {
+  if (process.env.PORT) {
+    const parsed = parseInt(process.env.PORT, 10);
+    if (!isNaN(parsed) && parsed > 0) return parsed;
+  }
+  const config = getConfig();
+  if (typeof config.port === 'number' && config.port > 0) {
+    return config.port;
+  }
+  if (typeof config.port === 'string') {
+    const parsed = parseInt(config.port, 10);
+    if (!isNaN(parsed) && parsed > 0) return parsed;
+  }
+  return 3002;
 }
 
 export { configPath };

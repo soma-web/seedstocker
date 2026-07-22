@@ -197,6 +197,21 @@ export class BaseScraper {
     }
     const str = String(val).trim();
     const lower = str.toLowerCase();
+    if (lower.includes('extreme') || lower.includes('extrem')) {
+      return '29%';
+    }
+    if (lower.includes('sehr viel')) {
+      return '26%';
+    }
+    if (lower.includes('viel')) {
+      return '20-24%';
+    }
+    if (lower.includes('normale menge') || lower.includes('normal')) {
+      return '20%';
+    }
+    if (lower.includes('wenig')) {
+      return '0-3%';
+    }
     if (
       lower === '' ||
       lower === 'not available' ||

@@ -18,7 +18,14 @@ export default async function adminRoutes(app) {
     }
   }, async (req, reply) => {
     const current = getConfig();
-    const updated = { ...current, ...req.body };
+    const body = { ...req.body };
+    if (body.port !== undefined) {
+      const p = parseInt(body.port, 10);
+      if (!isNaN(p) && p > 0) {
+        body.port = p;
+      }
+    }
+    const updated = { ...current, ...body };
     const ok = writeConfig(updated);
     if (!ok) {
       return reply.status(500).send({ error: 'Failed to write config' });
@@ -80,13 +87,18 @@ export default async function adminRoutes(app) {
 
   app.post('/api/db/reset', async (req, reply) => {
     try {
-      sqlite.exec(`
-        DELETE FROM strains;
-        DELETE FROM scraped_offers;
-        DELETE FROM price_history;
-        VACUUM;
-      `);
-      return { success: true, message: 'Database reset and vacuumed successfully.' };
+      // Delete strains that do not have an AI description or custom/rewritten description
+      sqlite.prepare(`
+        DELETE FROM strains 
+        WHERE id NOT IN (SELECT strain_id FROM ai_descriptions)
+          AND id NOT IN (SELECT strain_id FROM rewritten_descriptions)
+      `).run();
+      
+      sqlite.prepare('DELETE FROM scraped_offers').run();
+      sqlite.prepare('DELETE FROM price_history').run();
+      sqlite.prepare('VACUUM').run();
+
+      return { success: true, message: 'Database reset successfully. Retained strains with AI and custom descriptions.' };
     } catch (err) {
       reply.status(500).send({ error: err.message });
     }

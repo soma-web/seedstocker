@@ -12,8 +12,11 @@ import {
   ChevronUp, 
   ChevronDown, 
   Terminal, 
-  X 
+  X,
+  Check,
+  Zap
 } from 'lucide-react';
+import { apiGet, apiPost, apiPut } from '../hooks/useApi';
 
 export default function AdminPanel({
   config,
@@ -51,6 +54,92 @@ export default function AdminPanel({
   dbStrains
 }) {
   const [enrichShop, setEnrichShop] = useState('');
+  const [aiLimit, setAiLimit] = useState('');
+  const [thcLimit, setThcLimit] = useState('15');
+  const [missingThcCount, setMissingThcCount] = useState(0);
+  const [missingAiDescCount, setMissingAiDescCount] = useState(0);
+  const [thcProposals, setThcProposals] = useState([]);
+  const [loadingThc, setLoadingThc] = useState(false);
+  const [thcError, setThcError] = useState(null);
+
+  useEffect(() => {
+    apiGet('/api/strains/missing-thc')
+      .then(res => setMissingThcCount(res.count))
+      .catch(() => {});
+
+    apiGet('/api/strains/missing-ai-description')
+      .then(res => setMissingAiDescCount(res.count))
+      .catch(() => {});
+  }, [dbStrains, bulkAi.processedStrains]);
+
+  const handleFetchThcEstimates = async () => {
+    setLoadingThc(true);
+    setThcError(null);
+    try {
+      const res = await apiPost('/api/strains/estimate-thc/bulk', { limit: Number(thcLimit) || 15 });
+      if (res.proposals && res.proposals.length > 0) {
+        setThcProposals(res.proposals.map(p => ({ ...p, status: 'pending' })));
+      } else {
+        alert('No THC proposals returned by AI. All strains might already have THC values or the AI could not find data.');
+      }
+    } catch (err) {
+      setThcError(err.message);
+    } finally {
+      setLoadingThc(false);
+    }
+  };
+
+  const handleAcceptThc = async (proposalIndex) => {
+    const prop = thcProposals[proposalIndex];
+    if (!prop || !prop.proposedThc) return;
+
+    setThcProposals(prev => prev.map((p, idx) => idx === proposalIndex ? { ...p, status: 'saving' } : p));
+    try {
+      await apiPut(`/api/strains/${prop.strainId}`, { thc: prop.proposedThc });
+      setThcProposals(prev => prev.filter((_, idx) => idx !== proposalIndex));
+      setMissingThcCount(prev => Math.max(0, prev - 1));
+    } catch (err) {
+      alert(`Failed to save THC for ${prop.name}: ${err.message}`);
+      setThcProposals(prev => prev.map((p, idx) => idx === proposalIndex ? { ...p, status: 'pending' } : p));
+    }
+  };
+
+  const handleRejectThc = (proposalIndex) => {
+    setThcProposals(prev => prev.filter((_, idx) => idx !== proposalIndex));
+  };
+
+  const handleAcceptAllHighConfidence = async () => {
+    const highConfIndices = thcProposals
+      .map((p, idx) => (p.confidence === 'high' && p.status === 'pending' ? idx : null))
+      .filter(idx => idx !== null);
+
+    if (highConfIndices.length === 0) {
+      alert('No high-confidence pending proposals found in the queue.');
+      return;
+    }
+
+    for (const idx of highConfIndices) {
+      await handleAcceptThc(idx);
+    }
+  };
+
+  const handleAcceptAll = async () => {
+    // Collect snapshot of proposals to accept
+    const currentQueue = [...thcProposals];
+    for (let i = 0; i < currentQueue.length; i++) {
+      const prop = currentQueue[i];
+      if (prop && prop.proposedThc) {
+        try {
+          await apiPut(`/api/strains/${prop.strainId}`, { thc: prop.proposedThc });
+          setMissingThcCount(prev => Math.max(0, prev - 1));
+        } catch (err) {
+          console.error(`Failed to save THC for ${prop.name}:`, err);
+        }
+      }
+    }
+    setThcProposals([]);
+  };
+
   const seedfinderLogTerminalRef = useRef(null);
   const bulkAiLogTerminalRef = useRef(null);
 
@@ -86,6 +175,9 @@ export default function AdminPanel({
             const useLocalLlmVal = formData.get('useLocalLlm') === 'on';
             const localLlmUrlVal = formData.get('localLlmUrl');
             const localLlmModelVal = formData.get('localLlmModel');
+            const useChatGptVal = formData.get('useChatGpt') === 'on';
+            const chatgptApiKeyVal = formData.get('chatgptApiKey');
+            const chatgptModelVal = formData.get('chatgptModel');
             const blockedWordsVal = formData.get('blockedWords')
               ? formData.get('blockedWords').split('\n').map(w => w.trim()).filter(Boolean)
               : [];
@@ -96,6 +188,9 @@ export default function AdminPanel({
               useLocalLlm: useLocalLlmVal,
               localLlmUrl: localLlmUrlVal || null,
               localLlmModel: localLlmModelVal || null,
+              useChatGpt: useChatGptVal,
+              chatgptApiKey: chatgptApiKeyVal || null,
+              chatgptModel: chatgptModelVal || null,
               blockedWords: blockedWordsVal
             });
           }} className="space-y-6">
@@ -144,6 +239,58 @@ export default function AdminPanel({
               />
               <p className="text-[11px] text-slate-500 mt-1.5 leading-normal">
                 Used to generate creative and natural German prose descriptions using Google Gemini. Leave blank to use the local fallback engine.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                ChatGPT API Key
+              </label>
+              <input
+                type="password"
+                name="chatgptApiKey"
+                defaultValue={config.chatgptApiKey ?? ''}
+                placeholder="Enter your ChatGPT API Key..."
+                className="w-full h-12 px-4 bg-slate-950 border border-slate-900 rounded-xl text-slate-100 focus:outline-none focus:border-emerald-500/50 text-sm"
+              />
+              <p className="text-[11px] text-slate-500 mt-1.5 leading-normal">
+                Used to generate creative and natural German prose descriptions using OpenAI ChatGPT. Leave blank to use Gemini or local fallback engine.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between bg-slate-950/60 p-4 border border-slate-900 rounded-xl">
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-0.5">
+                  Enable ChatGPT
+                </label>
+                <span className="text-[11px] text-slate-500 leading-normal">
+                  Route prose description synthesis to OpenAI ChatGPT.
+                </span>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="useChatGpt"
+                  defaultChecked={config.useChatGpt}
+                  className="sr-only peer"
+                />
+                <div className="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500 peer-checked:after:bg-slate-950"></div>
+              </label>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                ChatGPT Model Name
+              </label>
+              <input
+                type="text"
+                name="chatgptModel"
+                defaultValue={config.chatgptModel ?? 'gpt-4o-mini'}
+                placeholder="e.g. gpt-4o-mini"
+                className="w-full h-12 px-4 bg-slate-950 border border-slate-900 rounded-xl text-slate-100 focus:outline-none focus:border-emerald-500/50 text-sm"
+              />
+              <p className="text-[11px] text-slate-500 mt-1.5 leading-normal">
+                Model name identifier to pass in completions payload (e.g. <code>gpt-4o-mini</code> or <code>gpt-4o</code>).
               </p>
             </div>
 
@@ -497,18 +644,34 @@ export default function AdminPanel({
 
       {/* Bulk AI Description Generator Card */}
       <div className="glass-panel rounded-2xl p-6 mt-8">
-        <h2 className="text-lg font-bold text-slate-100 mb-2 flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-emerald-400" />
-          Bulk AI Description Generator
-        </h2>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
+          <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-emerald-400" />
+            Bulk AI Description Generator
+          </h2>
+          <span className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full text-xs font-semibold self-start sm:self-auto">
+            {missingAiDescCount} Strains Missing AI Description
+          </span>
+        </div>
         <p className="text-xs text-slate-500 mb-6">
           Synthesize natural German prose descriptions using the configured AI engine (Gemini API or local inference server) for all strains in the database.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 items-center">
-          <div className="flex gap-2 w-full sm:w-auto">
+          <div className="w-full sm:w-48">
+            <input
+              type="number"
+              min="1"
+              value={aiLimit}
+              onChange={e => setAiLimit(e.target.value)}
+              disabled={bulkAi.isScanning}
+              placeholder="Limit (optional)"
+              className="w-full h-12 px-4 bg-slate-950 border border-slate-900 rounded-xl text-slate-100 placeholder-slate-650 focus:outline-none focus:border-emerald-500/50 text-sm font-medium"
+            />
+          </div>
+          <div className="flex gap-2 w-full sm:w-auto flex-1">
             <button
-              onClick={handleStartBulkAi}
+              onClick={() => handleStartBulkAi(aiLimit)}
               disabled={bulkAi.isScanning || scraper.isScanning || seedfinderScraper.isScanning}
               className={`px-6 h-12 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-1.5 flex-1 sm:flex-none ${
                 bulkAi.isScanning || scraper.isScanning || seedfinderScraper.isScanning
@@ -597,6 +760,208 @@ export default function AdminPanel({
                 </div>
               ))
             )}
+          </div>
+        )}
+      </div>
+
+      {/* AI THC Content Filler & Review Card */}
+      <div className="glass-panel rounded-2xl p-6 mt-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
+          <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+            <Zap className="w-5 h-5 text-emerald-400" />
+            AI THC Content Filler & Review
+          </h2>
+          <span className="px-3 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-full text-xs font-semibold self-start sm:self-auto">
+            {missingThcCount} Strains Missing THC
+          </span>
+        </div>
+        <p className="text-xs text-slate-500 mb-6">
+          Query the active LLM (ChatGPT / Gemini / Local LLM) to research and estimate missing THC percentages for strains based on breeder and strain name context. Review, edit, and accept proposals before saving them to the database.
+        </p>
+
+        {/* Statistics Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          <div className="bg-slate-950/60 p-4 border border-slate-900 rounded-xl flex items-center justify-between">
+            <div>
+              <span className="block text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Fehlende THC-Angaben</span>
+              <span className="text-2xl font-bold text-amber-400 font-mono mt-0.5 block">{missingThcCount} Strains</span>
+            </div>
+            <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-400">
+              <Zap className="w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="bg-slate-950/60 p-4 border border-slate-900 rounded-xl flex items-center justify-between">
+            <div>
+              <span className="block text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Gesamt Strains</span>
+              <span className="text-2xl font-bold text-slate-200 font-mono mt-0.5 block">{dbStats.strainsCount || dbStrains.length || 0}</span>
+            </div>
+            <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400">
+              <Layers className="w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="bg-slate-950/60 p-4 border border-slate-900 rounded-xl flex items-center justify-between">
+            <div>
+              <span className="block text-[10px] text-slate-500 uppercase tracking-wider font-semibold">THC Datenabdeckung</span>
+              <span className="text-2xl font-bold text-emerald-400 font-mono mt-0.5 block">
+                {(dbStats.strainsCount || dbStrains.length) ? (
+                  Math.max(0, Math.round((((dbStats.strainsCount || dbStrains.length) - missingThcCount) / (dbStats.strainsCount || dbStrains.length)) * 100)) + '%'
+                ) : '100%'}
+              </span>
+            </div>
+            <div className="p-2.5 bg-teal-500/10 border border-teal-500/20 rounded-xl text-teal-400">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-4 items-center mb-6">
+          <div className="w-full sm:w-48">
+            <input
+              type="number"
+              min="1"
+              max="50"
+              value={thcLimit}
+              onChange={e => setThcLimit(e.target.value)}
+              disabled={loadingThc}
+              placeholder="Batch Size (e.g. 15)"
+              className="w-full h-12 px-4 bg-slate-950 border border-slate-900 rounded-xl text-slate-100 placeholder-slate-600 focus:outline-none focus:border-emerald-500/50 text-sm font-medium"
+            />
+          </div>
+          <button
+            onClick={handleFetchThcEstimates}
+            disabled={loadingThc || missingThcCount === 0}
+            className={`px-6 h-12 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-1.5 flex-1 sm:flex-none ${
+              loadingThc || missingThcCount === 0
+                ? 'bg-slate-950 text-slate-600 border border-slate-950 cursor-not-allowed'
+                : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 shadow-lg shadow-emerald-500/10'
+            }`}
+          >
+            {loadingThc ? (
+              <>
+                <RotateCw className="w-4 h-4 animate-spin" />
+                Querying AI for THC...
+              </>
+            ) : (
+              <>
+                <Zap className="w-4 h-4" />
+                Estimate Missing THC with AI
+              </>
+            )}
+          </button>
+        </div>
+
+        {thcError && (
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl text-xs font-semibold mb-6">
+            Error: {thcError}
+          </div>
+        )}
+
+        {/* Proposals Queue */}
+        {thcProposals.length > 0 && (
+          <div className="space-y-4 border-t border-slate-900 pt-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                Pending AI Proposals ({thcProposals.length})
+              </h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleAcceptAll}
+                  className="px-3.5 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-300 text-xs font-bold transition-all flex items-center gap-1 shadow-sm"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Accept All ({thcProposals.filter(p => p.status === 'pending' && p.proposedThc).length})
+                </button>
+                <button
+                  onClick={handleAcceptAllHighConfidence}
+                  className="px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-xs font-semibold transition-all flex items-center gap-1"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  High Confidence Only
+                </button>
+                <button
+                  onClick={() => setThcProposals([])}
+                  className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 text-xs font-semibold transition-all"
+                >
+                  Clear Queue
+                </button>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto rounded-xl border border-slate-900 bg-slate-950/40">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-slate-950 border-b border-slate-900 text-slate-400 font-semibold">
+                    <th className="p-3">Strain & Breeder</th>
+                    <th className="p-3">AI Proposed THC (Editable)</th>
+                    <th className="p-3">Confidence & Model</th>
+                    <th className="p-3">AI Reasoning</th>
+                    <th className="p-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-900/60">
+                  {thcProposals.map((prop, idx) => (
+                    <tr key={prop.strainId} className="hover:bg-slate-900/20 text-slate-300">
+                      <td className="p-3 font-medium">
+                        <div className="font-bold text-slate-100">{prop.name}</div>
+                        <div className="text-[10px] text-emerald-400">{prop.breeder || 'Unknown Breeder'}</div>
+                      </td>
+                      <td className="p-3">
+                        <input
+                          type="text"
+                          value={prop.proposedThc || ''}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setThcProposals(prev => prev.map((p, i) => i === idx ? { ...p, proposedThc: val } : p));
+                          }}
+                          placeholder="e.g. 22%"
+                          className="w-28 h-9 px-3 bg-slate-950 border border-slate-800 rounded-lg text-emerald-400 font-bold text-xs focus:outline-none focus:border-emerald-500/50"
+                        />
+                      </td>
+                      <td className="p-3">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                            prop.confidence === 'high' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                            prop.confidence === 'medium' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                            'bg-red-500/10 text-red-400 border border-red-500/20'
+                          }`}>
+                            {prop.confidence}
+                          </span>
+                          <span className="text-[10px] text-slate-500 font-mono">{prop.modelUsed}</span>
+                        </div>
+                      </td>
+                      <td className="p-3 text-[11px] text-slate-400 max-w-[250px] leading-relaxed">
+                        {prop.reasoning}
+                      </td>
+                      <td className="p-3 text-right">
+                        <div className="flex justify-end gap-1.5">
+                          <button
+                            onClick={() => handleAcceptThc(idx)}
+                            disabled={prop.status === 'saving'}
+                            className="px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 font-bold text-xs transition-all flex items-center gap-1"
+                          >
+                            {prop.status === 'saving' ? (
+                              <RotateCw className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Check className="w-3.5 h-3.5" />
+                            )}
+                            Accept
+                          </button>
+                          <button
+                            onClick={() => handleRejectThc(idx)}
+                            disabled={prop.status === 'saving'}
+                            className="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 text-xs transition-all"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

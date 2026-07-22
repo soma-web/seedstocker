@@ -1,4 +1,4 @@
-import { getGeminiApiKey, getLocalLlmConfig } from './config.js';
+import { getGeminiApiKey, getLocalLlmConfig, getChatgptApiKey, getChatgptConfig } from './config.js';
 
 function cleanText(html) {
   if (!html) return '';
@@ -12,6 +12,8 @@ function cleanText(html) {
 export async function rewriteDescriptionToProse(originalText, strain, options = {}) {
   const skipAi = options.skipAi ?? false;
   const localConfig = getLocalLlmConfig();
+  const chatgptConfig = getChatgptConfig();
+  const chatgptApiKey = skipAi ? null : getChatgptApiKey();
   
   const prompt = `Du bist ein professioneller Cannabis-Experte und Texter.
 Schreibe eine ansprechende, sachliche und einzigartige Sortenbeschreibung auf Deutsch für die folgende Cannabissorte.
@@ -41,7 +43,7 @@ Schreibe genau einen zusammenhängenden Absatz (ca. 4-6 Sätze).`;
 
   if (!skipAi && localConfig.useLocalLlm) {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 12000); // 12 seconds timeout
+    const timeoutId = setTimeout(() => controller.abort(), 180000); // 180 seconds timeout
     try {
       console.log(`[Local LLM] Sending request to local inference server: ${localConfig.localLlmUrl} (model: ${localConfig.localLlmModel})`);
       const response = await fetch(localConfig.localLlmUrl, {
@@ -85,6 +87,56 @@ Schreibe genau einen zusammenhängenden Absatz (ca. 4-6 Sätze).`;
     } catch (err) {
       clearTimeout(timeoutId);
       console.error(`[Local LLM] Connection failed: ${err.message}`);
+    }
+  }
+
+  if (!skipAi && chatgptConfig.useChatGpt && chatgptApiKey) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 seconds timeout
+    try {
+      console.log(`[ChatGPT] Sending request to OpenAI API: https://api.openai.com/v1/chat/completions (model: ${chatgptConfig.chatgptModel})`);
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${chatgptApiKey}`
+        },
+        body: JSON.stringify({
+          model: chatgptConfig.chatgptModel,
+          messages: [
+            {
+              role: 'system',
+              content: 'Du bist ein professioneller Cannabis-Experte und Texter. Schreibe sachliche und ansprechende Beschreibungen auf Deutsch.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          temperature: 0.7
+        }),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if (response.ok) {
+        const data = await response.json();
+        const text = data.choices?.[0]?.message?.content;
+        if (text && text.trim()) {
+          console.log(`[ChatGPT] Successfully generated description for ${strain.name}`);
+          return {
+            description: text.replace(/\n+/g, ' ').trim(),
+            isAi: true,
+            modelUsed: chatgptConfig.chatgptModel
+          };
+        }
+      } else {
+        console.error(`[ChatGPT] OpenAI API returned status ${response.status}: ${await response.text()}`);
+      }
+    } catch (err) {
+      clearTimeout(timeoutId);
+      console.error(`[ChatGPT] Connection failed: ${err.message}`);
     }
   }
 
@@ -226,5 +278,165 @@ Schreibe genau einen zusammenhängenden Absatz (ca. 4-6 Sätze).`;
   return {
     description: `${s1} ${s2} ${s3} ${s4} ${s5}`,
     isAi: false
+  };
+}
+
+/**
+ * Estimate THC content for a strain using active LLMs (Local LLM, ChatGPT, or Gemini).
+ */
+export async function estimateThcForStrain(strain, shopDescriptions = []) {
+  const localConfig = getLocalLlmConfig();
+  const chatgptConfig = getChatgptConfig();
+  const chatgptApiKey = getChatgptApiKey();
+  const geminiApiKey = getGeminiApiKey();
+
+  const descContext = Array.isArray(shopDescriptions)
+    ? shopDescriptions.map(d => (typeof d === 'string' ? d : d.description)).filter(Boolean).join('\n---\n')
+    : String(shopDescriptions || '');
+
+  const prompt = `Du bist ein erfahrener Cannabis-Experte und Datenanalyst.
+Wir suchen den typischen THC-Gehalt (in %) für die folgende Cannabissorte:
+- Sortenname: ${strain.name || 'Unbekannt'}
+- Breeder / Züchter: ${strain.breeder || 'Unbekannt'}
+- Typ: ${strain.type || 'Unbekannt'}
+- Genetik: ${strain.strainType || strain.strain_type || 'Unbekannt'}
+
+Zusätzliche Shop-Beschreibungen als Kontext:
+"""
+${cleanText(descContext)}
+"""
+
+Aufgabe:
+Analysiere die Angaben und dein Fachwissen zu dieser Sorte von diesem Züchter.
+Antworte AUSSCHLIESSLICH mit einem gültigen JSON-Objekt im folgenden Format:
+{
+  "thc": "22%" (oder "18-24%" oder null falls unbekannt),
+  "confidence": "high" (oder "medium" oder "low"),
+  "reasoning": "Kurze Begründung auf Deutsch (max 1-2 Sätze)"
+}`;
+
+  function parseLlmJson(rawText) {
+    if (!rawText) return null;
+    try {
+      const cleaned = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
+      const parsed = JSON.parse(cleaned);
+      if (parsed && typeof parsed === 'object') {
+        let thc = parsed.thc ? String(parsed.thc).trim() : null;
+        if (thc && !thc.endsWith('%') && /^\d+(?:-\d+)?$/.test(thc)) {
+          thc += '%';
+        }
+        return {
+          thc: thc || null,
+          confidence: parsed.confidence || 'medium',
+          reasoning: parsed.reasoning || 'Auf Basis der Sorten-Informationen geschätzt.'
+        };
+      }
+    } catch {}
+    
+    // Regex fallback if LLM returned text instead of pure JSON
+    const thcMatch = rawText.match(/(\d{1,2}(?:\.\d+)?\s*(?:-\s*\d{1,2}(?:\.\d+)?)?\s*%)/);
+    if (thcMatch) {
+      return {
+        thc: thcMatch[1].replace(/\s+/g, ''),
+        confidence: 'medium',
+        reasoning: 'Aus der Antwort des Modells extrahiert.'
+      };
+    }
+    return null;
+  }
+
+  // 1. Local LLM
+  if (localConfig.useLocalLlm) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+    try {
+      const response = await fetch(localConfig.localLlmUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: localConfig.localLlmModel,
+          messages: [
+            { role: 'system', content: 'Du antwortest ausschließlich in gültigem JSON.' },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.2
+        }),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      if (response.ok) {
+        const data = await response.json();
+        const text = data.choices?.[0]?.message?.content;
+        const res = parseLlmJson(text);
+        if (res) return { ...res, modelUsed: localConfig.localLlmModel };
+      }
+    } catch (err) {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  // 2. ChatGPT
+  if (chatgptConfig.useChatGpt && chatgptApiKey) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${chatgptApiKey}`
+        },
+        body: JSON.stringify({
+          model: chatgptConfig.chatgptModel,
+          messages: [
+            { role: 'system', content: 'Du antwortest ausschließlich in gültigem JSON.' },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.2
+        }),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      if (response.ok) {
+        const data = await response.json();
+        const text = data.choices?.[0]?.message?.content;
+        const res = parseLlmJson(text);
+        if (res) return { ...res, modelUsed: chatgptConfig.chatgptModel };
+      }
+    } catch (err) {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  // 3. Gemini
+  if (geminiApiKey) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }]
+        }),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      if (response.ok) {
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        const res = parseLlmJson(text);
+        if (res) return { ...res, modelUsed: 'gemini-2.0-flash' };
+      }
+    } catch (err) {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  return {
+    thc: null,
+    confidence: 'low',
+    reasoning: 'Keine KI-Antwort verfügbar oder kein THC-Wert in Datenbank/Kontext gefunden.',
+    modelUsed: null
   };
 }

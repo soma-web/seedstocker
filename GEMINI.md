@@ -1,3 +1,5 @@
+Do not leave the seedstocker folder!
+
 ## graphify
 
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.

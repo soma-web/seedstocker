@@ -256,7 +256,7 @@ export default async function strainRoutes(app) {
         rewrittenDescription
       } = req.body;
 
-      const strain = sqlite.prepare('SELECT id FROM strains WHERE id = ?').get(id);
+      const strain = sqlite.prepare('SELECT * FROM strains WHERE id = ?').get(id);
       if (!strain) return reply.status(404).send({ error: 'Strain not found' });
 
       sqlite.transaction(() => {
@@ -284,24 +284,24 @@ export default async function strainRoutes(app) {
               updated_at = ?
           WHERE id = ?
         `).run(
-          name !== undefined ? name : null,
-          breeder !== undefined ? breeder : null,
-          type !== undefined ? type : null,
-          seedType !== undefined ? seedType : null,
-          thc !== undefined ? thc : null,
-          cbd !== undefined ? cbd : null,
-          strainType !== undefined ? strainType : null,
-          floweringTime !== undefined ? floweringTime : null,
-          floweringMin !== undefined && floweringMin !== null && floweringMin !== '' ? Number(floweringMin) : null,
-          floweringMax !== undefined && floweringMax !== null && floweringMax !== '' ? Number(floweringMax) : null,
-          environment !== undefined ? environment : null,
-          plantHeight !== undefined ? plantHeight : null,
-          harvestMonth !== undefined ? harvestMonth : null,
-          effects !== undefined ? effects : null,
-          rating !== undefined && rating !== null && rating !== '' ? Number(rating) : null,
-          seedfinderUrl !== undefined ? seedfinderUrl : null,
-          harvestYield !== undefined ? harvestYield : null,
-          genetics !== undefined ? genetics : null,
+          name !== undefined ? name : strain.name,
+          breeder !== undefined ? breeder : strain.breeder,
+          type !== undefined ? type : strain.type,
+          seedType !== undefined ? seedType : strain.seed_type,
+          thc !== undefined ? thc : strain.thc,
+          cbd !== undefined ? cbd : strain.cbd,
+          strainType !== undefined ? strainType : strain.strain_type,
+          floweringTime !== undefined ? floweringTime : strain.flowering_time,
+          floweringMin !== undefined && floweringMin !== null && floweringMin !== '' ? Number(floweringMin) : (floweringMin === null ? null : strain.flowering_min),
+          floweringMax !== undefined && floweringMax !== null && floweringMax !== '' ? Number(floweringMax) : (floweringMax === null ? null : strain.flowering_max),
+          environment !== undefined ? environment : strain.environment,
+          plantHeight !== undefined ? plantHeight : strain.plant_height,
+          harvestMonth !== undefined ? harvestMonth : strain.harvest_month,
+          effects !== undefined ? effects : strain.effects,
+          rating !== undefined && rating !== null && rating !== '' ? Number(rating) : (rating === null ? null : strain.rating),
+          seedfinderUrl !== undefined ? seedfinderUrl : strain.seedfinder_url,
+          harvestYield !== undefined ? harvestYield : strain.yield,
+          genetics !== undefined ? genetics : strain.genetics,
           new Date().toISOString(),
           id
         );
