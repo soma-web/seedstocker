@@ -212,6 +212,9 @@ export class BaseScraper {
     if (lower.includes('wenig')) {
       return '0-3%';
     }
+    if (lower === '1%' || lower === '1 %' || lower === '0.1%' || lower === '<1%' || lower === '< 1%' || lower === 'gering') {
+      return '0-1%';
+    }
     if (
       lower === '' ||
       lower === 'not available' ||
@@ -523,19 +526,24 @@ export class BaseScraper {
   parseFloweringRange(val) {
     if (!val) return { min: null, max: null };
     const str = val.toString().trim();
+    const isDays = /\b(tage|days?|d)\b/i.test(str);
     const numbers = [];
     const numberRegex = /(\d+)/g;
     let match;
     while ((match = numberRegex.exec(str)) !== null) {
       numbers.push(parseInt(match[1], 10));
     }
-    if (numbers.length === 1) {
-      return { min: numbers[0], max: numbers[0] };
+    if (numbers.length === 0) return { min: null, max: null };
+
+    let min = numbers.length === 1 ? numbers[0] : Math.min(...numbers);
+    let max = numbers.length === 1 ? numbers[0] : Math.max(...numbers);
+
+    if (isDays && min > 20) {
+      min = Math.round(min / 7);
+      max = Math.round(max / 7);
     }
-    if (numbers.length >= 2) {
-      return { min: Math.min(...numbers), max: Math.max(...numbers) };
-    }
-    return { min: null, max: null };
+
+    return { min, max };
   }
 
   normalizeStrainType(val, tags = []) {

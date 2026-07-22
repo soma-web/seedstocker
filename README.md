@@ -1,5 +1,7 @@
 # Used Services
 - webshare.io for proxy if the scraper gets 429 returned
+- OpenAI for ai generation, usage can be found here: https://platform.openai.com/usage
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.

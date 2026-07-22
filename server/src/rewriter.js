@@ -440,3 +440,478 @@ Antworte AUSSCHLIESSLICH mit einem gültigen JSON-Objekt im folgenden Format:
     modelUsed: null
   };
 }
+
+export async function estimateCbdForStrain(strain, shopDescriptions = []) {
+  const localConfig = getLocalLlmConfig();
+  const chatgptApiKey = getChatgptApiKey();
+  const chatgptConfig = getChatgptConfig();
+  const geminiApiKey = getGeminiApiKey();
+
+  const descContext = shopDescriptions
+    .map(d => d.description)
+    .filter(Boolean)
+    .join('\n\n')
+    .slice(0, 2000);
+
+  const prompt = `Analysiere die folgenden Cannabissorte-Informationen und schätze den CBD-Gehalt (z.B. "10%", "1:1", "15%", "1-2%", "15% CBD (THC:CBD 1:1)"):
+Strain Name: ${strain.name}
+Breeder: ${strain.breeder || 'Unbekannt'}
+Sortentyp/Genetik: ${strain.strainType || 'Unbekannt'}
+Aktueller THC-Gehalt: ${strain.thc || 'Unbekannt'}
+
+Zusätzlicher Kontext aus Shop-Beschreibungen:
+${descContext || 'Keine weiteren Shop-Beschreibungen vorhanden.'}
+
+Antworte ausschließlich im folgenden JSON-Format ohne Markdown-Codeblöcke:
+{
+  "cbd": "geschätzter CBD-Gehalt oder Ratio (z.B. '10%', '1:1', '15%')",
+  "confidence": "high|medium|low",
+  "reasoning": "Kurze deutsche Begründung (1 Satz) zur Schätzung"
+}`;
+
+  function parseLlmJson(rawText) {
+    if (!rawText) return null;
+    let cleaned = rawText.trim();
+    cleaned = cleaned.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/\s*```$/, '').trim();
+
+    try {
+      const parsed = JSON.parse(cleaned);
+      if (parsed.cbd && typeof parsed.cbd === 'string') {
+        return {
+          cbd: parsed.cbd.trim(),
+          confidence: parsed.confidence || 'medium',
+          reasoning: parsed.reasoning || 'Auf Basis der Sorten-Informationen geschätzt.'
+        };
+      }
+    } catch {}
+
+    const cbdMatch = rawText.match(/(\d{1,2}(?:\.\d+)?\s*(?:-\s*\d{1,2}(?:\.\d+)?)?\s*%)/) || rawText.match(/(1:[12]|2:1)/);
+    if (cbdMatch) {
+      return {
+        cbd: cbdMatch[1].replace(/\s+/g, ''),
+        confidence: 'medium',
+        reasoning: 'Aus der Antwort des Modells extrahiert.'
+      };
+    }
+    return null;
+  }
+
+  // 1. Local LLM
+  if (localConfig.useLocalLlm) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+    try {
+      const response = await fetch(localConfig.localLlmUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: localConfig.localLlmModel,
+          messages: [
+            { role: 'system', content: 'Du antwortest ausschließlich in gültigem JSON.' },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.2
+        }),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      if (response.ok) {
+        const data = await response.json();
+        const text = data.choices?.[0]?.message?.content;
+        const res = parseLlmJson(text);
+        if (res) return { ...res, modelUsed: localConfig.localLlmModel };
+      }
+    } catch (err) {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  // 2. ChatGPT
+  if (chatgptConfig.useChatGpt && chatgptApiKey) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${chatgptApiKey}`
+        },
+        body: JSON.stringify({
+          model: chatgptConfig.chatgptModel,
+          messages: [
+            { role: 'system', content: 'Du antwortest ausschließlich in gültigem JSON.' },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.2
+        }),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      if (response.ok) {
+        const data = await response.json();
+        const text = data.choices?.[0]?.message?.content;
+        const res = parseLlmJson(text);
+        if (res) return { ...res, modelUsed: chatgptConfig.chatgptModel };
+      }
+    } catch (err) {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  // 3. Gemini
+  if (geminiApiKey) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }]
+        }),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      if (response.ok) {
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        const res = parseLlmJson(text);
+        if (res) return { ...res, modelUsed: 'gemini-2.0-flash' };
+      }
+    } catch (err) {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  return {
+    cbd: null,
+    confidence: 'low',
+    reasoning: 'Keine KI-Antwort verfügbar oder kein CBD-Wert in Datenbank/Kontext gefunden.',
+    modelUsed: null
+  };
+}
+
+export async function estimateStrainTypeForStrain(strain, shopDescriptions = []) {
+  const localConfig = getLocalLlmConfig();
+  const chatgptApiKey = getChatgptApiKey();
+  const chatgptConfig = getChatgptConfig();
+  const geminiApiKey = getGeminiApiKey();
+
+  const descContext = shopDescriptions
+    .map(d => d.description)
+    .filter(Boolean)
+    .join('\n\n')
+    .slice(0, 2000);
+
+  const prompt = `Analysiere die folgenden Cannabissorte-Informationen und schätze den Genetik-/Sortentyp (z.B. "Indica Dominant", "Sativa Dominant", "60% Sativa / 40% Indica", "Hybrid", "Pure Sativa", "Pure Indica"):
+Strain Name: ${strain.name}
+Breeder: ${strain.breeder || 'Unbekannt'}
+Aktueller THC-Gehalt: ${strain.thc || 'Unbekannt'}
+Aktueller CBD-Gehalt: ${strain.cbd || 'Unbekannt'}
+
+Zusätzlicher Kontext aus Shop-Beschreibungen:
+${descContext || 'Keine weiteren Shop-Beschreibungen vorhanden.'}
+
+Antworte ausschließlich im folgenden JSON-Format ohne Markdown-Codeblöcke:
+{
+  "strainType": "geschätzter Sortentyp (z.B. 'Indica Dominant', '60% Sativa / 40% Indica', 'Hybrid')",
+  "confidence": "high|medium|low",
+  "reasoning": "Kurze deutsche Begründung (1 Satz) zur Schätzung"
+}`;
+
+  function parseLlmJson(rawText) {
+    if (!rawText) return null;
+    let cleaned = rawText.trim();
+    cleaned = cleaned.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/\s*```$/, '').trim();
+
+    try {
+      const parsed = JSON.parse(cleaned);
+      if (parsed.strainType && typeof parsed.strainType === 'string') {
+        return {
+          strainType: parsed.strainType.trim(),
+          confidence: parsed.confidence || 'medium',
+          reasoning: parsed.reasoning || 'Auf Basis der Sorten-Informationen geschätzt.'
+        };
+      }
+    } catch {}
+
+    const typeMatch = rawText.match(/(indica|sativa|hybrid|dominant)/i);
+    if (typeMatch) {
+      return {
+        strainType: rawText.slice(0, 50).trim(),
+        confidence: 'medium',
+        reasoning: 'Aus der Antwort des Modells extrahiert.'
+      };
+    }
+    return null;
+  }
+
+  // 1. Local LLM
+  if (localConfig.useLocalLlm) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+    try {
+      const response = await fetch(localConfig.localLlmUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: localConfig.localLlmModel,
+          messages: [
+            { role: 'system', content: 'Du antwortest ausschließlich in gültigem JSON.' },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.2
+        }),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      if (response.ok) {
+        const data = await response.json();
+        const text = data.choices?.[0]?.message?.content;
+        const res = parseLlmJson(text);
+        if (res) return { ...res, modelUsed: localConfig.localLlmModel };
+      }
+    } catch (err) {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  // 2. ChatGPT
+  if (chatgptConfig.useChatGpt && chatgptApiKey) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${chatgptApiKey}`
+        },
+        body: JSON.stringify({
+          model: chatgptConfig.chatgptModel,
+          messages: [
+            { role: 'system', content: 'Du antwortest ausschließlich in gültigem JSON.' },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.2
+        }),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      if (response.ok) {
+        const data = await response.json();
+        const text = data.choices?.[0]?.message?.content;
+        const res = parseLlmJson(text);
+        if (res) return { ...res, modelUsed: chatgptConfig.chatgptModel };
+      }
+    } catch (err) {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  // 3. Gemini
+  if (geminiApiKey) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }]
+        }),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      if (response.ok) {
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        const res = parseLlmJson(text);
+        if (res) return { ...res, modelUsed: 'gemini-2.0-flash' };
+      }
+    } catch (err) {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  return {
+    strainType: null,
+    confidence: 'low',
+    reasoning: 'Keine KI-Antwort verfügbar oder keine Genetik-Angabe gefunden.',
+    modelUsed: null
+  };
+}
+
+export async function estimateFloweringTimeForStrain(strain, shopDescriptions = []) {
+  const localConfig = getLocalLlmConfig();
+  const chatgptApiKey = getChatgptApiKey();
+  const chatgptConfig = getChatgptConfig();
+  const geminiApiKey = getGeminiApiKey();
+
+  const descContext = shopDescriptions
+    .map(d => d.description)
+    .filter(Boolean)
+    .join('\n\n')
+    .slice(0, 2000);
+
+  const prompt = `Analysiere die folgenden Cannabissorte-Informationen und schätze die Blütezeit in Wochen (Indoor/Outdoor Blütedauer, z.B. 8-9 Wochen):
+Strain Name: ${strain.name}
+Breeder: ${strain.breeder || 'Unbekannt'}
+Sortentyp: ${strain.strainType || strain.type || 'Unbekannt'}
+Aktueller Blütezeit-Text: ${strain.floweringTime || 'Unbekannt'}
+
+Zusätzlicher Kontext aus Shop-Beschreibungen:
+${descContext || 'Keine weiteren Shop-Beschreibungen vorhanden.'}
+
+Antworte ausschließlich im folgenden JSON-Format ohne Markdown-Codeblöcke:
+{
+  "floweringMin": 8,
+  "floweringMax": 9,
+  "floweringTime": "8-9 Wochen",
+  "confidence": "high|medium|low",
+  "reasoning": "Kurze deutsche Begründung (1 Satz) zur Schätzung"
+}`;
+
+  function parseLlmJson(rawText) {
+    if (!rawText) return null;
+    let cleaned = rawText.trim();
+    cleaned = cleaned.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/\s*```$/, '').trim();
+
+    try {
+      const parsed = JSON.parse(cleaned);
+      const min = parseInt(parsed.floweringMin, 10);
+      const max = parseInt(parsed.floweringMax, 10);
+
+      if (!isNaN(min) && !isNaN(max)) {
+        return {
+          floweringMin: Math.min(min, max),
+          floweringMax: Math.max(min, max),
+          floweringTime: parsed.floweringTime || `${Math.min(min, max)}-${Math.max(min, max)} Wochen`,
+          confidence: parsed.confidence || 'medium',
+          reasoning: parsed.reasoning || 'Auf Basis der Sorten-Informationen geschätzt.'
+        };
+      }
+    } catch {}
+
+    const numbers = [];
+    const numberRegex = /(\d+)/g;
+    let match;
+    while ((match = numberRegex.exec(rawText)) !== null) {
+      const num = parseInt(match[1], 10);
+      if (num >= 4 && num <= 16) {
+        numbers.push(num);
+      }
+    }
+
+    if (numbers.length > 0) {
+      const min = Math.min(...numbers);
+      const max = Math.max(...numbers);
+      return {
+        floweringMin: min,
+        floweringMax: max,
+        floweringTime: `${min}-${max} Wochen`,
+        confidence: 'medium',
+        reasoning: 'Aus der Antwort des Modells extrahiert.'
+      };
+    }
+    return null;
+  }
+
+  // 1. Local LLM
+  if (localConfig.useLocalLlm) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+    try {
+      const response = await fetch(localConfig.localLlmUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: localConfig.localLlmModel,
+          messages: [
+            { role: 'system', content: 'Du antwortest ausschließlich in gültigem JSON.' },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.2
+        }),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      if (response.ok) {
+        const data = await response.json();
+        const text = data.choices?.[0]?.message?.content;
+        const res = parseLlmJson(text);
+        if (res) return { ...res, modelUsed: localConfig.localLlmModel };
+      }
+    } catch (err) {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  // 2. ChatGPT
+  if (chatgptConfig.useChatGpt && chatgptApiKey) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${chatgptApiKey}`
+        },
+        body: JSON.stringify({
+          model: chatgptConfig.chatgptModel,
+          messages: [
+            { role: 'system', content: 'Du antwortest ausschließlich in gültigem JSON.' },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.2
+        }),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      if (response.ok) {
+        const data = await response.json();
+        const text = data.choices?.[0]?.message?.content;
+        const res = parseLlmJson(text);
+        if (res) return { ...res, modelUsed: chatgptConfig.chatgptModel };
+      }
+    } catch (err) {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  // 3. Gemini
+  if (geminiApiKey) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }]
+        }),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      if (response.ok) {
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        const res = parseLlmJson(text);
+        if (res) return { ...res, modelUsed: 'gemini-2.0-flash' };
+      }
+    } catch (err) {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  return {
+    floweringMin: null,
+    floweringMax: null,
+    floweringTime: null,
+    confidence: 'low',
+    reasoning: 'Keine KI-Antwort verfügbar oder keine Blütezeit-Angabe gefunden.',
+    modelUsed: null
+  };
+}

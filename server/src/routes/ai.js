@@ -1,5 +1,6 @@
 import { sqlite } from '../db.js';
-import { rewriteDescriptionToProse, estimateThcForStrain } from '../rewriter.js';
+import { rewriteDescriptionToProse, estimateThcForStrain, estimateCbdForStrain, estimateStrainTypeForStrain, estimateFloweringTimeForStrain } from '../rewriter.js';
+import { BaseScraper } from '../scrapers/BaseScraper.js';
 
 export default async function aiRoutes(app) {
 
@@ -301,6 +302,299 @@ export default async function aiRoutes(app) {
             breeder: strain.breeder,
             currentThc: strain.thc,
             proposedThc: result.thc,
+            confidence: result.confidence,
+            reasoning: result.reasoning,
+            modelUsed: result.modelUsed
+          });
+        }
+      }
+
+      return { success: true, count: proposals.length, proposals };
+    } catch (err) {
+      reply.status(500).send({ error: err.message });
+    }
+  });
+
+  // ── Missing CBD Strains Listing ───────────────────────────────────────────
+  app.get('/api/strains/missing-cbd', async (req, reply) => {
+    try {
+      const rows = sqlite.prepare(`
+        SELECT id, name, breeder, type, seed_type AS seedType, strain_type AS strainType, thc, cbd
+        FROM strains
+        WHERE (cbd IS NULL OR cbd = '' OR cbd = 'N/A' OR cbd = 'Unknown' OR cbd = '?')
+          AND (LOWER(name) LIKE '%cbd%' OR LOWER(name) LIKE '%1:1%' OR LOWER(name) LIKE '%1:2%' OR LOWER(name) LIKE '%2:1%')
+        ORDER BY name ASC
+      `).all();
+      return { count: rows.length, strains: rows };
+    } catch (err) {
+      reply.status(500).send({ error: err.message });
+    }
+  });
+
+  // ── AI CBD Estimation for Single Strain ──────────────────────────────────
+  app.post('/api/strains/:id/estimate-cbd', async (req, reply) => {
+    try {
+      const { id } = req.params;
+      const strain = sqlite.prepare('SELECT * FROM strains WHERE id = ?').get(id);
+      if (!strain) {
+        return reply.status(404).send({ error: 'Strain not found' });
+      }
+
+      const shopDescs = sqlite.prepare(`
+        SELECT description FROM strain_shop_descriptions WHERE strain_id = ?
+      `).all(id);
+
+      const result = await estimateCbdForStrain(strain, shopDescs);
+      return {
+        strainId: strain.id,
+        name: strain.name,
+        breeder: strain.breeder,
+        currentCbd: strain.cbd,
+        proposedCbd: result.cbd,
+        confidence: result.confidence,
+        reasoning: result.reasoning,
+        modelUsed: result.modelUsed
+      };
+    } catch (err) {
+      reply.status(500).send({ error: err.message });
+    }
+  });
+
+  // ── AI CBD Estimation Batch Generator ─────────────────────────────────────
+  app.post('/api/strains/estimate-cbd/bulk', async (req, reply) => {
+    try {
+      const { limit = 20 } = req.body || {};
+      const parsedLimit = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 100);
+
+      const missingStrains = sqlite.prepare(`
+        SELECT * FROM strains
+        WHERE (cbd IS NULL OR cbd = '' OR cbd = 'N/A' OR cbd = 'Unknown' OR cbd = '?')
+          AND (LOWER(name) LIKE '%cbd%' OR LOWER(name) LIKE '%1:1%' OR LOWER(name) LIKE '%1:2%' OR LOWER(name) LIKE '%2:1%')
+        ORDER BY name ASC
+        LIMIT ?
+      `).all(parsedLimit);
+
+      const proposals = [];
+      for (const strain of missingStrains) {
+        const shopDescs = sqlite.prepare(`
+          SELECT description FROM strain_shop_descriptions WHERE strain_id = ?
+        `).all(strain.id);
+
+        const result = await estimateCbdForStrain(strain, shopDescs);
+        if (result && result.cbd) {
+          proposals.push({
+            strainId: strain.id,
+            name: strain.name,
+            breeder: strain.breeder,
+            currentCbd: strain.cbd,
+            proposedCbd: result.cbd,
+            confidence: result.confidence,
+            reasoning: result.reasoning,
+            modelUsed: result.modelUsed
+          });
+        }
+      }
+
+      return { success: true, count: proposals.length, proposals };
+    } catch (err) {
+      reply.status(500).send({ error: err.message });
+    }
+  });
+
+  // ── Missing Strain Type Listing ───────────────────────────────────────────
+  app.get('/api/strains/missing-strain-type', async (req, reply) => {
+    try {
+      const rows = sqlite.prepare(`
+        SELECT id, name, breeder, type, seed_type AS seedType, strain_type AS strainType, thc, cbd
+        FROM strains
+        WHERE strain_type IS NULL OR strain_type = '' OR strain_type = 'N/A' OR strain_type = 'Unknown' OR strain_type = '?'
+        ORDER BY name ASC
+      `).all();
+      return { count: rows.length, strains: rows };
+    } catch (err) {
+      reply.status(500).send({ error: err.message });
+    }
+  });
+
+  // ── AI Strain Type Estimation for Single Strain ───────────────────────────
+  app.post('/api/strains/:id/estimate-strain-type', async (req, reply) => {
+    try {
+      const { id } = req.params;
+      const strain = sqlite.prepare('SELECT * FROM strains WHERE id = ?').get(id);
+      if (!strain) {
+        return reply.status(404).send({ error: 'Strain not found' });
+      }
+
+      const shopDescs = sqlite.prepare(`
+        SELECT description FROM strain_shop_descriptions WHERE strain_id = ?
+      `).all(id);
+
+      const result = await estimateStrainTypeForStrain(strain, shopDescs);
+      return {
+        strainId: strain.id,
+        name: strain.name,
+        breeder: strain.breeder,
+        currentStrainType: strain.strain_type,
+        proposedStrainType: result.strainType,
+        confidence: result.confidence,
+        reasoning: result.reasoning,
+        modelUsed: result.modelUsed
+      };
+    } catch (err) {
+      reply.status(500).send({ error: err.message });
+    }
+  });
+
+  // ── AI Strain Type Estimation Batch Generator ────────────────────────────
+  app.post('/api/strains/estimate-strain-type/bulk', async (req, reply) => {
+    try {
+      const { limit = 20 } = req.body || {};
+      const parsedLimit = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 100);
+
+      const missingStrains = sqlite.prepare(`
+        SELECT * FROM strains
+        WHERE strain_type IS NULL OR strain_type = '' OR strain_type = 'N/A' OR strain_type = 'Unknown' OR strain_type = '?'
+        ORDER BY name ASC
+        LIMIT ?
+      `).all(parsedLimit);
+
+      const proposals = [];
+      for (const strain of missingStrains) {
+        const shopDescs = sqlite.prepare(`
+          SELECT description FROM strain_shop_descriptions WHERE strain_id = ?
+        `).all(strain.id);
+
+        const result = await estimateStrainTypeForStrain(strain, shopDescs);
+        if (result && result.strainType) {
+          proposals.push({
+            strainId: strain.id,
+            name: strain.name,
+            breeder: strain.breeder,
+            currentStrainType: strain.strain_type,
+            proposedStrainType: result.strainType,
+            confidence: result.confidence,
+            reasoning: result.reasoning,
+            modelUsed: result.modelUsed
+          });
+        }
+      }
+
+      return { success: true, count: proposals.length, proposals };
+    } catch (err) {
+      reply.status(500).send({ error: err.message });
+    }
+  });
+
+  // ── Missing Flowering Time Listing ─────────────────────────────────────────
+  app.get('/api/strains/missing-flowering-time', async (req, reply) => {
+    try {
+      const rows = sqlite.prepare(`
+        SELECT id, name, breeder, type, seed_type AS seedType, strain_type AS strainType, thc, cbd, flowering_time AS floweringTime, flowering_min AS floweringMin, flowering_max AS floweringMax
+        FROM strains
+        WHERE flowering_min IS NULL OR flowering_max IS NULL
+        ORDER BY name ASC
+      `).all();
+      return { count: rows.length, strains: rows };
+    } catch (err) {
+      reply.status(500).send({ error: err.message });
+    }
+  });
+
+  // ── Auto-Populate Flowering Min/Max From Existing Text ────────────────────
+  app.post('/api/strains/populate-flowering-from-text', async (req, reply) => {
+    try {
+      const scraperHelper = new BaseScraper();
+      const rows = sqlite.prepare(`
+        SELECT id, name, flowering_time AS floweringTime
+        FROM strains
+        WHERE (flowering_min IS NULL OR flowering_max IS NULL)
+          AND flowering_time IS NOT NULL AND flowering_time != ''
+      `).all();
+
+      let updatedCount = 0;
+      const updatedStrains = [];
+
+      for (const strain of rows) {
+        const range = scraperHelper.parseFloweringRange(strain.floweringTime);
+        if (range.min !== null && range.max !== null) {
+          sqlite.prepare(`
+            UPDATE strains
+            SET flowering_min = ?, flowering_max = ?
+            WHERE id = ?
+          `).run(range.min, range.max, strain.id);
+          updatedCount++;
+          updatedStrains.push({ id: strain.id, name: strain.name, min: range.min, max: range.max, text: strain.floweringTime });
+        }
+      }
+
+      return { success: true, updatedCount, updatedStrains };
+    } catch (err) {
+      reply.status(500).send({ error: err.message });
+    }
+  });
+
+  // ── AI Flowering Time Estimation for Single Strain ────────────────────────
+  app.post('/api/strains/:id/estimate-flowering-time', async (req, reply) => {
+    try {
+      const { id } = req.params;
+      const strain = sqlite.prepare('SELECT * FROM strains WHERE id = ?').get(id);
+      if (!strain) {
+        return reply.status(404).send({ error: 'Strain not found' });
+      }
+
+      const shopDescs = sqlite.prepare(`
+        SELECT description FROM strain_shop_descriptions WHERE strain_id = ?
+      `).all(id);
+
+      const result = await estimateFloweringTimeForStrain(strain, shopDescs);
+      return {
+        strainId: strain.id,
+        name: strain.name,
+        breeder: strain.breeder,
+        currentFloweringMin: strain.flowering_min,
+        currentFloweringMax: strain.flowering_max,
+        currentFloweringTime: strain.flowering_time,
+        proposedMin: result.floweringMin,
+        proposedMax: result.floweringMax,
+        proposedTime: result.floweringTime,
+        confidence: result.confidence,
+        reasoning: result.reasoning,
+        modelUsed: result.modelUsed
+      };
+    } catch (err) {
+      reply.status(500).send({ error: err.message });
+    }
+  });
+
+  // ── AI Flowering Time Estimation Batch Generator ──────────────────────────
+  app.post('/api/strains/estimate-flowering-time/bulk', async (req, reply) => {
+    try {
+      const { limit = 20 } = req.body || {};
+      const parsedLimit = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 100);
+
+      const missingStrains = sqlite.prepare(`
+        SELECT * FROM strains
+        WHERE flowering_min IS NULL OR flowering_max IS NULL
+        ORDER BY name ASC
+        LIMIT ?
+      `).all(parsedLimit);
+
+      const proposals = [];
+      for (const strain of missingStrains) {
+        const shopDescs = sqlite.prepare(`
+          SELECT description FROM strain_shop_descriptions WHERE strain_id = ?
+        `).all(strain.id);
+
+        const result = await estimateFloweringTimeForStrain(strain, shopDescs);
+        if (result && (result.floweringMin !== null || result.floweringMax !== null)) {
+          proposals.push({
+            strainId: strain.id,
+            name: strain.name,
+            breeder: strain.breeder,
+            currentFloweringTime: strain.flowering_time,
+            proposedMin: result.floweringMin,
+            proposedMax: result.floweringMax,
+            proposedTime: result.floweringTime || (result.floweringMin ? `${result.floweringMin}-${result.floweringMax || result.floweringMin} Wochen` : null),
             confidence: result.confidence,
             reasoning: result.reasoning,
             modelUsed: result.modelUsed

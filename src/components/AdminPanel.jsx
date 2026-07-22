@@ -62,9 +62,40 @@ export default function AdminPanel({
   const [loadingThc, setLoadingThc] = useState(false);
   const [thcError, setThcError] = useState(null);
 
+  const [cbdLimit, setCbdLimit] = useState('15');
+  const [missingCbdCount, setMissingCbdCount] = useState(0);
+  const [cbdProposals, setCbdProposals] = useState([]);
+  const [loadingCbd, setLoadingCbd] = useState(false);
+  const [cbdError, setCbdError] = useState(null);
+
+  const [strainTypeLimit, setStrainTypeLimit] = useState('15');
+  const [missingStrainTypeCount, setMissingStrainTypeCount] = useState(0);
+  const [strainTypeProposals, setStrainTypeProposals] = useState([]);
+  const [loadingStrainType, setLoadingStrainType] = useState(false);
+  const [strainTypeError, setStrainTypeError] = useState(null);
+
+  const [floweringLimit, setFloweringLimit] = useState('15');
+  const [missingFloweringCount, setMissingFloweringCount] = useState(0);
+  const [floweringProposals, setFloweringProposals] = useState([]);
+  const [loadingFlowering, setLoadingFlowering] = useState(false);
+  const [populatingFloweringText, setPopulatingFloweringText] = useState(false);
+  const [floweringError, setFloweringError] = useState(null);
+
   useEffect(() => {
     apiGet('/api/strains/missing-thc')
       .then(res => setMissingThcCount(res.count))
+      .catch(() => {});
+
+    apiGet('/api/strains/missing-cbd')
+      .then(res => setMissingCbdCount(res.count))
+      .catch(() => {});
+
+    apiGet('/api/strains/missing-strain-type')
+      .then(res => setMissingStrainTypeCount(res.count))
+      .catch(() => {});
+
+    apiGet('/api/strains/missing-flowering-time')
+      .then(res => setMissingFloweringCount(res.count))
       .catch(() => {});
 
     apiGet('/api/strains/missing-ai-description')
@@ -138,6 +169,230 @@ export default function AdminPanel({
       }
     }
     setThcProposals([]);
+  };
+
+  const handleFetchCbdEstimates = async () => {
+    setLoadingCbd(true);
+    setCbdError(null);
+    try {
+      const res = await apiPost('/api/strains/estimate-cbd/bulk', { limit: Number(cbdLimit) || 15 });
+      if (res.proposals && res.proposals.length > 0) {
+        setCbdProposals(res.proposals.map(p => ({ ...p, status: 'pending' })));
+      } else {
+        alert('No CBD proposals returned by AI. All matching strains might already have CBD values or no matching strains found.');
+      }
+    } catch (err) {
+      setCbdError(err.message || 'Failed to fetch CBD estimates');
+    } finally {
+      setLoadingCbd(false);
+    }
+  };
+
+  const handleAcceptCbd = async (proposalIndex) => {
+    const prop = cbdProposals[proposalIndex];
+    if (!prop || !prop.proposedCbd) return;
+
+    setCbdProposals(prev => prev.map((p, idx) => idx === proposalIndex ? { ...p, status: 'saving' } : p));
+    try {
+      await apiPut(`/api/strains/${prop.strainId}`, { cbd: prop.proposedCbd });
+      setCbdProposals(prev => prev.filter((_, idx) => idx !== proposalIndex));
+      setMissingCbdCount(prev => Math.max(0, prev - 1));
+    } catch (err) {
+      alert(`Failed to save CBD for ${prop.name}: ${err.message}`);
+      setCbdProposals(prev => prev.map((p, idx) => idx === proposalIndex ? { ...p, status: 'pending' } : p));
+    }
+  };
+
+  const handleRejectCbd = (proposalIndex) => {
+    setCbdProposals(prev => prev.filter((_, idx) => idx !== proposalIndex));
+  };
+
+  const handleAcceptAllCbdHighConfidence = async () => {
+    const highConfIndices = cbdProposals
+      .map((p, idx) => (p.confidence === 'high' && p.status === 'pending' ? idx : null))
+      .filter(idx => idx !== null);
+
+    if (highConfIndices.length === 0) {
+      alert('No high-confidence pending proposals found in the queue.');
+      return;
+    }
+
+    for (const idx of highConfIndices) {
+      await handleAcceptCbd(idx);
+    }
+  };
+
+  const handleAcceptAllCbd = async () => {
+    const currentQueue = [...cbdProposals];
+    for (let i = 0; i < currentQueue.length; i++) {
+      const prop = currentQueue[i];
+      if (prop && prop.proposedCbd) {
+        try {
+          await apiPut(`/api/strains/${prop.strainId}`, { cbd: prop.proposedCbd });
+          setMissingCbdCount(prev => Math.max(0, prev - 1));
+        } catch (err) {
+          console.error(`Failed to save CBD for ${prop.name}:`, err);
+        }
+      }
+    }
+    setCbdProposals([]);
+  };
+
+  const handleFetchStrainTypeEstimates = async () => {
+    setLoadingStrainType(true);
+    setStrainTypeError(null);
+    try {
+      const res = await apiPost('/api/strains/estimate-strain-type/bulk', { limit: Number(strainTypeLimit) || 15 });
+      if (res.proposals && res.proposals.length > 0) {
+        setStrainTypeProposals(res.proposals.map(p => ({ ...p, status: 'pending' })));
+      } else {
+        alert('No strain type proposals returned by AI. All strains might already have strain type values or no matching strains found.');
+      }
+    } catch (err) {
+      setStrainTypeError(err.message || 'Failed to fetch strain type estimates');
+    } finally {
+      setLoadingStrainType(false);
+    }
+  };
+
+  const handleAcceptStrainType = async (proposalIndex) => {
+    const prop = strainTypeProposals[proposalIndex];
+    if (!prop || !prop.proposedStrainType) return;
+
+    setStrainTypeProposals(prev => prev.map((p, idx) => idx === proposalIndex ? { ...p, status: 'saving' } : p));
+    try {
+      await apiPut(`/api/strains/${prop.strainId}`, { strainType: prop.proposedStrainType });
+      setStrainTypeProposals(prev => prev.filter((_, idx) => idx !== proposalIndex));
+      setMissingStrainTypeCount(prev => Math.max(0, prev - 1));
+    } catch (err) {
+      alert(`Failed to save strain type for ${prop.name}: ${err.message}`);
+      setStrainTypeProposals(prev => prev.map((p, idx) => idx === proposalIndex ? { ...p, status: 'pending' } : p));
+    }
+  };
+
+  const handleRejectStrainType = (proposalIndex) => {
+    setStrainTypeProposals(prev => prev.filter((_, idx) => idx !== proposalIndex));
+  };
+
+  const handleAcceptAllStrainTypeHighConfidence = async () => {
+    const highConfIndices = strainTypeProposals
+      .map((p, idx) => (p.confidence === 'high' && p.status === 'pending' ? idx : null))
+      .filter(idx => idx !== null);
+
+    if (highConfIndices.length === 0) {
+      alert('No high-confidence pending proposals found in the queue.');
+      return;
+    }
+
+    for (const idx of highConfIndices) {
+      await handleAcceptStrainType(idx);
+    }
+  };
+
+  const handleAcceptAllStrainType = async () => {
+    const currentQueue = [...strainTypeProposals];
+    for (let i = 0; i < currentQueue.length; i++) {
+      const prop = currentQueue[i];
+      if (prop && prop.proposedStrainType) {
+        try {
+          await apiPut(`/api/strains/${prop.strainId}`, { strainType: prop.proposedStrainType });
+          setMissingStrainTypeCount(prev => Math.max(0, prev - 1));
+        } catch (err) {
+          console.error(`Failed to save strain type for ${prop.name}:`, err);
+        }
+      }
+    }
+    setStrainTypeProposals([]);
+  };
+
+  const handlePopulateFloweringFromText = async () => {
+    setPopulatingFloweringText(true);
+    try {
+      const res = await apiPost('/api/strains/populate-flowering-from-text', {});
+      alert(`Successfully auto-filled min/max flowering weeks for ${res.updatedCount} strains from existing text strings!`);
+      apiGet('/api/strains/missing-flowering-time')
+        .then(r => setMissingFloweringCount(r.count))
+        .catch(() => {});
+    } catch (err) {
+      alert(`Failed to populate flowering times: ${err.message}`);
+    } finally {
+      setPopulatingFloweringText(false);
+    }
+  };
+
+  const handleFetchFloweringEstimates = async () => {
+    setLoadingFlowering(true);
+    setFloweringError(null);
+    try {
+      const res = await apiPost('/api/strains/estimate-flowering-time/bulk', { limit: Number(floweringLimit) || 15 });
+      if (res.proposals && res.proposals.length > 0) {
+        setFloweringProposals(res.proposals.map(p => ({ ...p, status: 'pending' })));
+      } else {
+        alert('No flowering time proposals returned by AI. All strains might already have min/max values or no data found.');
+      }
+    } catch (err) {
+      setFloweringError(err.message || 'Failed to fetch flowering time estimates');
+    } finally {
+      setLoadingFlowering(false);
+    }
+  };
+
+  const handleAcceptFlowering = async (proposalIndex) => {
+    const prop = floweringProposals[proposalIndex];
+    if (!prop || (prop.proposedMin === null && prop.proposedMax === null)) return;
+
+    setFloweringProposals(prev => prev.map((p, idx) => idx === proposalIndex ? { ...p, status: 'saving' } : p));
+    try {
+      await apiPut(`/api/strains/${prop.strainId}`, {
+        floweringMin: Number(prop.proposedMin),
+        floweringMax: Number(prop.proposedMax),
+        floweringTime: prop.proposedTime || `${prop.proposedMin}-${prop.proposedMax} Wochen`
+      });
+      setFloweringProposals(prev => prev.filter((_, idx) => idx !== proposalIndex));
+      setMissingFloweringCount(prev => Math.max(0, prev - 1));
+    } catch (err) {
+      alert(`Failed to save flowering time for ${prop.name}: ${err.message}`);
+      setFloweringProposals(prev => prev.map((p, idx) => idx === proposalIndex ? { ...p, status: 'pending' } : p));
+    }
+  };
+
+  const handleRejectFlowering = (proposalIndex) => {
+    setFloweringProposals(prev => prev.filter((_, idx) => idx !== proposalIndex));
+  };
+
+  const handleAcceptAllFloweringHighConfidence = async () => {
+    const highConfIndices = floweringProposals
+      .map((p, idx) => (p.confidence === 'high' && p.status === 'pending' ? idx : null))
+      .filter(idx => idx !== null);
+
+    if (highConfIndices.length === 0) {
+      alert('No high-confidence pending proposals found in the queue.');
+      return;
+    }
+
+    for (const idx of highConfIndices) {
+      await handleAcceptFlowering(idx);
+    }
+  };
+
+  const handleAcceptAllFlowering = async () => {
+    const currentQueue = [...floweringProposals];
+    for (let i = 0; i < currentQueue.length; i++) {
+      const prop = currentQueue[i];
+      if (prop && (prop.proposedMin !== null || prop.proposedMax !== null)) {
+        try {
+          await apiPut(`/api/strains/${prop.strainId}`, {
+            floweringMin: Number(prop.proposedMin),
+            floweringMax: Number(prop.proposedMax),
+            floweringTime: prop.proposedTime || `${prop.proposedMin}-${prop.proposedMax} Wochen`
+          });
+          setMissingFloweringCount(prev => Math.max(0, prev - 1));
+        } catch (err) {
+          console.error(`Failed to save flowering time for ${prop.name}:`, err);
+        }
+      }
+    }
+    setFloweringProposals([]);
   };
 
   const seedfinderLogTerminalRef = useRef(null);
@@ -950,6 +1205,614 @@ export default function AdminPanel({
                           </button>
                           <button
                             onClick={() => handleRejectThc(idx)}
+                            disabled={prop.status === 'saving'}
+                            className="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 text-xs transition-all"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* AI CBD Content Filler & Review Card */}
+      <div className="glass-panel rounded-2xl p-6 mt-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
+          <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+            <Zap className="w-5 h-5 text-teal-400" />
+            AI CBD Content Filler & Review (CBD / 1:1 / 1:2 / 2:1 Strains)
+          </h2>
+          <span className="px-3 py-1 bg-teal-500/10 border border-teal-500/20 text-teal-400 rounded-full text-xs font-semibold self-start sm:self-auto">
+            {missingCbdCount} Strains Missing CBD
+          </span>
+        </div>
+        <p className="text-xs text-slate-500 mb-6">
+          Query the active LLM (ChatGPT / Gemini / Local LLM) to research and estimate missing CBD percentages or ratios (e.g. 10%, 1:1) for strains containing <strong>CBD</strong>, <strong>1:1</strong>, <strong>1:2</strong>, or <strong>2:1</strong> in their name. Review, edit, and accept proposals before saving them to the database.
+        </p>
+
+        {/* Statistics Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          <div className="bg-slate-950/60 p-4 border border-slate-900 rounded-xl flex items-center justify-between">
+            <div>
+              <span className="block text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Fehlende CBD-Angaben (Filtered)</span>
+              <span className="text-2xl font-bold text-teal-400 font-mono mt-0.5 block">{missingCbdCount} Strains</span>
+            </div>
+            <div className="p-2.5 bg-teal-500/10 border border-teal-500/20 rounded-xl text-teal-400">
+              <Zap className="w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="bg-slate-950/60 p-4 border border-slate-900 rounded-xl flex items-center justify-between">
+            <div>
+              <span className="block text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Gesamt Strains in DB</span>
+              <span className="text-2xl font-bold text-slate-200 font-mono mt-0.5 block">{dbStats.strainsCount || dbStrains.length || 0}</span>
+            </div>
+            <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400">
+              <Layers className="w-5 h-5" />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-4 items-center mb-6">
+          <div className="w-full sm:w-48">
+            <input
+              type="number"
+              min="1"
+              max="100"
+              value={cbdLimit}
+              onChange={e => setCbdLimit(e.target.value)}
+              disabled={loadingCbd}
+              placeholder="Batch size limit"
+              className="w-full h-12 px-4 bg-slate-950 border border-slate-900 rounded-xl text-slate-100 placeholder-slate-650 focus:outline-none focus:border-teal-500/50 text-sm font-medium"
+            />
+          </div>
+          <button
+            onClick={handleFetchCbdEstimates}
+            disabled={loadingCbd || bulkAi.isScanning || scraper.isScanning}
+            className={`px-6 h-12 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-1.5 w-full sm:w-auto ${
+              loadingCbd || bulkAi.isScanning || scraper.isScanning
+                ? 'bg-slate-950 text-slate-600 border border-slate-950 cursor-not-allowed'
+                : 'bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-slate-950 shadow-lg shadow-teal-500/10'
+            }`}
+          >
+            {loadingCbd ? (
+              <>
+                <RotateCw className="w-4 h-4 animate-spin" />
+                Querying AI for CBD...
+              </>
+            ) : (
+              <>
+                <Zap className="w-4 h-4" />
+                Estimate Missing CBD with AI
+              </>
+            )}
+          </button>
+        </div>
+
+        {cbdError && (
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl text-xs font-semibold mb-6">
+            Error: {cbdError}
+          </div>
+        )}
+
+        {/* Proposals Queue */}
+        {cbdProposals.length > 0 && (
+          <div className="space-y-4 border-t border-slate-900 pt-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                Pending AI CBD Proposals ({cbdProposals.length})
+              </h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleAcceptAllCbd}
+                  className="px-3.5 py-1.5 rounded-lg bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/30 text-teal-300 text-xs font-bold transition-all flex items-center gap-1 shadow-sm"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Accept All ({cbdProposals.filter(p => p.status === 'pending' && p.proposedCbd).length})
+                </button>
+                <button
+                  onClick={handleAcceptAllCbdHighConfidence}
+                  className="px-3 py-1.5 rounded-lg bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/20 text-teal-400 text-xs font-semibold transition-all flex items-center gap-1"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  High Confidence Only
+                </button>
+                <button
+                  onClick={() => setCbdProposals([])}
+                  className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 text-xs font-semibold transition-all"
+                >
+                  Clear Queue
+                </button>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto rounded-xl border border-slate-900 bg-slate-950/40">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-slate-950 border-b border-slate-900 text-slate-400 font-semibold">
+                    <th className="p-3">Strain & Breeder</th>
+                    <th className="p-3">AI Proposed CBD (Editable)</th>
+                    <th className="p-3">Confidence & Model</th>
+                    <th className="p-3">AI Reasoning</th>
+                    <th className="p-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-900/60">
+                  {cbdProposals.map((prop, idx) => (
+                    <tr key={prop.strainId || idx} className="hover:bg-slate-900/30 transition-colors">
+                      <td className="p-3">
+                        <div className="font-semibold text-slate-200">{prop.name}</div>
+                        <div className="text-[10px] text-slate-500">{prop.breeder || 'Unknown Breeder'}</div>
+                      </td>
+                      <td className="p-3">
+                        <input
+                          type="text"
+                          value={prop.proposedCbd}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setCbdProposals(prev => prev.map((p, i) => i === idx ? { ...p, proposedCbd: val } : p));
+                          }}
+                          className="w-32 px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-teal-400 font-mono text-xs focus:outline-none focus:border-teal-500/50"
+                        />
+                      </td>
+                      <td className="p-3">
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                              prop.confidence === 'high'
+                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                : prop.confidence === 'medium'
+                                ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                : 'bg-slate-800 text-slate-400'
+                            }`}
+                          >
+                            {prop.confidence}
+                          </span>
+                          {prop.modelUsed && (
+                            <span className="text-[10px] text-slate-500 font-mono">{prop.modelUsed}</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-3 text-slate-400 max-w-xs truncate" title={prop.reasoning}>
+                        {prop.reasoning}
+                      </td>
+                      <td className="p-3 text-right">
+                        <div className="flex justify-end gap-1.5">
+                          <button
+                            onClick={() => handleAcceptCbd(idx)}
+                            disabled={prop.status === 'saving'}
+                            className="px-3 py-1.5 rounded-lg bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/20 text-teal-400 text-xs font-semibold transition-all flex items-center gap-1"
+                          >
+                            {prop.status === 'saving' ? (
+                              <RotateCw className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Check className="w-3.5 h-3.5" />
+                            )}
+                            Accept
+                          </button>
+                          <button
+                            onClick={() => handleRejectCbd(idx)}
+                            disabled={prop.status === 'saving'}
+                            className="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 text-xs transition-all"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* AI Strain Type Content Filler & Review Card */}
+      <div className="glass-panel rounded-2xl p-6 mt-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
+          <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+            <Zap className="w-5 h-5 text-indigo-400" />
+            AI Strain Type Content Filler & Review
+          </h2>
+          <span className="px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-full text-xs font-semibold self-start sm:self-auto">
+            {missingStrainTypeCount} Strains Missing Strain Type
+          </span>
+        </div>
+        <p className="text-xs text-slate-500 mb-6">
+          Query the active LLM (ChatGPT / Gemini / Local LLM) to research and estimate missing strain types / genetics classifications (e.g. Indica Dominant, 60% Sativa / 40% Indica, Hybrid) for all strains lacking genetics data. Review, edit, and accept proposals before saving them to the database.
+        </p>
+
+        {/* Statistics Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          <div className="bg-slate-950/60 p-4 border border-slate-900 rounded-xl flex items-center justify-between">
+            <div>
+              <span className="block text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Fehlende Strain Type Angaben</span>
+              <span className="text-2xl font-bold text-indigo-400 font-mono mt-0.5 block">{missingStrainTypeCount} Strains</span>
+            </div>
+            <div className="p-2.5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl text-indigo-400">
+              <Zap className="w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="bg-slate-950/60 p-4 border border-slate-900 rounded-xl flex items-center justify-between">
+            <div>
+              <span className="block text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Gesamt Strains in DB</span>
+              <span className="text-2xl font-bold text-slate-200 font-mono mt-0.5 block">{dbStats.strainsCount || dbStrains.length || 0}</span>
+            </div>
+            <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400">
+              <Layers className="w-5 h-5" />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-4 items-center mb-6">
+          <div className="w-full sm:w-48">
+            <input
+              type="number"
+              min="1"
+              max="100"
+              value={strainTypeLimit}
+              onChange={e => setStrainTypeLimit(e.target.value)}
+              disabled={loadingStrainType}
+              placeholder="Batch size limit"
+              className="w-full h-12 px-4 bg-slate-950 border border-slate-900 rounded-xl text-slate-100 placeholder-slate-650 focus:outline-none focus:border-indigo-500/50 text-sm font-medium"
+            />
+          </div>
+          <button
+            onClick={handleFetchStrainTypeEstimates}
+            disabled={loadingStrainType || bulkAi.isScanning || scraper.isScanning}
+            className={`px-6 h-12 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-1.5 w-full sm:w-auto ${
+              loadingStrainType || bulkAi.isScanning || scraper.isScanning
+                ? 'bg-slate-950 text-slate-600 border border-slate-950 cursor-not-allowed'
+                : 'bg-gradient-to-r from-indigo-500 to-teal-500 hover:from-indigo-400 hover:to-teal-400 text-slate-950 shadow-lg shadow-indigo-500/10'
+            }`}
+          >
+            {loadingStrainType ? (
+              <>
+                <RotateCw className="w-4 h-4 animate-spin" />
+                Querying AI for Strain Type...
+              </>
+            ) : (
+              <>
+                <Zap className="w-4 h-4" />
+                Estimate Missing Strain Type with AI
+              </>
+            )}
+          </button>
+        </div>
+
+        {strainTypeError && (
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl text-xs font-semibold mb-6">
+            Error: {strainTypeError}
+          </div>
+        )}
+
+        {/* Proposals Queue */}
+        {strainTypeProposals.length > 0 && (
+          <div className="space-y-4 border-t border-slate-900 pt-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                Pending AI Strain Type Proposals ({strainTypeProposals.length})
+              </h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleAcceptAllStrainType}
+                  className="px-3.5 py-1.5 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/30 text-indigo-300 text-xs font-bold transition-all flex items-center gap-1 shadow-sm"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Accept All ({strainTypeProposals.filter(p => p.status === 'pending' && p.proposedStrainType).length})
+                </button>
+                <button
+                  onClick={handleAcceptAllStrainTypeHighConfidence}
+                  className="px-3 py-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-400 text-xs font-semibold transition-all flex items-center gap-1"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  High Confidence Only
+                </button>
+                <button
+                  onClick={() => setStrainTypeProposals([])}
+                  className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 text-xs font-semibold transition-all"
+                >
+                  Clear Queue
+                </button>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto rounded-xl border border-slate-900 bg-slate-950/40">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-slate-950 border-b border-slate-900 text-slate-400 font-semibold">
+                    <th className="p-3">Strain & Breeder</th>
+                    <th className="p-3">AI Proposed Strain Type (Editable)</th>
+                    <th className="p-3">Confidence & Model</th>
+                    <th className="p-3">AI Reasoning</th>
+                    <th className="p-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-900/60">
+                  {strainTypeProposals.map((prop, idx) => (
+                    <tr key={prop.strainId || idx} className="hover:bg-slate-900/30 transition-colors">
+                      <td className="p-3">
+                        <div className="font-semibold text-slate-200">{prop.name}</div>
+                        <div className="text-[10px] text-slate-500">{prop.breeder || 'Unknown Breeder'}</div>
+                      </td>
+                      <td className="p-3">
+                        <input
+                          type="text"
+                          value={prop.proposedStrainType}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setStrainTypeProposals(prev => prev.map((p, i) => i === idx ? { ...p, proposedStrainType: val } : p));
+                          }}
+                          className="w-48 px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-indigo-400 font-mono text-xs focus:outline-none focus:border-indigo-500/50"
+                        />
+                      </td>
+                      <td className="p-3">
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                              prop.confidence === 'high'
+                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                : prop.confidence === 'medium'
+                                ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                : 'bg-slate-800 text-slate-400'
+                            }`}
+                          >
+                            {prop.confidence}
+                          </span>
+                          {prop.modelUsed && (
+                            <span className="text-[10px] text-slate-500 font-mono">{prop.modelUsed}</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-3 text-slate-400 max-w-xs truncate" title={prop.reasoning}>
+                        {prop.reasoning}
+                      </td>
+                      <td className="p-3 text-right">
+                        <div className="flex justify-end gap-1.5">
+                          <button
+                            onClick={() => handleAcceptStrainType(idx)}
+                            disabled={prop.status === 'saving'}
+                            className="px-3 py-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-400 text-xs font-semibold transition-all flex items-center gap-1"
+                          >
+                            {prop.status === 'saving' ? (
+                              <RotateCw className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Check className="w-3.5 h-3.5" />
+                            )}
+                            Accept
+                          </button>
+                          <button
+                            onClick={() => handleRejectStrainType(idx)}
+                            disabled={prop.status === 'saving'}
+                            className="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 text-xs transition-all"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* AI Flowering Weeks Content Filler & Review Card */}
+      <div className="glass-panel rounded-2xl p-6 mt-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
+          <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+            <Zap className="w-5 h-5 text-amber-400" />
+            AI Flowering Weeks Content Filler & Review
+          </h2>
+          <span className="px-3 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-full text-xs font-semibold self-start sm:self-auto">
+            {missingFloweringCount} Strains Missing Min/Max Weeks
+          </span>
+        </div>
+        <p className="text-xs text-slate-500 mb-6">
+          Parse existing flowering time text strings into numerical <strong>min/max weeks</strong> or query the active LLM (ChatGPT / Gemini / Local LLM) to research and estimate missing flowering weeks for all strains.
+        </p>
+
+        {/* Statistics Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          <div className="bg-slate-950/60 p-4 border border-slate-900 rounded-xl flex items-center justify-between">
+            <div>
+              <span className="block text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Fehlende Min/Max Wochen</span>
+              <span className="text-2xl font-bold text-amber-400 font-mono mt-0.5 block">{missingFloweringCount} Strains</span>
+            </div>
+            <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-400">
+              <Zap className="w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="bg-slate-950/60 p-4 border border-slate-900 rounded-xl flex items-center justify-between">
+            <div>
+              <span className="block text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Gesamt Strains in DB</span>
+              <span className="text-2xl font-bold text-slate-200 font-mono mt-0.5 block">{dbStats.strainsCount || dbStrains.length || 0}</span>
+            </div>
+            <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400">
+              <Layers className="w-5 h-5" />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-4 items-center mb-6">
+          <button
+            onClick={handlePopulateFloweringFromText}
+            disabled={populatingFloweringText || loadingFlowering}
+            className="px-5 h-12 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-amber-400 font-semibold text-xs transition-all flex items-center justify-center gap-1.5 w-full sm:w-auto shrink-0"
+          >
+            {populatingFloweringText ? (
+              <RotateCw className="w-4 h-4 animate-spin" />
+            ) : (
+              <CheckCircle2 className="w-4 h-4 text-amber-400" />
+            )}
+            Auto-Fill Min/Max from Existing Text Strings
+          </button>
+
+          <div className="w-full sm:w-48">
+            <input
+              type="number"
+              min="1"
+              max="100"
+              value={floweringLimit}
+              onChange={e => setFloweringLimit(e.target.value)}
+              disabled={loadingFlowering}
+              placeholder="Batch size limit"
+              className="w-full h-12 px-4 bg-slate-950 border border-slate-900 rounded-xl text-slate-100 placeholder-slate-650 focus:outline-none focus:border-amber-500/50 text-sm font-medium"
+            />
+          </div>
+          <button
+            onClick={handleFetchFloweringEstimates}
+            disabled={loadingFlowering || bulkAi.isScanning || scraper.isScanning}
+            className={`px-6 h-12 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-1.5 w-full sm:w-auto ${
+              loadingFlowering || bulkAi.isScanning || scraper.isScanning
+                ? 'bg-slate-950 text-slate-600 border border-slate-950 cursor-not-allowed'
+                : 'bg-gradient-to-r from-amber-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-slate-950 shadow-lg shadow-amber-500/10'
+            }`}
+          >
+            {loadingFlowering ? (
+              <>
+                <RotateCw className="w-4 h-4 animate-spin" />
+                Querying AI for Flowering Weeks...
+              </>
+            ) : (
+              <>
+                <Zap className="w-4 h-4" />
+                Estimate Missing Flowering Weeks with AI
+              </>
+            )}
+          </button>
+        </div>
+
+        {floweringError && (
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl text-xs font-semibold mb-6">
+            Error: {floweringError}
+          </div>
+        )}
+
+        {/* Proposals Queue */}
+        {floweringProposals.length > 0 && (
+          <div className="space-y-4 border-t border-slate-900 pt-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                Pending AI Flowering Weeks Proposals ({floweringProposals.length})
+              </h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleAcceptAllFlowering}
+                  className="px-3.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 text-amber-300 text-xs font-bold transition-all flex items-center gap-1 shadow-sm"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Accept All ({floweringProposals.filter(p => p.status === 'pending' && (p.proposedMin !== null || p.proposedMax !== null)).length})
+                </button>
+                <button
+                  onClick={handleAcceptAllFloweringHighConfidence}
+                  className="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 text-amber-400 text-xs font-semibold transition-all flex items-center gap-1"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  High Confidence Only
+                </button>
+                <button
+                  onClick={() => setFloweringProposals([])}
+                  className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 text-xs font-semibold transition-all"
+                >
+                  Clear Queue
+                </button>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto rounded-xl border border-slate-900 bg-slate-950/40">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-slate-950 border-b border-slate-900 text-slate-400 font-semibold">
+                    <th className="p-3">Strain & Breeder</th>
+                    <th className="p-3">Min Weeks</th>
+                    <th className="p-3">Max Weeks</th>
+                    <th className="p-3">Confidence & Model</th>
+                    <th className="p-3">AI Reasoning</th>
+                    <th className="p-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-900/60">
+                  {floweringProposals.map((prop, idx) => (
+                    <tr key={prop.strainId || idx} className="hover:bg-slate-900/30 transition-colors">
+                      <td className="p-3">
+                        <div className="font-semibold text-slate-200">{prop.name}</div>
+                        <div className="text-[10px] text-slate-500">{prop.breeder || 'Unknown Breeder'} {prop.currentFloweringTime ? `(${prop.currentFloweringTime})` : ''}</div>
+                      </td>
+                      <td className="p-3">
+                        <input
+                          type="number"
+                          min="1"
+                          max="30"
+                          value={prop.proposedMin ?? ''}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setFloweringProposals(prev => prev.map((p, i) => i === idx ? { ...p, proposedMin: val === '' ? null : Number(val) } : p));
+                          }}
+                          className="w-20 px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-amber-400 font-mono text-xs focus:outline-none focus:border-amber-500/50"
+                        />
+                      </td>
+                      <td className="p-3">
+                        <input
+                          type="number"
+                          min="1"
+                          max="30"
+                          value={prop.proposedMax ?? ''}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setFloweringProposals(prev => prev.map((p, i) => i === idx ? { ...p, proposedMax: val === '' ? null : Number(val) } : p));
+                          }}
+                          className="w-20 px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-amber-400 font-mono text-xs focus:outline-none focus:border-amber-500/50"
+                        />
+                      </td>
+                      <td className="p-3">
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                              prop.confidence === 'high'
+                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                : prop.confidence === 'medium'
+                                ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                : 'bg-slate-800 text-slate-400'
+                            }`}
+                          >
+                            {prop.confidence}
+                          </span>
+                          {prop.modelUsed && (
+                            <span className="text-[10px] text-slate-500 font-mono">{prop.modelUsed}</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-3 text-slate-400 max-w-xs truncate" title={prop.reasoning}>
+                        {prop.reasoning}
+                      </td>
+                      <td className="p-3 text-right">
+                        <div className="flex justify-end gap-1.5">
+                          <button
+                            onClick={() => handleAcceptFlowering(idx)}
+                            disabled={prop.status === 'saving'}
+                            className="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 text-amber-400 text-xs font-semibold transition-all flex items-center gap-1"
+                          >
+                            {prop.status === 'saving' ? (
+                              <RotateCw className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Check className="w-3.5 h-3.5" />
+                            )}
+                            Accept
+                          </button>
+                          <button
+                            onClick={() => handleRejectFlowering(idx)}
                             disabled={prop.status === 'saving'}
                             className="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 text-xs transition-all"
                           >
