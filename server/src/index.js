@@ -12,6 +12,7 @@ import strainRoutes from './routes/strains.js';
 import scraperRoutes from './routes/scraper.js';
 import adminRoutes from './routes/admin.js';
 import aiRoutes from './routes/ai.js';
+import discoveryRoutes from './routes/discovery.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -59,6 +60,7 @@ await app.register(strainRoutes);
 await app.register(scraperRoutes);
 await app.register(adminRoutes);
 await app.register(aiRoutes);
+await app.register(discoveryRoutes);
 
 // Fallback to index.html for React SPA router (for production build fallback)
 app.setNotFoundHandler((req, reply) => {

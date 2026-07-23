@@ -186,4 +186,170 @@ export function initializeDatabase(sqlite) {
     // Return empty SQL since we ran everything via prepared statements
     return 'SELECT 1';
   })());
+
+  // ── V005: New Scraped Entries Staging Table ─────────────────────────────
+  runMigration('005_new_scraped_entries_table', `
+    CREATE TABLE IF NOT EXISTS new_scraped_entries (
+      id TEXT PRIMARY KEY,
+      shop TEXT NOT NULL,
+      shop_product_url TEXT NOT NULL,
+      raw_title TEXT NOT NULL,
+      extracted_name TEXT NOT NULL,
+      extracted_breeder TEXT,
+      seeds INTEGER NOT NULL,
+      price REAL NOT NULL,
+      currency TEXT NOT NULL DEFAULT 'EUR',
+      type TEXT,
+      seed_type TEXT,
+      thc TEXT,
+      cbd TEXT,
+      strain_type TEXT,
+      flowering_time TEXT,
+      description TEXT,
+      genetics TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_new_scraped_entries_shop_status ON new_scraped_entries(shop, status);
+    CREATE INDEX IF NOT EXISTS idx_new_scraped_entries_name_breeder ON new_scraped_entries(extracted_name, extracted_breeder);
+  `);
+
+  // ── V006: Auto-populate URLs for existing staged entries ─────────────────
+  runMigration('006_fix_new_scraped_entries_urls', (() => {
+    const shopifyUrls = {
+      'Gas Station LU': 'https://gas-station.lu/products/',
+      'Gas Station Co. Seeds': 'https://gasstationcoseeds.de/products/',
+      'House of Seeds': 'https://house-of-seeds.de/products/',
+      'Hans Brainfood': 'https://hansbrainfood.de/products/'
+    };
+
+    for (const [shopName, prefix] of Object.entries(shopifyUrls)) {
+      const rows = sqlite.prepare("SELECT id, raw_title FROM new_scraped_entries WHERE shop = ? AND (shop_product_url = '' OR shop_product_url IS NULL)").all(shopName);
+      for (const r of rows) {
+        const handle = (r.raw_title || '')
+          .toLowerCase()
+          .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+        if (handle) {
+          const generatedUrl = `${prefix}${handle}`;
+          sqlite.prepare("UPDATE new_scraped_entries SET shop_product_url = ? WHERE id = ?").run(generatedUrl, r.id);
+        }
+      }
+    }
+
+    // Sensi Seeds fallback URL
+    const sensiRows = sqlite.prepare("SELECT id, extracted_name FROM new_scraped_entries WHERE shop = 'Sensi Seeds' AND (shop_product_url = '' OR shop_product_url IS NULL)").all();
+    for (const r of sensiRows) {
+      const slug = (r.extracted_name || '')
+        .toLowerCase()
+        .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      const sensiUrl = `https://sensiseeds.com/de/hanfsamen/sensi-seeds/${slug}`;
+      sqlite.prepare("UPDATE new_scraped_entries SET shop_product_url = ? WHERE id = ?").run(sensiUrl, r.id);
+    }
+
+    return 'SELECT 1';
+  })());
+
+  // ── V007: Normalize smart apostrophes & auto-link suggested strains ───────
+  runMigration('007_normalize_apostrophes_and_link_staging', (() => {
+    // 1. Normalize strains table
+    sqlite.prepare("UPDATE strains SET name = REPLACE(REPLACE(REPLACE(name, '’', ''''), '‘', ''''), '`', ''''), breeder = REPLACE(REPLACE(REPLACE(breeder, '’', ''''), '‘', ''''), '`', '''')").run();
+
+    // 2. Normalize new_scraped_entries table
+    sqlite.prepare("UPDATE new_scraped_entries SET raw_title = REPLACE(REPLACE(REPLACE(raw_title, '’', ''''), '‘', ''''), '`', ''''), extracted_name = REPLACE(REPLACE(REPLACE(extracted_name, '’', ''''), '‘', ''''), '`', ''''), extracted_breeder = REPLACE(REPLACE(REPLACE(extracted_breeder, '’', ''''), '‘', ''''), '`', '''')").run();
+
+    // 3. Link suggested_strain_id for all pending staged entries
+    sqlite.prepare(`
+      UPDATE new_scraped_entries
+      SET suggested_strain_id = (
+        SELECT s.id FROM strains s 
+        WHERE LOWER(TRIM(s.name)) = LOWER(TRIM(new_scraped_entries.extracted_name))
+        LIMIT 1
+      )
+      WHERE status = 'pending'
+    `).run();
+
+    return 'SELECT 1';
+  })());
+
+  // ── V008: Strip leading BF prefix from strain names ────────────────────────
+  runMigration('008_strip_bf_prefix_from_strains', (() => {
+    const now = new Date().toISOString();
+    const bfStrains = sqlite.prepare("SELECT * FROM strains WHERE name LIKE 'BF %' OR name LIKE 'BF-%'").all();
+
+    for (const strain of bfStrains) {
+      const cleanName = strain.name.replace(/^BF[\s\-]+/i, '').trim();
+
+      // Check if strain with cleanName already exists
+      const existing = sqlite.prepare("SELECT * FROM strains WHERE LOWER(TRIM(name)) = LOWER(TRIM(?)) AND LOWER(TRIM(COALESCE(breeder, ''))) = LOWER(TRIM(COALESCE(?, ''))) AND id != ?")
+        .get(cleanName, strain.breeder || '', strain.id);
+
+      if (existing) {
+        // Reassign offers & price history to existing strain
+        sqlite.prepare('UPDATE scraped_offers SET strain_id = ? WHERE strain_id = ?').run(existing.id, strain.id);
+        sqlite.prepare('UPDATE price_history SET strain_id = ? WHERE strain_id = ?').run(existing.id, strain.id);
+        sqlite.prepare('DELETE FROM strains WHERE id = ?').run(strain.id);
+      } else {
+        // Simple rename
+        sqlite.prepare('UPDATE strains SET name = ?, updated_at = ? WHERE id = ?').run(cleanName, now, strain.id);
+      }
+    }
+
+    // Also clean up new_scraped_entries table
+    const stagedBf = sqlite.prepare("SELECT id, extracted_name FROM new_scraped_entries WHERE extracted_name LIKE 'BF %' OR extracted_name LIKE 'BF-%'").all();
+    for (const entry of stagedBf) {
+      const cleanName = entry.extracted_name.replace(/^BF[\s\-]+/i, '').trim();
+      sqlite.prepare('UPDATE new_scraped_entries SET extracted_name = ?, updated_at = ? WHERE id = ?').run(cleanName, now, entry.id);
+    }
+
+    return 'SELECT 1';
+  })());
+
+  // ── V009: Strip leading TB prefix from strain names ────────────────────────
+  runMigration('009_strip_tb_prefix_from_strains', (() => {
+    const now = new Date().toISOString();
+    const tbStrains = sqlite.prepare("SELECT * FROM strains WHERE name LIKE 'TB %' OR name LIKE 'TB-%'").all();
+
+    for (const strain of tbStrains) {
+      const cleanName = strain.name.replace(/^TB[\s\-]+/i, '').trim();
+
+      // Check if strain with cleanName already exists
+      const existing = sqlite.prepare("SELECT * FROM strains WHERE LOWER(TRIM(name)) = LOWER(TRIM(?)) AND LOWER(TRIM(COALESCE(breeder, ''))) = LOWER(TRIM(COALESCE(?, ''))) AND id != ?")
+        .get(cleanName, strain.breeder || '', strain.id);
+
+      if (existing) {
+        // Reassign offers & price history to existing strain
+        sqlite.prepare('UPDATE scraped_offers SET strain_id = ? WHERE strain_id = ?').run(existing.id, strain.id);
+        sqlite.prepare('UPDATE price_history SET strain_id = ? WHERE strain_id = ?').run(existing.id, strain.id);
+        sqlite.prepare('DELETE FROM strains WHERE id = ?').run(strain.id);
+      } else {
+        // Simple rename
+        sqlite.prepare('UPDATE strains SET name = ?, updated_at = ? WHERE id = ?').run(cleanName, now, strain.id);
+      }
+    }
+
+    // Also clean up new_scraped_entries table
+    const stagedTb = sqlite.prepare("SELECT id, extracted_name FROM new_scraped_entries WHERE extracted_name LIKE 'TB %' OR extracted_name LIKE 'TB-%'").all();
+    for (const entry of stagedTb) {
+      const cleanName = entry.extracted_name.replace(/^TB[\s\-]+/i, '').trim();
+      sqlite.prepare('UPDATE new_scraped_entries SET extracted_name = ?, updated_at = ? WHERE id = ?').run(cleanName, now, entry.id);
+    }
+
+    // Re-link suggested_strain_id for all pending staged entries
+    sqlite.prepare(`
+      UPDATE new_scraped_entries
+      SET suggested_strain_id = (
+        SELECT s.id FROM strains s 
+        WHERE LOWER(TRIM(s.name)) = LOWER(TRIM(new_scraped_entries.extracted_name))
+        LIMIT 1
+      )
+      WHERE status = 'pending'
+    `).run();
+
+    return 'SELECT 1';
+  })());
 }
+

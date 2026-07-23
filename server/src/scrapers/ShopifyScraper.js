@@ -146,7 +146,9 @@ export class ShopifyScraper extends BaseScraper {
             strainType,
             floweringTime,
             description: p.body_html || '',
-            genetics
+            genetics,
+            url: `${baseUrl}/products/${p.handle}`,
+            rawTitle: p.title
           });
         } catch (dbErr) {
           this.log('error', `Database error for strain ${name}: ${dbErr.message}`);

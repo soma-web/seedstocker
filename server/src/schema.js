@@ -69,3 +69,28 @@ export const aiDescriptions = sqliteTable('ai_descriptions', {
   modelUsed: text('model_used').notNull(),
   updatedAt: text('updated_at').notNull()
 });
+
+export const newScrapedEntries = sqliteTable('new_scraped_entries', {
+  id: text('id').primaryKey(),
+  shop: text('shop').notNull(),
+  shopProductUrl: text('shop_product_url').notNull(),
+  rawTitle: text('raw_title').notNull(),
+  extractedName: text('extracted_name').notNull(),
+  extractedBreeder: text('extracted_breeder'),
+  seeds: integer('seeds').notNull(),
+  price: real('price').notNull(),
+  currency: text('currency').notNull().default('EUR'),
+  type: text('type'),
+  seedType: text('seed_type'),
+  thc: text('thc'),
+  cbd: text('cbd'),
+  strainType: text('strain_type'),
+  floweringTime: text('flowering_time'),
+  description: text('description'),
+  genetics: text('genetics'),
+  suggestedStrainId: text('suggested_strain_id'),
+  status: text('status').notNull().default('pending'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull()
+});
+

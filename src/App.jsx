@@ -20,6 +20,7 @@ import SeedfinderPanel from './components/SeedfinderPanel';
 import BulkAiPanel from './components/BulkAiPanel';
 import PriceHistoryModal from './components/PriceHistoryModal';
 import SanityCheckPanel from './components/SanityCheckPanel';
+import NewEntriesPanel from './components/NewEntriesPanel';
 
 export default function App() {
   const [strains, setStrains] = useState([]);
@@ -100,6 +101,7 @@ export default function App() {
     logs: []
   });
   const [isBulkAiOpen, setIsBulkAiOpen] = useState(false);
+  const [isNewEntriesOpen, setIsNewEntriesOpen] = useState(false);
   const pollIntervalRef = useRef(null);
 
   // Fetch initial data
@@ -634,16 +636,24 @@ export default function App() {
             Rewritten Prose
           </button>
           {config.debug && (
-            <button
-              onClick={() => navigateTo('/admin')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
-                currentPath === '/admin'
-                  ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
-                  : 'border-slate-900 bg-slate-950/40 text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
-              }`}
-            >
-              System Administration
-            </button>
+            <>
+              <button
+                onClick={() => navigateTo('/admin')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
+                  currentPath === '/admin'
+                    ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
+                    : 'border-slate-900 bg-slate-950/40 text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
+                }`}
+              >
+                System Administration
+              </button>
+              <button
+                onClick={() => setIsNewEntriesOpen(true)}
+                className="px-4 py-2 rounded-xl text-xs font-bold border transition-all border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+              >
+                Staging & Import
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -729,6 +739,7 @@ export default function App() {
           queryError={queryError}
           queryResult={queryResult}
           dbStrains={dbStrains}
+          onOpenNewEntries={() => setIsNewEntriesOpen(true)}
         />
       )}
 
@@ -776,6 +787,14 @@ export default function App() {
           }
         }}
         sanityCheck={sanityCheck}
+      />
+
+      {/* New Entries Discovery Staging Panel */}
+      <NewEntriesPanel
+        isOpen={isNewEntriesOpen}
+        onClose={() => setIsNewEntriesOpen(false)}
+        dbStrains={dbStrains}
+        onRefreshData={fetchData}
       />
 
     </div>

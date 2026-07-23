@@ -51,7 +51,8 @@ export default function AdminPanel({
   executingQuery,
   queryError,
   queryResult,
-  dbStrains
+  dbStrains,
+  onOpenNewEntries
 }) {
   const [enrichShop, setEnrichShop] = useState('');
   const [aiLimit, setAiLimit] = useState('');
@@ -414,6 +415,36 @@ export default function AdminPanel({
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
       <div className="space-y-8">
         
+        {/* Discovery Staging Shield Panel */}
+        <div className="glass-panel rounded-2xl p-6 border border-emerald-500/20 bg-gradient-to-r from-emerald-950/30 via-slate-900/60 to-slate-950/80">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-emerald-400">
+                <Database className="w-7 h-7" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+                  Neue Shop-Einträge & Scrape-Prüfung (Staging)
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-mono">
+                    Protected Mode
+                  </span>
+                </h2>
+                <p className="text-xs text-slate-400 mt-1 max-w-xl">
+                  Isolierte Erkennung neuer Strains aus Online-Shops. Prüfe, verknüpfe oder importiere Funde manuell, ohne die produktive Datenbank zu gefährden.
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => onOpenNewEntries && onOpenNewEntries()}
+              className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all"
+            >
+              <Sparkles className="w-4 h-4" />
+              Staging & Import Panel öffnen
+            </button>
+          </div>
+        </div>
+
         {/* Scraper Settings Panel */}
         <div className="glass-panel rounded-2xl p-6">
           <h2 className="text-lg font-bold text-slate-100 mb-6 flex items-center gap-2">
@@ -1950,64 +1981,6 @@ export default function AdminPanel({
                 </pre>
               </div>
             )}
-          </div>
-        )}
-      </div>
-
-      {/* Database Strains Explorer Card */}
-      <div className="glass-panel rounded-2xl p-6 mt-8">
-        <h2 className="text-lg font-bold text-slate-100 mb-2 flex items-center gap-2">
-          <Database className="w-5 h-5 text-emerald-400" />
-          Tracked Seed Entries ({dbStrains.length})
-        </h2>
-        <p className="text-xs text-slate-500 mb-6">
-          All raw cannabis strains and breeders currently stored in the SQLite database.
-        </p>
-
-        {dbStrains.length === 0 ? (
-          <div className="bg-slate-950 border border-slate-900 rounded-xl p-6 text-center text-xs text-slate-500">
-            No seed entries tracked in the database.
-          </div>
-        ) : (
-          <div className="overflow-x-auto max-h-96 rounded-xl border border-slate-900 bg-slate-950/40">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="bg-slate-950 border-b border-slate-900 text-slate-400 font-semibold">
-                  <th className="p-3">ID</th>
-                  <th className="p-3">Name</th>
-                  <th className="p-3">Breeder</th>
-                  <th className="p-3">Type</th>
-                  <th className="p-3">Seed Type</th>
-                  <th className="p-3 text-right">Created At</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-900/60">
-                {dbStrains.map(s => (
-                  <tr key={s.id} className="hover:bg-slate-900/20 text-slate-300">
-                    <td className="p-3 font-mono text-[10px] text-slate-500 break-all max-w-[80px]">
-                      {s.id}
-                    </td>
-                    <td className="p-3 font-bold text-slate-200">{s.name}</td>
-                    <td className="p-3 text-emerald-400 font-medium">{s.breeder || 'Unknown'}</td>
-                    <td className="p-3">
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
-                        s.type === 'autoflower' 
-                          ? 'bg-purple-500/10 text-purple-400' 
-                          : 'bg-emerald-500/10 text-emerald-400'
-                      }`}>
-                        {s.type === 'autoflower' ? 'Auto' : 'Photo'}
-                      </span>
-                    </td>
-                    <td className="p-3 text-slate-400">
-                      {s.seedType === 'feminized' ? 'Fem' : 'Reg'}
-                    </td>
-                    <td className="p-3 text-right text-[10px] text-slate-500 font-mono">
-                      {s.createdAt ? new Date(s.createdAt).toLocaleString() : 'N/A'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
           </div>
         )}
       </div>

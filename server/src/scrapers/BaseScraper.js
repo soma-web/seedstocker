@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { db } from '../db.js';
-import { strains, scrapedOffers, priceHistory, strainShopDescriptions, rewrittenDescriptions } from '../schema.js';
+import { strains, scrapedOffers, priceHistory, strainShopDescriptions, rewrittenDescriptions, newScrapedEntries } from '../schema.js';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import crypto from 'node:crypto';
 import { normalizeBreederName, CANONICAL_TO_ALIASES, KNOWN_BREEDERS } from './breeder-normalize.js';
@@ -40,15 +40,22 @@ export class BaseScraper {
 
   normalizeBreeder(breeder) {
     if (!breeder) return 'Unknown Breeder';
-    const normalized = normalizeBreederName(breeder);
+    const cleaned = breeder.replace(/[’‘\`′]/g, "'");
+    const normalized = normalizeBreederName(cleaned);
     return normalized || 'Unknown Breeder';
   }
 
   normalizeStrainName(title, breeder) {
     let name = title.trim();
 
+    // Normalize smart/curly apostrophes and quotes to standard ASCII single quote
+    name = name.replace(/[’‘\`′]/g, "'");
+
     // Strip registered trademark (®) and trademark (™) symbols
     name = name.replace(/[®™]/g, '');
+
+    // Strip leading "BF " or "TB " prefixes (shop/breeder abbreviations)
+    name = name.replace(/^(BF|TB)[\s\-]+/i, '');
 
     // Strip trailing "by <Breeder>" or "von <Breeder>" from titles if matching a breeder
     const byMatch = name.match(/\s+(by|von)\s+(.+)$/i);
@@ -177,10 +184,16 @@ export class BaseScraper {
       return true;
     }
 
-    // Check custom blocked words from scraper.json
+    // Check custom blocked words from scraper.json with word boundary regex
     const blocked = getBlockedWords();
     if (blocked.length > 0) {
-      const matchBlocked = blocked.some(word => lower.includes(word) || descLower.includes(word) || breederLower.includes(word));
+      const matchBlocked = blocked.some(word => {
+        const w = word.trim().toLowerCase();
+        if (!w) return false;
+        const escaped = w.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+        const regex = new RegExp(`\\b${escaped}\\b`, 'i');
+        return regex.test(lower) || regex.test(breederLower);
+      });
       if (matchBlocked) {
         this.log('info', `Skipping product "${title}" because it matches custom blocked word list.`);
         return true;
@@ -232,9 +245,12 @@ export class BaseScraper {
   }
 
   // Case-insensitive strain lookup (issue #9)
-  async upsertStrain({ name, breeder, type, seedType, thc = null, cbd = null, strainType = null, floweringTime = null, floweringMin = null, floweringMax = null, description = null, genetics = null }) {
-    const bLower = (breeder || '').trim().toLowerCase();
-    const nLower = (name || '').trim().toLowerCase();
+  async upsertStrain({ name, breeder, type, seedType, thc = null, cbd = null, strainType = null, floweringTime = null, floweringMin = null, floweringMax = null, description = null, genetics = null, url = null, rawTitle = null, seeds = 1, price = 0 }) {
+    name = (name || '').replace(/[’‘\`′]/g, "'").trim();
+    breeder = (breeder || '').replace(/[’‘\`′]/g, "'").trim();
+
+    const bLower = breeder.toLowerCase();
+    const nLower = name.toLowerCase();
     if (
       bLower === 'headshop' || 
       bLower === 'head shop' || 
@@ -363,6 +379,69 @@ export class BaseScraper {
         return strainId;
       }
 
+      // In discovery mode: Stage new strain candidate in new_scraped_entries table to protect main database
+      if (this.scrapeMode === 'discovery') {
+        const [suggestedMatch] = await db.select({ id: strains.id })
+          .from(strains)
+          .where(sql`LOWER(TRIM(${strains.name})) = LOWER(TRIM(${name}))`)
+          .limit(1);
+
+        const [alreadyStaged] = await db.select()
+          .from(newScrapedEntries)
+          .where(and(
+            eq(newScrapedEntries.shop, this.shopName),
+            sql`LOWER(TRIM(${newScrapedEntries.extractedName})) = LOWER(TRIM(${name}))`,
+            sql`LOWER(TRIM(COALESCE(${newScrapedEntries.extractedBreeder}, ''))) = LOWER(TRIM(COALESCE(${breeder}, '')))`
+          ))
+          .limit(1);
+
+        if (!alreadyStaged) {
+          const stagedId = crypto.randomUUID();
+          await db.insert(newScrapedEntries).values({
+            id: stagedId,
+            shop: this.shopName,
+            shopProductUrl: url || '',
+            rawTitle: rawTitle || name,
+            extractedName: name,
+            extractedBreeder: breeder,
+            seeds: seeds || 1,
+            price: price || 0,
+            currency: 'EUR',
+            type: cleanedType,
+            seedType: cleanedSeedType,
+            thc: cleanedThc,
+            cbd: cleanedCbd,
+            strainType: cleanedStrainType,
+            floweringTime: cleanedFloweringTime,
+            description: description ? this.stripHtml(description) : null,
+            genetics: cleanedGenetics,
+            suggestedStrainId: suggestedMatch ? suggestedMatch.id : null,
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          });
+          this._currentDiscoveryStagedId = stagedId;
+          this.log('info', `[discovery mode] Staged new entry: "${name}" (${breeder}) from ${this.shopName}`);
+        } else {
+          this._currentDiscoveryStagedId = alreadyStaged.id;
+          const updateData = {};
+          if (url && (!alreadyStaged.shopProductUrl || alreadyStaged.shopProductUrl === '')) {
+            updateData.shopProductUrl = url;
+          }
+          if (rawTitle && (!alreadyStaged.rawTitle || alreadyStaged.rawTitle === '')) {
+            updateData.rawTitle = rawTitle;
+          }
+          if (Object.keys(updateData).length > 0) {
+            updateData.updatedAt = new Date().toISOString();
+            await db.update(newScrapedEntries)
+              .set(updateData)
+              .where(eq(newScrapedEntries.id, alreadyStaged.id));
+          }
+          this.log('info', `[discovery mode] Candidate "${name}" already staged in review queue.`);
+        }
+        return null;
+      }
+
       strainId = crypto.randomUUID();
       await db.insert(strains).values({
         id: strainId,
@@ -392,6 +471,7 @@ export class BaseScraper {
 
     return strainId;
   }
+
 
   stripHtml(html) {
     if (!html) return '';
@@ -660,6 +740,21 @@ export class BaseScraper {
 
   // Price validation added (issue #6)
   async insertOffer({ strainId, url, seeds, price, availability = 'available' }) {
+    // In discovery mode: update the staged entry's URL, seeds and price if strainId is null
+    if (this.scrapeMode === 'discovery' && (strainId === null || strainId === undefined) && this._currentDiscoveryStagedId) {
+      const updateData = {};
+      if (url) updateData.shopProductUrl = url;
+      if (seeds && seeds > 0) updateData.seeds = seeds;
+      if (price && price > 0) updateData.price = price;
+      if (Object.keys(updateData).length > 0) {
+        updateData.updatedAt = new Date().toISOString();
+        await db.update(newScrapedEntries)
+          .set(updateData)
+          .where(eq(newScrapedEntries.id, this._currentDiscoveryStagedId));
+      }
+      return;
+    }
+
     // In price mode, a null strainId means the strain wasn't found — skip silently
     if (strainId === null || strainId === undefined) return;
 

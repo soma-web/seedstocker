@@ -253,7 +253,9 @@ export class SensiSeedsScraper extends BaseScraper {
       strainType,
       floweringTime,
       genetics,
-      description
+      description,
+      url,
+      rawTitle
     });
 
     // 8. Extract Offers (Pack Sizes & Prices)
@@ -263,11 +265,12 @@ export class SensiSeedsScraper extends BaseScraper {
     for (const lm of labelMatches) {
       const decodedLabel = decodeHTMLEntities(lm[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim());
       const seedsMatch = decodedLabel.match(/(\d+)(?:\s*\+\s*\d+)?\s*samen/i);
-      const priceMatch = decodedLabel.match(/€\s*([\d.,]+)/);
+      const priceMatch = decodedLabel.match(/(?:€\s*([\d.,]+)|([\d.,]+)\s*€)/);
       
       if (seedsMatch && priceMatch) {
         const seeds = parseInt(seedsMatch[1], 10);
-        const price = parseFloat(priceMatch[1].replace('.', '').replace(',', '.'));
+        const priceRaw = priceMatch[1] || priceMatch[2];
+        const price = parseFloat(priceRaw.replace('.', '').replace(',', '.'));
         
         if (!isNaN(seeds) && !isNaN(price) && seeds > 0 && price > 0) {
           await this.insertOffer({
@@ -383,7 +386,9 @@ export class SensiSeedsScraper extends BaseScraper {
       strainType,
       floweringTime,
       genetics,
-      description
+      description,
+      url,
+      rawTitle
     });
 
     const labelMatches = [...html.matchAll(/<label[^>]*for="product_attribute_[^"]*"[^>]*>([\s\S]*?)<\/label>/gi)];
@@ -392,11 +397,12 @@ export class SensiSeedsScraper extends BaseScraper {
     for (const lm of labelMatches) {
       const decodedLabel = decodeHTMLEntities(lm[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim());
       const seedsMatch = decodedLabel.match(/(\d+)(?:\s*\+\s*\d+)?\s*samen/i);
-      const priceMatch = decodedLabel.match(/€\s*([\d.,]+)/);
+      const priceMatch = decodedLabel.match(/(?:€\s*([\d.,]+)|([\d.,]+)\s*€)/);
       
       if (seedsMatch && priceMatch) {
         const seeds = parseInt(seedsMatch[1], 10);
-        const price = parseFloat(priceMatch[1].replace('.', '').replace(',', '.'));
+        const priceRaw = priceMatch[1] || priceMatch[2];
+        const price = parseFloat(priceRaw.replace('.', '').replace(',', '.'));
         
         if (!isNaN(seeds) && !isNaN(price) && seeds > 0 && price > 0) {
           await this.insertOffer({
