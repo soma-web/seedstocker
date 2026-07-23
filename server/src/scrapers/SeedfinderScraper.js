@@ -152,7 +152,7 @@ export class SeedfinderScraper extends BaseScraper {
     // Strategy 2: Try shortened name if still no match (remove common suffixes)
     if (!match) {
       const shortenedName = strain.name
-        .replace(/\s*(Fast Version|Auto|Automatic|Feminized|Regular|F1|Photoperiodic)\s*/gi, '')
+        .replace(/\s*(Fast Version|Fast Flowering|Auto|Automatic|Feminized|Regular|F1|Photoperiodic|Triploid)\s*/gi, '')
         .trim();
       if (shortenedName !== strain.name && shortenedName.length > 2) {
         this.log('info', `Trying shortened name: ${shortenedName}`);

@@ -104,7 +104,13 @@ export async function startSanityCheck(shopName) {
         if (!data.products || !Array.isArray(data.products)) throw new Error('Invalid products.json structure');
         urls = data.products.map(p => ({
           url: `${baseUrl}/products/${p.handle}`,
-          type: p.title.toLowerCase().includes('auto') ? 'autoflower' : 'photoperiodic',
+          type: (() => {
+            const titleLower = p.title.toLowerCase();
+            if (titleLower.includes('auto')) return 'autoflower';
+            if (titleLower.includes('fast flowering') || titleLower.includes('fast version') || titleLower.includes('fast') || titleLower.includes('schnellblühend')) return 'fast_flowering';
+            if (titleLower.includes('triploid') || titleLower.includes('triploide')) return 'triploid';
+            return 'photoperiodic';
+          })(),
           seedType: (p.title.toLowerCase().includes('regular') || p.title.toLowerCase().includes('regulär')) ? 'regular' : 'feminized'
         }));
       } else if (shopName === 'Zamnesia') {
@@ -114,6 +120,10 @@ export async function startSanityCheck(shopName) {
           const lower = u.toLowerCase();
           if (lower.includes('autoflowering') || lower.includes('auto') || lower.includes('f1-samen') || lower.includes('f1')) {
             type = 'autoflower';
+          } else if (lower.includes('fast-flowering') || lower.includes('fast-version') || lower.includes('fast') || lower.includes('schnellbluehend')) {
+            type = 'fast_flowering';
+          } else if (lower.includes('triploid')) {
+            type = 'triploid';
           }
           if (lower.includes('regulare') || lower.includes('regular') || lower.includes('regulär')) {
             seedType = 'regular';

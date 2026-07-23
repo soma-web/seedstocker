@@ -206,12 +206,12 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
-  // Load db stats when debug is enabled and path is /admin
+  // Load db stats when debug is enabled and path is /admin, or when staging panel is opened
   useEffect(() => {
-    if (config.debug && currentPath === '/admin') {
+    if ((config.debug && currentPath === '/admin') || isNewEntriesOpen) {
       fetchDbStats();
     }
-  }, [config.debug, currentPath]);
+  }, [config.debug, currentPath, isNewEntriesOpen]);
 
   // Effect to fetch initial strains and breeders
   useEffect(() => {

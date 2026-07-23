@@ -351,5 +351,12 @@ export function initializeDatabase(sqlite) {
 
     return 'SELECT 1';
   })());
+
+  // ── V010: Correct strain types (regular/feminized -> photoperiodic) ───────
+  runMigration('010_correct_strain_types', (() => {
+    sqlite.prepare("UPDATE strains SET type = 'photoperiodic' WHERE type = 'regular' OR type = 'feminized'").run();
+    sqlite.prepare("UPDATE new_scraped_entries SET type = 'photoperiodic' WHERE type = 'regular' OR type = 'feminized'").run();
+    return 'SELECT 1';
+  })());
 }
 

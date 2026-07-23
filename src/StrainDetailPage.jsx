@@ -28,6 +28,58 @@ function getShopColor(shop) {
   return { pill: 'text-blue-400 bg-blue-500/10 border-blue-500/20', accent: '#38bdf8' };
 }
 
+function getTypeStyle(type) {
+  if (type === 'autoflower') {
+    return {
+      gradient: 'linear-gradient(135deg, #1e0a2e 0%, #0f172a 45%, #031410 100%)',
+      radial: 'radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%)',
+      pill: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+      label: '⚡ Autoflower',
+      textColor: 'text-purple-400',
+      glowColor: 'rgba(139,92,246,0.12)'
+    };
+  }
+  if (type === 'fast_flowering') {
+    return {
+      gradient: 'linear-gradient(135deg, #2e0a1a 0%, #0f172a 45%, #18031a 100%)',
+      radial: 'radial-gradient(circle, rgba(236,72,153,0.12) 0%, transparent 70%)',
+      pill: 'bg-pink-500/20 text-pink-300 border-pink-500/30',
+      label: '🚀 Fast Flowering',
+      textColor: 'text-pink-400',
+      glowColor: 'rgba(236,72,153,0.12)'
+    };
+  }
+  if (type === 'triploid') {
+    return {
+      gradient: 'linear-gradient(135deg, #0a202e 0%, #0f172a 45%, #031a18 100%)',
+      radial: 'radial-gradient(circle, rgba(6,182,212,0.12) 0%, transparent 70%)',
+      pill: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
+      label: '🧬 Triploid',
+      textColor: 'text-cyan-400',
+      glowColor: 'rgba(6,182,212,0.12)'
+    };
+  }
+  if (type === 'regular') {
+    return {
+      gradient: 'linear-gradient(135deg, #1c1c1c 0%, #0f172a 45%, #0f172a 100%)',
+      radial: 'radial-gradient(circle, rgba(148,163,184,0.12) 0%, transparent 70%)',
+      pill: 'bg-slate-500/20 text-slate-300 border-slate-500/30',
+      label: '🌿 Regular',
+      textColor: 'text-slate-400',
+      glowColor: 'rgba(148,163,184,0.12)'
+    };
+  }
+  // photoperiodic is the default
+  return {
+    gradient: 'linear-gradient(135deg, #031a0e 0%, #0f172a 45%, #001a1a 100%)',
+    radial: 'radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%)',
+    pill: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+    label: '🌱 Photoperiodic',
+    textColor: 'text-emerald-400',
+    glowColor: 'rgba(16,185,129,0.1)'
+  };
+}
+
 function getCheapestMap(offers) {
   const grouped = {};
   offers.forEach(o => {
@@ -42,7 +94,14 @@ function getCheapestMap(offers) {
 }
 
 function buildDescription(strain) {
-  const type = strain.type === 'autoflower' ? 'autoflowering' : 'photoperiodic';
+  const typeLabelMap = {
+    'autoflower': 'autoflowering',
+    'photoperiodic': 'photoperiodic',
+    'fast_flowering': 'fast flowering',
+    'triploid': 'triploid',
+    'regular': 'regular'
+  };
+  const type = typeLabelMap[strain.type] || strain.type || 'photoperiodic';
   const seedKind = strain.seedType === 'feminized' ? 'feminized' : 'regular';
   const shopCount = new Set((strain.offers || []).map(o => o.shop)).size;
   const breeder = strain.breeder || 'an independent breeder';
@@ -351,6 +410,15 @@ export default function StrainDetailPage({ strainId, onBack, onNavigate }) {
   const lowestPrice = strain.offers?.length > 0 ? Math.min(...strain.offers.map(o => o.price)) : null;
   const packs = Array.from(new Set((strain.offers || []).map(o => o.seeds))).sort((a, b) => Number(a) - Number(b));
   const isAuto = strain.type === 'autoflower';
+  const typeStyle = getTypeStyle(strain.type);
+  const displayLabelMap = {
+    'autoflower': 'Autoflower',
+    'fast_flowering': 'Fast Flowering',
+    'triploid': 'Triploid',
+    'regular': 'Regular',
+    'photoperiodic': 'Photoperiodic'
+  };
+  const typeDisplayVal = displayLabelMap[strain.type] || 'Photoperiodic';
 
   const allBreeders = [
     { id: strain.id, breeder: strain.breeder || 'Unknown' },
@@ -432,15 +500,13 @@ export default function StrainDetailPage({ strainId, onBack, onNavigate }) {
         <div
           className="absolute inset-0 bg-gradient-to-br"
           style={{
-            background: isAuto
-              ? 'linear-gradient(135deg, #1e0a2e 0%, #0f172a 45%, #031410 100%)'
-              : 'linear-gradient(135deg, #031a0e 0%, #0f172a 45%, #001a1a 100%)',
+            background: typeStyle.gradient,
             opacity: imgLoaded ? 1 : 1
           }}
         />
 
         <div className="absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full pointer-events-none"
-          style={{ background: isAuto ? 'radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%)' }} />
+          style={{ background: typeStyle.radial }} />
         <div className="absolute -bottom-20 right-0 w-[400px] h-[400px] rounded-full pointer-events-none"
           style={{ background: 'radial-gradient(circle, rgba(20,184,166,0.08) 0%, transparent 70%)' }} />
 
@@ -504,6 +570,9 @@ export default function StrainDetailPage({ strainId, onBack, onNavigate }) {
                     >
                       <option value="photoperiodic">🌱 Photoperiodic</option>
                       <option value="autoflower">⚡ Autoflower</option>
+                      <option value="fast_flowering">🚀 Fast Flowering</option>
+                      <option value="triploid">🧬 Triploid</option>
+                      <option value="regular">🌿 Regular</option>
                     </select>
                   </div>
                   <div className="flex flex-col gap-1 animate-pulse">
@@ -520,12 +589,8 @@ export default function StrainDetailPage({ strainId, onBack, onNavigate }) {
                 </>
               ) : (
                 <>
-                  <span className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border ${
-                    isAuto
-                      ? 'bg-purple-500/20 text-purple-300 border-purple-500/30'
-                      : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                  }`}>
-                    {isAuto ? '⚡ Autoflower' : '🌱 Photoperiodic'}
+                  <span className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border ${typeStyle.pill}`}>
+                    {typeStyle.label}
                   </span>
                   <span className="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border bg-slate-900/70 text-slate-300 border-slate-700">
                     {strain.seedType === 'feminized' ? '♀ Feminized' : 'Regular'}
@@ -860,7 +925,7 @@ export default function StrainDetailPage({ strainId, onBack, onNavigate }) {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
               {[
-                { label: 'Strain Type', value: isAuto ? 'Autoflower' : 'Photoperiodic', color: isAuto ? 'text-purple-400' : 'text-emerald-400' },
+                { label: 'Strain Type', value: typeDisplayVal, color: typeStyle.textColor },
                 { label: 'Seed Type',   value: strain.seedType === 'feminized' ? 'Feminized' : 'Regular', color: 'text-teal-400' },
                 { label: 'Genetics',    value: strain.strainType ? strain.strainType.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('-') : 'Not available', color: 'text-sky-400' },
                 { label: 'THC',         value: strain.thc || 'Not available', color: 'text-rose-400' },

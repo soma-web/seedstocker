@@ -74,12 +74,20 @@ export default function StrainCard({
 
           {/* Attribute Tags */}
           <div className="flex flex-col items-end gap-1.5">
-            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-              strain.type === 'autoflower' 
-                ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' 
-                : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-            }`}>
-              {strain.type === 'autoflower' ? 'Auto' : 'Photo'}
+            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${(() => {
+              if (strain.type === 'autoflower') return 'bg-purple-500/10 text-purple-400 border border-purple-500/20';
+              if (strain.type === 'fast_flowering') return 'bg-pink-500/10 text-pink-400 border border-pink-500/20';
+              if (strain.type === 'triploid') return 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20';
+              if (strain.type === 'regular') return 'bg-slate-500/10 text-slate-400 border border-slate-500/20';
+              return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+            })()}`}>
+              {(() => {
+                if (strain.type === 'autoflower') return 'Auto';
+                if (strain.type === 'fast_flowering') return 'Fast';
+                if (strain.type === 'triploid') return 'Trip';
+                if (strain.type === 'regular') return 'Reg';
+                return 'Photo';
+              })()}
             </span>
             <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-900 border border-slate-800 text-slate-400 tracking-wider">
               {strain.seedType === 'feminized' ? 'Fem' : 'Reg'}

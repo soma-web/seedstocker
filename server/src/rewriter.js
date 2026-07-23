@@ -35,7 +35,12 @@ Wichtig:
 Sorten-Eigenschaften:
 - Name: ${strain.name || 'Unbekannt'}
 - Breeder: ${strain.breeder || 'Unbekannt'}
-- Typ: ${strain.type === 'autoflower' ? 'Autoflower (selbstblühend)' : 'Photoperiodisch'}
+- Typ: ${(() => {
+    if (strain.type === 'autoflower') return 'Autoflower (selbstblühend)';
+    if (strain.type === 'fast_flowering') return 'Fast Flowering (schnellblühend)';
+    if (strain.type === 'triploid') return 'Triploid';
+    return 'Photoperiodisch';
+  })()}
 - Genetiktyp: ${strain.strainType || 'Unbekannt'}
 - THC-Gehalt: ${strain.thc || 'Nicht angegeben'}
 - CBD-Gehalt: ${strain.cbd || 'Nicht angegeben'}
@@ -191,7 +196,13 @@ Schreibe genau einen zusammenhängenden Absatz (ca. 4-6 Sätze).`;
 
   const name = strain.name || 'Diese Sorte';
   const breeder = strain.breeder || 'renommierte Züchter';
-  const type = strain.type === 'autoflower' ? 'selbstblühende' : 'photoperiodische';
+  const typeMap = {
+    autoflower: 'selbstblühende',
+    photoperiodic: 'photoperiodische',
+    fast_flowering: 'schnellblühende (Fast Flowering)',
+    triploid: 'triploide'
+  };
+  const type = typeMap[strain.type] || 'photoperiodische';
   const seedType = strain.seedType === 'feminized' ? 'feminisierte' : 'reguläre';
 
   // 1. Intro Sentence

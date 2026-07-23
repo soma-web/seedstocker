@@ -61,6 +61,10 @@ export class ZamnesiaScraper extends BaseScraper {
         const lower = u.toLowerCase();
         if (lower.includes('autoflowering') || lower.includes('auto') || lower.includes('f1-samen') || lower.includes('f1')) {
           type = 'autoflower';
+        } else if (lower.includes('fast-flowering') || lower.includes('fast-version') || lower.includes('fast') || lower.includes('schnellbluehend')) {
+          type = 'fast_flowering';
+        } else if (lower.includes('triploid')) {
+          type = 'triploid';
         }
         if (lower.includes('regulare') || lower.includes('regular') || lower.includes('regulär')) {
           seedType = 'regular';
@@ -351,10 +355,7 @@ export class ZamnesiaScraper extends BaseScraper {
       throw new Error(`Skipping invalid/collection strain: ${rawTitle}`);
     }
     
-    let type = 'photoperiodic';
-    if (rawTitle.toLowerCase().includes('auto') || html.toLowerCase().includes('autoflowering') || html.toLowerCase().includes('automatisch')) {
-      type = 'autoflower';
-    }
+    const type = this.determineStrainType(rawTitle, html);
     let seedType = 'feminized';
     if (rawTitle.toLowerCase().includes('regulär') || rawTitle.toLowerCase().includes('regular') || html.toLowerCase().includes('reguläre')) {
       seedType = 'regular';

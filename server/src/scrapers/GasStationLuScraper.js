@@ -263,11 +263,7 @@ export class GasStationLuScraper extends ShopifyScraper {
 
         const name = this.normalizeStrainName(p.title, breeder);
 
-        let type = 'photoperiodic';
-        if (tagsString.includes('autoflower') || tagsString.includes('auto') || 
-            titleLower.includes('auto') || bodyHtml.includes('auto')) {
-          type = 'autoflower';
-        }
+        const type = this.determineStrainType(p.title, tagsString + ' ' + bodyHtml);
 
         let seedType = this.extractSeedType(p.title, p.tags, p.body_html);
 

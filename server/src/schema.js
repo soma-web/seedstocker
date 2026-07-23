@@ -5,7 +5,7 @@ export const strains = sqliteTable('strains', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   breeder: text('breeder'),
-  type: text('type'), // 'photoperiodic' | 'autoflower'
+  type: text('type'), // 'photoperiodic' | 'autoflower' | 'fast_flowering' | 'triploid'
   seedType: text('seed_type'), // 'feminized' | 'regular'
   thc: text('thc'),
   cbd: text('cbd'),

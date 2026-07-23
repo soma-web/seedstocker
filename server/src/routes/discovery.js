@@ -108,6 +108,47 @@ export default async function discoveryRoutes(app) {
     }
   });
 
+  // Update a staged entry's fields (e.g. type, seedType)
+  app.put('/api/new-entries/:id', async (req, reply) => {
+    try {
+      const { id } = req.params;
+      const { type, seedType, extractedName, extractedBreeder } = req.body || {};
+      
+      const entry = sqlite.prepare('SELECT * FROM new_scraped_entries WHERE id = ?').get(id);
+      if (!entry) {
+        return reply.status(404).send({ error: 'Staged entry not found.' });
+      }
+
+      const now = new Date().toISOString();
+      sqlite.prepare(`
+        UPDATE new_scraped_entries
+        SET type = ?,
+            seed_type = ?,
+            extracted_name = ?,
+            extracted_breeder = ?,
+            updated_at = ?
+        WHERE id = ?
+      `).run(
+        type !== undefined ? type : entry.type,
+        seedType !== undefined ? seedType : entry.seed_type,
+        extractedName !== undefined ? extractedName : entry.extracted_name,
+        extractedBreeder !== undefined ? extractedBreeder : entry.extracted_breeder,
+        now,
+        id
+      );
+
+      // Re-link suggested_strain_id if name changed
+      if (extractedName !== undefined && extractedName !== entry.extracted_name) {
+        const match = sqlite.prepare('SELECT id FROM strains WHERE LOWER(TRIM(name)) = LOWER(TRIM(?)) LIMIT 1').get(extractedName);
+        sqlite.prepare('UPDATE new_scraped_entries SET suggested_strain_id = ? WHERE id = ?').run(match ? match.id : null, id);
+      }
+
+      return { success: true, message: 'Staged entry updated successfully.' };
+    } catch (err) {
+      reply.status(500).send({ error: err.message });
+    }
+  });
+
   // Approve staged entries (Imports into strains & scraped_offers)
   app.post('/api/new-entries/approve', async (req, reply) => {
     try {

@@ -100,13 +100,15 @@ export default function StrainFilters({
 
       <div className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-900 pt-4">
         
-        {/* Type Toggles (Auto vs Photo) */}
-        <div className="flex items-center gap-2">
+        {/* Type Toggles */}
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider mr-2">Strain Type</span>
           {[
             { label: 'All', value: '' },
             { label: 'Autoflower', value: 'autoflower' },
-            { label: 'Photoperiodic', value: 'photoperiodic' }
+            { label: 'Photoperiodic', value: 'photoperiodic' },
+            { label: 'Fast Flowering', value: 'fast_flowering' },
+            { label: 'Triploid', value: 'triploid' }
           ].map(t => (
             <button
               key={t.value}

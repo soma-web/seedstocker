@@ -91,11 +91,7 @@ export class ShopifyScraper extends BaseScraper {
         
         const name = this.normalizeStrainName(p.title, breeder);
         
-        let type = 'photoperiodic';
-        if (tagsString.includes('autoflower') || tagsString.includes('auto') || 
-            titleLower.includes('auto') || bodyHtml.includes('auto')) {
-          type = 'autoflower';
-        }
+        const type = this.determineStrainType(p.title, tagsString + ' ' + bodyHtml);
         
         let seedType = 'feminized';
         if (tagsString.includes('regular') || tagsString.includes('regulär') || 
@@ -260,11 +256,7 @@ export class ShopifyScraper extends BaseScraper {
     const breeder = this.normalizeBreeder(vendor);
     const name = this.normalizeStrainName(title, breeder);
 
-    let type = 'photoperiodic';
-    const titleLower = title.toLowerCase();
-    if (titleLower.includes('auto')) {
-      type = 'autoflower';
-    }
+    const type = this.determineStrainType(title, html);
 
     let seedType = 'feminized';
     if (titleLower.includes('regular') || titleLower.includes('regulär')) {

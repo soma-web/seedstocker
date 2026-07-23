@@ -199,11 +199,12 @@ export class DutchPassionScraper extends BaseScraper {
       seedType = 'regular';
     }
 
+    const type = this.determineStrainType(rawTitle, genetics || '');
     const strainId = await this.upsertStrain({
       name: strainName,
       breeder: breeder,
-      type: seedType,
-      seedType: seedType,
+      type: type,
+      seedType: seedType === 'autoflower' ? 'feminized' : seedType,
       thc: thc,
       cbd: null,
       strainType: strainType,

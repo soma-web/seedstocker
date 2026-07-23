@@ -3,7 +3,14 @@ import { RotateCw, Info, Sparkles, ExternalLink } from 'lucide-react';
 import StrainCard from './StrainCard';
 
 export function getFallbackDescription(strain) {
-  const type = strain.type === 'autoflower' ? 'autoflowering' : 'photoperiodic';
+  const typeLabelMap = {
+    'autoflower': 'autoflowering',
+    'photoperiodic': 'photoperiodic',
+    'fast_flowering': 'fast flowering',
+    'triploid': 'triploid',
+    'regular': 'regular'
+  };
+  const type = typeLabelMap[strain.type] || strain.type || 'photoperiodic';
   const seedKind = strain.seedType === 'feminized' ? 'feminized' : 'regular';
   const breeder = strain.breeder || 'an independent breeder';
   const details = [];
@@ -12,6 +19,37 @@ export function getFallbackDescription(strain) {
   if (strain.strainType) details.push(`Genetics: ${strain.strainType.replace('-', ' ')}`);
   
   return `${strain.name} is a ${type} (${seedKind}) cannabis strain bred by ${breeder}. ${details.length > 0 ? 'Specifications: ' + details.join(', ') + '.' : ''}`;
+}
+
+export function getTypeBadge(type) {
+  if (type === 'autoflower') {
+    return {
+      classes: 'bg-purple-500/10 text-purple-400 border border-purple-500/20',
+      label: 'Auto'
+    };
+  }
+  if (type === 'fast_flowering') {
+    return {
+      classes: 'bg-pink-500/10 text-pink-400 border border-pink-500/20',
+      label: 'Fast'
+    };
+  }
+  if (type === 'triploid') {
+    return {
+      classes: 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20',
+      label: 'Trip'
+    };
+  }
+  if (type === 'regular') {
+    return {
+      classes: 'bg-slate-500/10 text-slate-400 border border-slate-500/20',
+      label: 'Reg'
+    };
+  }
+  return {
+    classes: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+    label: 'Photo'
+  };
 }
 
 export default function StrainList({
@@ -146,6 +184,7 @@ export default function StrainList({
                   const prose = strain.aiDescription ? strain.aiDescription.description : strain.rewrittenDescription;
                   const isAi = !!strain.aiDescription;
                   const modelName = strain.aiDescription?.modelUsed;
+                  const badge = getTypeBadge(strain.type);
                   return (
                     <tr key={strain.id} className="hover:bg-slate-900/10 transition-colors">
                       <td className="px-7 py-4 whitespace-nowrap">
@@ -156,12 +195,8 @@ export default function StrainList({
                           {strain.name}
                         </button>
                         <div className="flex items-center gap-1.5 mt-1.5">
-                          <span className={`px-1.5 py-0.2 rounded text-[8px] font-bold uppercase tracking-wider ${
-                            strain.type === 'autoflower' 
-                              ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' 
-                              : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          }`}>
-                            {strain.type === 'autoflower' ? 'Auto' : 'Photo'}
+                          <span className={`px-1.5 py-0.2 rounded text-[8px] font-bold uppercase tracking-wider ${badge.classes}`}>
+                            {badge.label}
                           </span>
                           <span className="px-1.5 py-0.2 rounded text-[8px] font-bold uppercase bg-slate-900 border border-slate-800 text-slate-400 tracking-wider">
                             {strain.seedType === 'feminized' ? 'Fem' : 'Reg'}
@@ -254,6 +289,7 @@ export default function StrainList({
                     ? (strain.descriptions.find(d => d.shop === activeShop)?.description || strain.descriptions[0].description)
                     : getFallbackDescription(strain);
 
+                  const badge = getTypeBadge(strain.type);
                   return (
                     <tr key={strain.id} className="hover:bg-slate-900/10 transition-colors">
                       <td className="px-7 py-4 whitespace-nowrap">
@@ -264,12 +300,8 @@ export default function StrainList({
                           {strain.name}
                         </button>
                         <div className="flex items-center gap-1.5 mt-1.5">
-                          <span className={`px-1.5 py-0.2 rounded text-[8px] font-bold uppercase tracking-wider ${
-                            strain.type === 'autoflower' 
-                              ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' 
-                              : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          }`}>
-                            {strain.type === 'autoflower' ? 'Auto' : 'Photo'}
+                          <span className={`px-1.5 py-0.2 rounded text-[8px] font-bold uppercase tracking-wider ${badge.classes}`}>
+                            {badge.label}
                           </span>
                           <span className="px-1.5 py-0.2 rounded text-[8px] font-bold uppercase bg-slate-900 border border-slate-800 text-slate-400 tracking-wider">
                             {strain.seedType === 'feminized' ? 'Fem' : 'Reg'}

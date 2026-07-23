@@ -73,6 +73,8 @@ export class BaseScraper {
       'feminisiert', 'feminisierte', 'feminised', 'feminized', 'feminize', 'fem',
       'autoflowering', 'autoflower', 'automatic', 'auto',
       'reguläre', 'regulär', 'regular', 'reg',
+      'fast flowering', 'fast version', 'fast',
+      'triploid', 'triploide',
       'blitzversand', 'premium us', 'premium',
       'hanfsamen', 'cannabis', 'cannabis seeds', 'cannabissamen', 'seeds', 'samen',
       'f1 hybrid', 'f1'
@@ -120,6 +122,45 @@ export class BaseScraper {
     name = name.replace(/\s+/g, ' ');
 
     return name.trim();
+  }
+
+  determineStrainType(title, text = '') {
+    const titleLower = (title || '').toLowerCase();
+    const textLower = (text || '').toLowerCase();
+
+    // 1. Autoflower
+    if (
+      titleLower.includes('auto') ||
+      /\bauto\b/i.test(titleLower) ||
+      textLower.includes('autoflowering') ||
+      textLower.includes('automatisch')
+    ) {
+      return 'autoflower';
+    }
+
+    // 2. Fast Flowering
+    if (
+      titleLower.includes('fast flowering') ||
+      titleLower.includes('fast version') ||
+      /\bfast\b/i.test(titleLower) ||
+      textLower.includes('fast flowering') ||
+      textLower.includes('fast version') ||
+      textLower.includes('schnellblühend')
+    ) {
+      return 'fast_flowering';
+    }
+
+    // 3. Triploid
+    if (
+      titleLower.includes('triploid') ||
+      textLower.includes('triploid') ||
+      textLower.includes('triploide')
+    ) {
+      return 'triploid';
+    }
+
+    // 4. Default
+    return 'photoperiodic';
   }
 
   isInvalidStrainName(title, description = '', breeder = '') {

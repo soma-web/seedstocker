@@ -236,10 +236,7 @@ export class SensiSeedsScraper extends BaseScraper {
       seedType = 'regular';
     }
 
-    let type = 'photoperiodic';
-    if (samenTyp.includes('auto') || rawTitle.toLowerCase().includes('auto') || url.toLowerCase().includes('autoflowering')) {
-      type = 'autoflower';
-    }
+    const type = this.determineStrainType(rawTitle, samenTyp + ' ' + url);
 
     const strainType = attributes['sativa / indica'] || null;
     const floweringTime = this.normalizeFloweringTime(attributes['blütezeit'] || null);
@@ -370,10 +367,7 @@ export class SensiSeedsScraper extends BaseScraper {
       seedType = 'regular';
     }
 
-    let type = 'photoperiodic';
-    if (samenTyp.includes('auto') || rawTitle.toLowerCase().includes('auto') || url.toLowerCase().includes('autoflowering')) {
-      type = 'autoflower';
-    }
+    const type = this.determineStrainType(rawTitle, samenTyp + ' ' + url);
 
     const strainType = attributes['sativa / indica'] || null;
     const floweringTime = this.normalizeFloweringTime(attributes['blütezeit'] || null);

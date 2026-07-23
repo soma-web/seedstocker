@@ -18,7 +18,7 @@ import {
   ChevronRight,
   Database
 } from 'lucide-react';
-import { apiGet, apiPost } from '../hooks/useApi';
+import { apiGet, apiPost, apiPut } from '../hooks/useApi';
 
 export default function NewEntriesPanel({
   isOpen,
@@ -96,6 +96,19 @@ export default function NewEntriesPanel({
       setSelectedIds([]);
     }
   }, [isOpen, statusFilter, shopFilter]);
+
+  const handleUpdateEntry = async (id, fields) => {
+    try {
+      const res = await apiPut(`/api/new-entries/${id}`, fields);
+      if (res.success) {
+        setEntries(prev => prev.map(e => e.id === id ? { ...e, ...fields } : e));
+      } else {
+        alert('Aktualisierung fehlgeschlagen: ' + (res.error || 'Unbekannter Fehler'));
+      }
+    } catch (err) {
+      alert(`Fehler beim Aktualisieren: ${err.message}`);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -456,17 +469,28 @@ export default function NewEntriesPanel({
                         <div className="text-[11px] text-teal-400 font-medium mt-0.5">
                           {entry.extractedBreeder || 'Unknown Breeder'}
                         </div>
-                        <div className="flex gap-1 mt-1">
-                          {entry.type && (
-                            <span className="text-[9px] px-1.5 py-0.2 rounded bg-slate-900 border border-slate-800 text-slate-400">
-                              {entry.type}
-                            </span>
-                          )}
-                          {entry.seedType && (
-                            <span className="text-[9px] px-1.5 py-0.2 rounded bg-slate-900 border border-slate-800 text-slate-400">
-                              {entry.seedType}
-                            </span>
-                          )}
+                        <div className="flex gap-1.5 mt-1.5 flex-wrap">
+                          <select
+                            value={entry.type || 'photoperiodic'}
+                            onChange={(e) => handleUpdateEntry(entry.id, { type: e.target.value })}
+                            disabled={entry.status !== 'pending' || actionLoading}
+                            className="text-[10px] px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 focus:outline-none focus:border-emerald-500/50 cursor-pointer font-bold transition-colors"
+                          >
+                            <option value="photoperiodic">🌱 Photo</option>
+                            <option value="autoflower">⚡ Auto</option>
+                            <option value="fast_flowering">🚀 Fast</option>
+                            <option value="triploid">🧬 Trip</option>
+                          </select>
+
+                          <select
+                            value={entry.seedType || 'feminized'}
+                            onChange={(e) => handleUpdateEntry(entry.id, { seedType: e.target.value })}
+                            disabled={entry.status !== 'pending' || actionLoading}
+                            className="text-[10px] px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 focus:outline-none focus:border-emerald-500/50 cursor-pointer font-bold transition-colors"
+                          >
+                            <option value="feminized">♀ Fem</option>
+                            <option value="regular">Reg</option>
+                          </select>
                         </div>
                       </td>
 
