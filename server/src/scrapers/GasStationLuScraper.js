@@ -11,6 +11,13 @@ export class GasStationLuScraper extends ShopifyScraper {
 
     // If vendor is missing or generic "Gas Station", try to find breeder in title
     if (!raw || raw.toLowerCase() === 'gas station' || raw.toLowerCase() === 'gas-station' || raw.toLowerCase() === 'unknown') {
+      // 0. Look for breeder in square brackets at the beginning (e.g. "[Ripper Seeds] ...")
+      const bracketMatch = title.match(/^\[([^\]]+)\]/);
+      if (bracketMatch) {
+        const found = normalizeBreederName(bracketMatch[1].trim());
+        if (found) return found;
+      }
+
       // 1. Look for "by <Breeder>"
       const byMatch = title.match(/\sby\s+([^|(\n]+)/i);
       if (byMatch) {
@@ -51,6 +58,15 @@ export class GasStationLuScraper extends ShopifyScraper {
     if (!title) return '';
 
     let name = title.trim();
+
+    // Remove square brackets and anything inside them (e.g. "[Ripper Seeds] Zombie Bride" -> "Zombie Bride")
+    name = name.replace(/\[[^\]]*\]/g, '');
+
+    // Remove promo packages (e.g. "7+1")
+    name = name.replace(/\s*\b\d+\s*\+\s*\d+\b/g, '');
+
+    // Remove "*Limited*" prefixes from the beginning of names
+    name = name.replace(/^\*+limited\*+\s*/i, '');
 
     // 1. Remove promo suffixes (e.g. "| Gas-Station exclusive Mary Jane Drop", "- only available today...")
     name = name.replace(/\s*\|\s*Gas-Station exclusive.*$/i, '');

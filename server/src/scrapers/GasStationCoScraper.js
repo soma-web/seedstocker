@@ -9,6 +9,12 @@ export class GasStationCoScraper extends ShopifyScraper {
   normalizeStrainName(title, breeder) {
     let name = title.trim();
 
+    // Remove promo packages (e.g. "7+1")
+    name = name.replace(/\s*\b\d+\s*\+\s*\d+\b/g, '');
+
+    // Remove "*Limited*" prefixes from the beginning of names
+    name = name.replace(/^\*+limited\*+\s*/i, '');
+
     // Strip trailing "by <Breeder>" or "von <Breeder>" from title if it matches a known breeder
     const byMatch = name.match(/\s+(by|von)\s+(.+)$/i);
     if (byMatch) {

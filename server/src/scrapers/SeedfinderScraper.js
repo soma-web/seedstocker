@@ -39,6 +39,7 @@ export class SeedfinderScraper extends BaseScraper {
       'Gas Co. Genetics': 'gas-co-genetics',
       'Gas Station Co. Seeds': 'gas-station-co-seeds',
       'Holy Hemp': 'holy-hemp',
+      'Nine Week Harvest': 'nine-weeks-harvest',
       'Nine Weeks Harvest': 'nine-weeks-harvest',
       'Elev8 Seeds Genetics': 'elev8-seeds-genetics',
       'Terphogz Genetics': 'terphogz-genetics',

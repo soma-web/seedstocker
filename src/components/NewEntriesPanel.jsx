@@ -101,7 +101,11 @@ export default function NewEntriesPanel({
     try {
       const res = await apiPut(`/api/new-entries/${id}`, fields);
       if (res.success) {
-        setEntries(prev => prev.map(e => e.id === id ? { ...e, ...fields } : e));
+        if (fields.extractedName !== undefined) {
+          fetchEntries();
+        } else {
+          setEntries(prev => prev.map(e => e.id === id ? { ...e, ...fields } : e));
+        }
       } else {
         alert('Aktualisierung fehlgeschlagen: ' + (res.error || 'Unbekannter Fehler'));
       }
@@ -462,12 +466,55 @@ export default function NewEntriesPanel({
 
                       {/* Extracted Strain & Breeder */}
                       <td className="p-3">
-                        <div className="font-bold text-slate-100 text-sm flex items-center gap-1.5">
+                        <div className="font-bold text-slate-100 text-sm flex items-center gap-1.5 mb-1.5">
                           <Sparkles className="w-3.5 h-3.5 text-teal-400 shrink-0" />
-                          <span>{entry.extractedName}</span>
+                          {entry.status === 'pending' ? (
+                            <input
+                              key={entry.id + '_name_' + (entry.extractedName || '')}
+                              type="text"
+                              defaultValue={entry.extractedName || ''}
+                              onBlur={(e) => {
+                                const val = e.target.value.trim();
+                                if (val && val !== entry.extractedName) {
+                                  handleUpdateEntry(entry.id, { extractedName: val });
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.target.blur();
+                                }
+                              }}
+                              disabled={actionLoading}
+                              className="bg-slate-900/60 hover:bg-slate-900 focus:bg-slate-900 border border-slate-800 focus:border-teal-500 text-slate-100 font-bold px-2 py-0.5 rounded text-xs focus:outline-none w-full max-w-[180px] transition-all"
+                            />
+                          ) : (
+                            <span>{entry.extractedName}</span>
+                          )}
                         </div>
                         <div className="text-[11px] text-teal-400 font-medium mt-0.5">
-                          {entry.extractedBreeder || 'Unknown Breeder'}
+                          {entry.status === 'pending' ? (
+                            <input
+                              key={entry.id + '_breeder_' + (entry.extractedBreeder || '')}
+                              type="text"
+                              defaultValue={entry.extractedBreeder || ''}
+                              onBlur={(e) => {
+                                const val = e.target.value.trim();
+                                if (val !== (entry.extractedBreeder || '')) {
+                                  handleUpdateEntry(entry.id, { extractedBreeder: val });
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.target.blur();
+                                }
+                              }}
+                              disabled={actionLoading}
+                              placeholder="Breeder..."
+                              className="bg-slate-900/40 hover:bg-slate-900 focus:bg-slate-900 border border-slate-800 focus:border-teal-500/50 text-teal-300 font-medium px-2 py-0.5 rounded text-[11px] focus:outline-none w-full max-w-[180px] transition-all"
+                            />
+                          ) : (
+                            <span>{entry.extractedBreeder || 'Unknown Breeder'}</span>
+                          )}
                         </div>
                         <div className="flex gap-1.5 mt-1.5 flex-wrap">
                           <select

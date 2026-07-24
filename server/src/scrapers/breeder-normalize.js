@@ -12,6 +12,9 @@ const BREEDER_ALIASES = new Map([
   ['gasstation', 'Gas Co. Genetics'],
 
   // US Exklusive
+  ['atlas seed', 'Atlas Seed'],
+  ['atlas seeds', 'Atlas Seed'],
+  ['atlas', 'Atlas Seed'],
   ['aficionado', 'Aficionado'],
   ['archive seeds', 'Archive Seeds'],
   ['archive', 'Archive Seeds'],
@@ -60,8 +63,11 @@ const BREEDER_ALIASES = new Map([
   ['terphogz genetics', 'Terphogz Genetics'],
   ['terphogz', 'Terphogz Genetics'],
   ['tiki madman', 'Tiki Madman'],
-  ['nine weeks harvest', 'Nine Weeks Harvest'],
-  ['nine weeks', 'Nine Weeks Harvest'],
+  ['nine week harvest', 'Nine Week Harvest'],
+  ['nine weeks harvest', 'Nine Week Harvest'],
+  ['nineweekharvest', 'Nine Week Harvest'],
+  ['nine week', 'Nine Week Harvest'],
+  ['nine weeks', 'Nine Week Harvest'],
   ['wizard tree', 'Wizard Trees'],
   ['wizard trees', 'Wizard Trees'],
   ['capulator', 'Capulator'],
