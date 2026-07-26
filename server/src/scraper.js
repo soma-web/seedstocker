@@ -59,9 +59,10 @@ export async function triggerScrape(targetShopName = null, scrapeMode = 'price')
 
   try {
     const config = getConfig();
-    const configuredShops = config.shops || SCRAPER_REGISTRY.map(e => ({ name: e.name, url: null }));
+    const configuredShops = config.shops;
 
     const getShopConfig = (name) => {
+      if (!configuredShops) return null;
       return configuredShops.find(s => {
         if (typeof s === 'string') {
           return s.toLowerCase() === name.toLowerCase();
@@ -77,12 +78,14 @@ export async function triggerScrape(targetShopName = null, scrapeMode = 'price')
     // Loop over all registered scrapers
     for (const entry of SCRAPER_REGISTRY) {
       const shopConfig = getShopConfig(entry.name);
+      // Enabled if no explicit shop config array exists, OR if in config, OR if specifically targeted by user
+      const isEnabled = !configuredShops || shopConfig !== undefined || (targetShopName && targetShopName.toLowerCase() === entry.name.toLowerCase());
 
-      if (shopConfig && shouldScrape(entry.name)) {
-        const targetUrl = typeof shopConfig === 'string' ? null : shopConfig.url;
+      if (isEnabled && shouldScrape(entry.name)) {
+        const targetUrl = (shopConfig && typeof shopConfig !== 'string' && shopConfig.url) ? shopConfig.url : (entry.defaultUrl || null);
         const scraper = new entry.ScraperClass(logMessage, scrapeMode);
         await scraper.scrape(scraperStatus, targetUrl);
-      } else if (shopConfig) {
+      } else if (isEnabled) {
         logMessage('info', `Skipping ${entry.name} (not requested for this run).`);
       } else {
         logMessage('info', `Skipping ${entry.name} (not enabled in config).`);

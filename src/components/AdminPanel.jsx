@@ -785,7 +785,7 @@ export default function AdminPanel({
           On-Demand Single Page Scraper
         </h2>
         <p className="text-xs text-slate-500 mb-6">
-          Paste a specific product URL from <strong>Dutch Passion</strong>, <strong>Sensi Seeds</strong>, <strong>Gas Station LU</strong>, <strong>Gas Station Co. Seeds</strong>, <strong>Zamnesia</strong>, <strong>Hans Brainfood</strong>, or <strong>House of Seeds</strong> to scrape and upsert that strain and its price offers into the database instantly.
+          Paste a specific product URL from <strong>Dutch Passion</strong>, <strong>Sensi Seeds</strong>, <strong>Gas Station LU</strong>, <strong>Gas Station Co. Seeds</strong>, <strong>Zamnesia</strong>, <strong>Hans Brainfood</strong>, <strong>House of Seeds</strong>, or <strong>Barney's Farm</strong> to scrape and upsert that strain and its price offers into the database instantly.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4">
@@ -859,6 +859,7 @@ export default function AdminPanel({
               <option value="Gas Station LU">Gas Station LU</option>
               <option value="Sensi Seeds">Sensi Seeds</option>
               <option value="Dutch Passion">Dutch Passion</option>
+              <option value="Barney's Farm">Barney's Farm</option>
             </select>
           </div>
           <button

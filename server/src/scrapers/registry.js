@@ -5,6 +5,7 @@ import { GasStationCoScraper } from './GasStationCoScraper.js';
 import { GasStationLuScraper } from './GasStationLuScraper.js';
 import { SensiSeedsScraper } from './SensiSeedsScraper.js';
 import { DutchPassionScraper } from './DutchPassionScraper.js';
+import { BarneysFarmScraper } from './BarneysFarmScraper.js';
 
 /**
  * Central scraper registry. Every new shop scraper is added here once,
@@ -60,6 +61,13 @@ export const SCRAPER_REGISTRY = [
     domain: 'dutch-passion.com',
     shopifyJson: false,
     defaultUrl: 'https://dutch-passion.com/de/hanfsamen'
+  },
+  {
+    name: "Barney's Farm",
+    ScraperClass: BarneysFarmScraper,
+    domain: 'barneysfarm.de',
+    shopifyJson: false,
+    defaultUrl: 'https://www.barneysfarm.de/sitemap.xml'
   }
 ];
 

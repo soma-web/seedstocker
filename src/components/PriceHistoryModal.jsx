@@ -19,7 +19,8 @@ export default function PriceHistoryModal({
     'Gas Station Co. Seeds': { stroke: '#ef4444' },
     'Gas Station LU': { stroke: '#14b8a6' },
     'Sensi Seeds': { stroke: '#10b981' },
-    'Dutch Passion': { stroke: '#f59e0b' }
+    'Dutch Passion': { stroke: '#f59e0b' },
+    "Barney's Farm": { stroke: '#eab308' }
   };
   const defaultColors = { stroke: '#94a3b8' };
 

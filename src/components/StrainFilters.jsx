@@ -71,6 +71,7 @@ export default function StrainFilters({
             <option value="Gas Station LU">Gas Station LU</option>
             <option value="Sensi Seeds">Sensi Seeds</option>
             <option value="Dutch Passion">Dutch Passion</option>
+            <option value="Barney's Farm">Barney's Farm</option>
           </select>
         </div>
 

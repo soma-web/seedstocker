@@ -23,6 +23,7 @@ export function getShopLogoColor(shop) {
   if (shop === 'Gas Station LU') return 'text-teal-400 bg-teal-500/10 border-teal-500/20';
   if (shop === 'Sensi Seeds') return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
   if (shop === 'Dutch Passion') return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
+  if (shop === "Barney's Farm" || shop === "Barneys Farm") return 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20';
   return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
 }
 
