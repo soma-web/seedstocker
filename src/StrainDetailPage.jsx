@@ -402,8 +402,8 @@ export default function StrainDetailPage({ strainId, onBack, onNavigate }) {
   );
 
   const sortedOffers = [...(strain.offers || [])].sort((a, b) => {
-    if (a.shop !== b.shop) return a.shop.localeCompare(b.shop);
-    return Number(a.seeds) - Number(b.seeds);
+    if (Number(a.seeds) !== Number(b.seeds)) return Number(a.seeds) - Number(b.seeds);
+    return Number(a.price) - Number(b.price);
   });
   const cheapestMap = getCheapestMap(strain.offers || []);
   const shopSet = new Set((strain.offers || []).map(o => o.shop));

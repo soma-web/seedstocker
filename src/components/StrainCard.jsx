@@ -32,12 +32,13 @@ export default function StrainCard({
   onNavigateToDetail
 }) {
   const cheapestMap = getCheapestOffersMap(strain.offers);
+  const lowestPrice = strain.offers?.length > 0 ? Math.min(...strain.offers.map(o => o.price)) : null;
   
   const sortedOffers = [...strain.offers].sort((a, b) => {
-    if (a.shop !== b.shop) {
-      return a.shop.localeCompare(b.shop);
+    if (Number(a.seeds) !== Number(b.seeds)) {
+      return Number(a.seeds) - Number(b.seeds);
     }
-    return Number(a.seeds) - Number(b.seeds);
+    return Number(a.price) - Number(b.price);
   });
 
   return (
@@ -53,8 +54,13 @@ export default function StrainCard({
       <div>
         <div className="flex items-start justify-between gap-3 mb-4">
           <div>
-            <h2 className="text-lg font-bold text-slate-100 tracking-tight">
+            <h2 className="text-lg font-bold text-slate-100 tracking-tight flex items-center gap-2 flex-wrap">
               {strain.name}
+              {lowestPrice !== null && (
+                <span className="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded font-mono">
+                  from €{lowestPrice.toFixed(2)}
+                </span>
+              )}
             </h2>
             <p className="text-xs text-slate-400 font-medium mt-0.5 flex items-center flex-wrap gap-2">
               by <span className="text-emerald-400 font-semibold">{strain.breeder || 'Unknown Breeder'}</span>

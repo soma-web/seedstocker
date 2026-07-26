@@ -215,7 +215,9 @@ export default function NewEntriesPanel({
     );
   };
 
-  const uniqueShops = Array.from(new Set(entries.map(e => e.shop))).filter(Boolean);
+  const uniqueShopsFromEntries = entries.map(e => e.shop).filter(Boolean);
+  const registeredShops = stats.allShops || [];
+  const availableShops = Array.from(new Set([...registeredShops, ...uniqueShopsFromEntries])).sort();
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in overflow-y-auto">
@@ -244,10 +246,11 @@ export default function NewEntriesPanel({
             <button
               onClick={handleStartDiscoveryScrape}
               disabled={actionLoading}
+              title={shopFilter ? `Discovery-Scrape für ${shopFilter} starten` : 'Discovery-Scrape für alle Shops starten'}
               className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-slate-900 font-semibold rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition-all disabled:opacity-50"
             >
               <Play className="w-4 h-4 fill-slate-900" />
-              Discovery-Scrape starten
+              {shopFilter ? `Discovery: ${shopFilter}` : 'Discovery-Scrape starten (Alle Shops)'}
             </button>
             <button
               onClick={fetchEntries}
@@ -324,10 +327,10 @@ export default function NewEntriesPanel({
             <select
               value={shopFilter}
               onChange={(e) => setShopFilter(e.target.value)}
-              className="bg-slate-900 border border-slate-800 text-slate-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-emerald-500"
+              className="bg-slate-900 border border-slate-800 text-slate-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-emerald-500 font-medium"
             >
-              <option value="">Alle Shops</option>
-              {uniqueShops.map(s => (
+              <option value="">Alle Shops ({availableShops.length})</option>
+              {availableShops.map(s => (
                 <option key={s} value={s}>{s}</option>
               ))}
             </select>

@@ -8,6 +8,8 @@ export default function StrainFilters({
   setSelectedBreeder,
   selectedShop,
   setSelectedShop,
+  sortBy = 'name_asc',
+  setSortBy,
   typeFilter,
   setTypeFilter,
   seedTypeFilter,
@@ -41,7 +43,7 @@ export default function StrainFilters({
         </div>
 
         {/* Breeder Dropdown */}
-        <div className="w-full lg:w-48">
+        <div className="w-full lg:w-44">
           <select
             value={selectedBreeder}
             onChange={e => setSelectedBreeder(e.target.value)}
@@ -55,7 +57,7 @@ export default function StrainFilters({
         </div>
 
         {/* Shop Dropdown */}
-        <div className="w-full lg:w-48">
+        <div className="w-full lg:w-44">
           <select
             value={selectedShop}
             onChange={e => setSelectedShop(e.target.value)}
@@ -69,6 +71,22 @@ export default function StrainFilters({
             <option value="Gas Station LU">Gas Station LU</option>
             <option value="Sensi Seeds">Sensi Seeds</option>
             <option value="Dutch Passion">Dutch Passion</option>
+          </select>
+        </div>
+
+        {/* Sort By Dropdown */}
+        <div className="w-full lg:w-52">
+          <select
+            value={sortBy}
+            onChange={e => setSortBy && setSortBy(e.target.value)}
+            className="w-full h-12 px-4 bg-slate-950 border border-slate-900 rounded-xl text-emerald-400 font-semibold focus:outline-none focus:border-emerald-500/50 transition-colors text-sm"
+          >
+            <option value="name_asc">Sort: Name (A-Z)</option>
+            <option value="price_asc">Sort: Price (Low → High)</option>
+            <option value="price_desc">Sort: Price (High → Low)</option>
+            <option value="price_per_seed_asc">Sort: Price/Seed (Low → High)</option>
+            <option value="offers_desc">Sort: Most Offers</option>
+            <option value="name_desc">Sort: Name (Z-A)</option>
           </select>
         </div>
 

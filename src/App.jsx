@@ -28,6 +28,7 @@ export default function App() {
   const [search, setSearch] = useState('');
   const [selectedBreeder, setSelectedBreeder] = useState('');
   const [selectedShop, setSelectedShop] = useState('');
+  const [sortBy, setSortBy] = useState('name_asc');
   const [typeFilter, setTypeFilter] = useState('');
   const [config, setConfig] = useState({ maxItemsPerShop: 20, debug: false });
   const [dbStats, setDbStats] = useState({ strainsCount: 0, offersCount: 0, fileSize: '0.00 MB', dbPath: '', shopStats: [] });
@@ -508,7 +509,7 @@ export default function App() {
     return true;
   });
 
-  const groupedStrains = groupStrainsByName(
+  const rawGroupedStrains = groupStrainsByName(
     filteredStrainsWithFlowering
       .map(strain => {
         let filteredOffers = strain.offers;
@@ -522,6 +523,34 @@ export default function App() {
       })
       .filter(strain => strain.offers.length > 0)
   );
+
+  const groupedStrains = [...rawGroupedStrains].sort((a, b) => {
+    const minPriceA = a.offers.length > 0 ? Math.min(...a.offers.map(o => o.price)) : Infinity;
+    const minPriceB = b.offers.length > 0 ? Math.min(...b.offers.map(o => o.price)) : Infinity;
+    const minPpsA = a.offers.length > 0 ? Math.min(...a.offers.map(o => o.price / (o.seeds || 1))) : Infinity;
+    const minPpsB = b.offers.length > 0 ? Math.min(...b.offers.map(o => o.price / (o.seeds || 1))) : Infinity;
+
+    if (sortBy === 'price_asc') {
+      if (minPriceA !== minPriceB) return minPriceA - minPriceB;
+      return a.name.localeCompare(b.name);
+    }
+    if (sortBy === 'price_desc') {
+      if (minPriceA !== minPriceB) return minPriceB - minPriceA;
+      return a.name.localeCompare(b.name);
+    }
+    if (sortBy === 'price_per_seed_asc') {
+      if (minPpsA !== minPpsB) return minPpsA - minPpsB;
+      return a.name.localeCompare(b.name);
+    }
+    if (sortBy === 'offers_desc') {
+      if (a.offers.length !== b.offers.length) return b.offers.length - a.offers.length;
+      return a.name.localeCompare(b.name);
+    }
+    if (sortBy === 'name_desc') {
+      return b.name.localeCompare(a.name);
+    }
+    return a.name.localeCompare(b.name);
+  });
 
   const filteredDescriptionStrains = filteredStrainsWithFlowering;
 
@@ -669,6 +698,8 @@ export default function App() {
             setSelectedBreeder={setSelectedBreeder}
             selectedShop={selectedShop}
             setSelectedShop={setSelectedShop}
+            sortBy={sortBy}
+            setSortBy={setSortBy}
             typeFilter={typeFilter}
             setTypeFilter={setTypeFilter}
             seedTypeFilter={seedTypeFilter}
@@ -685,7 +716,7 @@ export default function App() {
           />
 
           <StrainList
-            key={`${search}-${selectedBreeder}-${selectedShop}-${typeFilter}-${seedTypeFilter}-${onlyAvailable}-${minFloweringFilter}-${maxFloweringFilter}-${selectedLetter}`}
+            key={`${search}-${selectedBreeder}-${selectedShop}-${sortBy}-${typeFilter}-${seedTypeFilter}-${onlyAvailable}-${minFloweringFilter}-${maxFloweringFilter}-${selectedLetter}`}
             currentPath={currentPath}
             groupedStrains={groupedStrains}
             filteredDescriptionStrains={filteredDescriptionStrains}

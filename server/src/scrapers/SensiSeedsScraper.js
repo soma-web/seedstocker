@@ -55,6 +55,66 @@ export class SensiSeedsScraper extends BaseScraper {
     return val.trim();
   }
 
+  parseOffersFromHtml(html) {
+    const offers = [];
+
+    // Main product price fallback (for single-option products where label text doesn't include pack price)
+    const metaPriceRaw = html.match(/<meta[^>]*itemprop="price"[^>]*content="([^"]+)"/i)?.[1];
+    let mainPrice = metaPriceRaw ? parseFloat(metaPriceRaw.replace(',', '.')) : null;
+
+    if (isNaN(mainPrice) || !mainPrice) {
+      const priceValSpanRaw = html.match(/class="[^"]*price-value-[^"]*"[^>]*>([\s\S]*?)<\/span>/i)?.[1];
+      if (priceValSpanRaw) {
+        const clean = decodeHTMLEntities(priceValSpanRaw.replace(/<[^>]+>/g, '')).replace(/[^0-9.,]/g, '').replace('.', '').replace(',', '.');
+        mainPrice = parseFloat(clean);
+      }
+    }
+
+    const labelMatches = [...html.matchAll(/<label[^>]*for="product_attribute_[^"]*"[^>]*>([\s\S]*?)<\/label>/gi)];
+
+    for (const lm of labelMatches) {
+      const rawLabelHtml = lm[1];
+
+      // 1. Extract price-per-seed if present
+      const pricePerSeedMatch = rawLabelHtml.match(/class="[^"]*price-per-seed"[^>]*>([\s\S]*?)<\/span>/i);
+      let pricePerSeed = null;
+      if (pricePerSeedMatch) {
+        const ppsDecoded = decodeHTMLEntities(pricePerSeedMatch[1].replace(/<[^>]+>/g, ''));
+        const ppsNumMatch = ppsDecoded.match(/(?:€\s*([\d.,]+)|([\d.,]+)\s*€)/);
+        if (ppsNumMatch) {
+          pricePerSeed = parseFloat((ppsNumMatch[1] || ppsNumMatch[2]).replace('.', '').replace(',', '.'));
+        }
+      }
+
+      // 2. Strip price-per-seed span to avoid matching price-per-seed as pack price
+      const labelWithoutPps = rawLabelHtml.replace(/<span[^>]*class="[^"]*price-per-seed"[^>]*>[\s\S]*?<\/span>/gi, '');
+      const decodedLabel = decodeHTMLEntities(labelWithoutPps.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim());
+
+      const seedsMatch = decodedLabel.match(/(\d+)(?:\s*\+\s*\d+)?\s*samen/i);
+      const priceMatch = decodedLabel.match(/(?:€\s*([\d.,]+)|([\d.,]+)\s*€)/);
+
+      if (seedsMatch) {
+        const seeds = parseInt(seedsMatch[1], 10);
+        let price = null;
+
+        if (priceMatch) {
+          const priceRaw = priceMatch[1] || priceMatch[2];
+          price = parseFloat(priceRaw.replace('.', '').replace(',', '.'));
+        } else if (labelMatches.length === 1 && mainPrice && !isNaN(mainPrice)) {
+          price = mainPrice;
+        } else if (pricePerSeed && seeds > 0) {
+          price = Math.round(seeds * pricePerSeed * 100) / 100;
+        }
+
+        if (!isNaN(seeds) && !isNaN(price) && seeds > 0 && price > 0) {
+          offers.push({ seeds, price });
+        }
+      }
+    }
+
+    return offers;
+  }
+
   async scrape(scraperStatus, targetUrl = null) {
     this.log('info', 'Starting Sensi Seeds scraper...');
     scraperStatus.currentShop = this.shopName;
@@ -256,31 +316,19 @@ export class SensiSeedsScraper extends BaseScraper {
     });
 
     // 8. Extract Offers (Pack Sizes & Prices)
-    const labelMatches = [...html.matchAll(/<label[^>]*for="product_attribute_[^"]*"[^>]*>([\s\S]*?)<\/label>/gi)];
+    const offers = this.parseOffersFromHtml(html);
     let savedOffersCount = 0;
 
-    for (const lm of labelMatches) {
-      const decodedLabel = decodeHTMLEntities(lm[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim());
-      const seedsMatch = decodedLabel.match(/(\d+)(?:\s*\+\s*\d+)?\s*samen/i);
-      const priceMatch = decodedLabel.match(/(?:€\s*([\d.,]+)|([\d.,]+)\s*€)/);
-      
-      if (seedsMatch && priceMatch) {
-        const seeds = parseInt(seedsMatch[1], 10);
-        const priceRaw = priceMatch[1] || priceMatch[2];
-        const price = parseFloat(priceRaw.replace('.', '').replace(',', '.'));
-        
-        if (!isNaN(seeds) && !isNaN(price) && seeds > 0 && price > 0) {
-          await this.insertOffer({
-            strainId,
-            url,
-            seeds,
-            price,
-            currency: 'EUR',
-            availability: 'available'
-          });
-          savedOffersCount++;
-        }
-      }
+    for (const offer of offers) {
+      await this.insertOffer({
+        strainId,
+        url,
+        seeds: offer.seeds,
+        price: offer.price,
+        currency: 'EUR',
+        availability: 'available'
+      });
+      savedOffersCount++;
     }
 
     if (savedOffersCount > 0) {
@@ -385,31 +433,19 @@ export class SensiSeedsScraper extends BaseScraper {
       rawTitle
     });
 
-    const labelMatches = [...html.matchAll(/<label[^>]*for="product_attribute_[^"]*"[^>]*>([\s\S]*?)<\/label>/gi)];
+    const offers = this.parseOffersFromHtml(html);
     let offersCreated = 0;
 
-    for (const lm of labelMatches) {
-      const decodedLabel = decodeHTMLEntities(lm[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim());
-      const seedsMatch = decodedLabel.match(/(\d+)(?:\s*\+\s*\d+)?\s*samen/i);
-      const priceMatch = decodedLabel.match(/(?:€\s*([\d.,]+)|([\d.,]+)\s*€)/);
-      
-      if (seedsMatch && priceMatch) {
-        const seeds = parseInt(seedsMatch[1], 10);
-        const priceRaw = priceMatch[1] || priceMatch[2];
-        const price = parseFloat(priceRaw.replace('.', '').replace(',', '.'));
-        
-        if (!isNaN(seeds) && !isNaN(price) && seeds > 0 && price > 0) {
-          await this.insertOffer({
-            strainId,
-            url,
-            seeds,
-            price,
-            currency: 'EUR',
-            availability: 'available'
-          });
-          offersCreated++;
-        }
-      }
+    for (const offer of offers) {
+      await this.insertOffer({
+        strainId,
+        url,
+        seeds: offer.seeds,
+        price: offer.price,
+        currency: 'EUR',
+        availability: 'available'
+      });
+      offersCreated++;
     }
 
     if (description) {

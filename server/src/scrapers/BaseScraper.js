@@ -219,7 +219,13 @@ export class BaseScraper {
       'ungeschält',
       'geschält',
       'adventskalender',
-      'mix'
+      'mix',
+      'dose',
+      'barney\'s farm dose',
+      'barneys farm dose',
+      'barney farm dose',
+      'metalldose',
+      'stashdose'
     ];
     if (invalidKeywords.some(kw => lower.includes(kw))) {
       return true;

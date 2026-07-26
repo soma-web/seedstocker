@@ -1,5 +1,6 @@
 import { sqlite } from '../db.js';
 import { triggerScrape } from '../scraper.js';
+import { getAllShopNames } from '../scrapers/registry.js';
 import crypto from 'node:crypto';
 
 export default async function discoveryRoutes(app) {
@@ -35,7 +36,8 @@ export default async function discoveryRoutes(app) {
         approvedCount,
         rejectedCount,
         mergedCount,
-        shopStats
+        shopStats,
+        allShops: getAllShopNames()
       };
     } catch (err) {
       reply.status(500).send({ error: err.message });
