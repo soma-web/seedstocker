@@ -889,14 +889,16 @@ export class BaseScraper {
     }
 
     if (shouldInsertHistory) {
+      const nowIso = new Date().toISOString();
       await db.insert(priceHistory).values({
         id: crypto.randomUUID(),
         strainId,
         shop: this.shopName,
         seeds,
         price,
-        fetchedAt: new Date().toISOString()
+        fetchedAt: nowIso
       });
+      this.log('price', `[PRICE RECORDED] Shop: ${this.shopName} | StrainID: ${strainId} | Seeds: ${seeds} | Price: ${price} EUR | URL: ${url}`);
     }
   }
 

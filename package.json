@@ -7,6 +7,8 @@
     "setup": "npm install && npm --prefix server install",
     "dev": "vite",
     "dev:api": "npm --prefix server run dev",
+    "scrape": "npm --prefix server run scrape",
+    "scrape:quick": "npm --prefix server run scrape:quick",
     "build": "vite build",
     "preview": "vite preview"
   },

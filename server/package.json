@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
+    "scrape": "node src/run-price-scraper.js",
+    "scrape:quick": "node src/run-price-scraper.js --mode=price_quick",
     "test:encoding": "node src/test-encoding.js",
     "test:normalization": "node src/test-normalization.js",
     "test:cannapot": "node src/test-cannapot-scraper.js",
