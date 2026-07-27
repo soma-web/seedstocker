@@ -247,6 +247,24 @@ export class DutchPassionScraper extends BaseScraper {
 
     scraperStatus.productsScraped++;
     this.log('success', `Saved strain "${strainName}" (${breeder}) with ${variants.length} offers.`);
-    return true;
+    return {
+      strainId,
+      name: strainName,
+      breeder,
+      offersCreated: variants.length
+    };
+  }
+
+  async scrapeSingle(url) {
+    this.log('info', `Running single page scrape for: ${url}`);
+    const scraperStatus = { productsScraped: 0 };
+    const res = await this.scrapeProductPage(url, scraperStatus);
+    if (!res) {
+      throw new Error(`Failed to scrape Dutch Passion product page at ${url}`);
+    }
+    return {
+      ...res,
+      shop: this.shopName
+    };
   }
 }

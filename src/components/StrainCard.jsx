@@ -24,6 +24,7 @@ export function getShopLogoColor(shop) {
   if (shop === 'Sensi Seeds') return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
   if (shop === 'Dutch Passion') return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
   if (shop === "Barney's Farm" || shop === "Barneys Farm") return 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20';
+  if (shop === 'Cannapot') return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
   return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
 }
 

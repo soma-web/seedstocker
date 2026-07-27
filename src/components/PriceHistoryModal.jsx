@@ -20,7 +20,8 @@ export default function PriceHistoryModal({
     'Gas Station LU': { stroke: '#14b8a6' },
     'Sensi Seeds': { stroke: '#10b981' },
     'Dutch Passion': { stroke: '#f59e0b' },
-    "Barney's Farm": { stroke: '#eab308' }
+    "Barney's Farm": { stroke: '#eab308' },
+    'Cannapot': { stroke: '#10b981' }
   };
   const defaultColors = { stroke: '#94a3b8' };
 

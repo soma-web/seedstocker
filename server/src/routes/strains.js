@@ -1,5 +1,27 @@
 import { sqlite } from '../db.js';
 
+function dedupeOffers(rows) {
+  const deduped = new Map();
+
+  for (const row of rows) {
+    const key = [
+      row.shop || '',
+      row.url || '',
+      row.seeds ?? '',
+      row.price ?? '',
+      row.currency || '',
+      row.availability || ''
+    ].join('|');
+
+    const existing = deduped.get(key);
+    if (!existing || new Date(row.fetchedAt).getTime() > new Date(existing.fetchedAt).getTime()) {
+      deduped.set(key, row);
+    }
+  }
+
+  return Array.from(deduped.values());
+}
+
 export default async function strainRoutes(app) {
 
   app.get('/api/strains', async (req, reply) => {
@@ -120,6 +142,14 @@ export default async function strainRoutes(app) {
         }
       }
 
+      for (const strain of strainsMap.values()) {
+        strain.offers = dedupeOffers(strain.offers).sort((a, b) => {
+          if (a.shop !== b.shop) return a.shop.localeCompare(b.shop);
+          if (Number(a.seeds) !== Number(b.seeds)) return Number(a.seeds) - Number(b.seeds);
+          return Number(a.price) - Number(b.price);
+        });
+      }
+
       return Array.from(strainsMap.values());
     } catch (err) {
       reply.status(500).send({ error: err.message });
@@ -131,11 +161,15 @@ export default async function strainRoutes(app) {
       const { id } = req.params;
       const strain = sqlite.prepare('SELECT * FROM strains WHERE id = ?').get(id);
       if (!strain) return reply.status(404).send({ error: 'Strain not found' });
-      const offers = sqlite.prepare(`
+      const offers = dedupeOffers(sqlite.prepare(`
         SELECT id, shop, url, seeds, price, currency, availability, fetched_at AS fetchedAt
         FROM scraped_offers WHERE strain_id = ?
         ORDER BY shop ASC, seeds ASC, price ASC
-      `).all(id);
+      `).all(id)).sort((a, b) => {
+        if (a.shop !== b.shop) return a.shop.localeCompare(b.shop);
+        if (Number(a.seeds) !== Number(b.seeds)) return Number(a.seeds) - Number(b.seeds);
+        return Number(a.price) - Number(b.price);
+      });
 
       // Find other strains with the same name but different breeders
       const siblings = sqlite.prepare(`

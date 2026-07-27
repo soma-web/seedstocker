@@ -308,7 +308,7 @@ export class ZamnesiaScraper extends BaseScraper {
       const description = this.extractDescription(html);
       let strainId;
       try {
-        strainId = await this.upsertStrain({ name, breeder, type, seedType, thc, cbd, strainType, floweringTime, description, url, rawTitle: title || name });
+        strainId = await this.upsertStrain({ name, breeder, type, seedType, thc, cbd, strainType, floweringTime, description, url, rawTitle: rawTitle || name });
       } catch (dbErr) {
         this.log('error', `Database error for Zamnesia strain ${name}: ${dbErr.message}`);
         await this.sleep(500);
@@ -466,7 +466,7 @@ export class ZamnesiaScraper extends BaseScraper {
     const strainType = this.normalizeStrainType(geneticsRaw);
 
     const description = this.extractDescription(html);
-    const strainId = await this.upsertStrain({ name, breeder, type, seedType, thc, cbd, strainType, floweringTime, description, url, rawTitle: title || name });
+    const strainId = await this.upsertStrain({ name, breeder, type, seedType, thc, cbd, strainType, floweringTime, description, url, rawTitle: rawTitle || name });
     
     let offersCreated = 0;
     for (const combo of psCombinations) {

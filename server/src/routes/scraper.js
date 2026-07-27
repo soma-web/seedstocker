@@ -13,7 +13,7 @@ export default async function scraperRoutes(app) {
         type: 'object',
         properties: {
           shop: { type: 'string' },
-          mode: { type: 'string', enum: ['price', 'metadata'] }
+          mode: { type: 'string', enum: ['price', 'price_quick', 'metadata'] }
         }
       }
     }

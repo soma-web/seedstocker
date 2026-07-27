@@ -36,6 +36,14 @@ export default function NewEntriesPanel({
   const [statusFilter, setStatusFilter] = useState('pending');
   const [shopFilter, setShopFilter] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  // Client-side filters
+  const [breederFilter, setBreederFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
+  const [matchFilter, setMatchFilter] = useState(''); // '' | 'match' | 'new'
+
+  // Pagination
+  const [pageSize, setPageSize] = useState(25);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Selection for bulk actions
   const [selectedIds, setSelectedIds] = useState([]);
@@ -97,6 +105,11 @@ export default function NewEntriesPanel({
     }
   }, [isOpen, statusFilter, shopFilter]);
 
+  // Reset to page 1 whenever filters or data change
+  useEffect(() => { setCurrentPage(1); }, [breederFilter, typeFilter, matchFilter, shopFilter, statusFilter, entries]);
+
+  if (!isOpen) return null;
+
   const handleUpdateEntry = async (id, fields) => {
     try {
       const res = await apiPut(`/api/new-entries/${id}`, fields);
@@ -113,8 +126,6 @@ export default function NewEntriesPanel({
       alert(`Fehler beim Aktualisieren: ${err.message}`);
     }
   };
-
-  if (!isOpen) return null;
 
   const handleStartDiscoveryScrape = async () => {
     setActionLoading(true);
@@ -202,10 +213,12 @@ export default function NewEntriesPanel({
   };
 
   const toggleSelectAll = () => {
-    if (selectedIds.length === entries.length) {
-      setSelectedIds([]);
+    const pageIds = pagedEntries.map(e => e.id);
+    const allPageSelected = pageIds.every(id => selectedIds.includes(id));
+    if (allPageSelected) {
+      setSelectedIds(prev => prev.filter(id => !pageIds.includes(id)));
     } else {
-      setSelectedIds(entries.map(e => e.id));
+      setSelectedIds(prev => Array.from(new Set([...prev, ...pageIds])));
     }
   };
 
@@ -219,9 +232,30 @@ export default function NewEntriesPanel({
   const registeredShops = stats.allShops || [];
   const availableShops = Array.from(new Set([...registeredShops, ...uniqueShopsFromEntries])).sort();
 
+  // Unique breeders from loaded entries for filter dropdown
+  const availableBreeders = Array.from(new Set(entries.map(e => e.extractedBreeder).filter(Boolean))).sort();
+
+  // Apply client-side filters on top of server-side results
+  const filteredEntries = entries.filter(e => {
+    if (breederFilter && (e.extractedBreeder || '') !== breederFilter) return false;
+    if (typeFilter && (e.type || 'photoperiodic') !== typeFilter) return false;
+    if (matchFilter === 'match' && !e.suggestedStrainId) return false;
+    if (matchFilter === 'new' && e.suggestedStrainId) return false;
+    return true;
+  });
+
+  const hasClientFilters = breederFilter || typeFilter || matchFilter;
+
+  // Pagination derived
+  const totalPages = pageSize === 0 ? 1 : Math.max(1, Math.ceil(filteredEntries.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const pagedEntries = pageSize === 0
+    ? filteredEntries
+    : filteredEntries.slice((safePage - 1) * pageSize, safePage * pageSize);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in overflow-y-auto">
-      <div className="w-full max-w-6xl max-h-[92vh] flex flex-col glass-panel rounded-2xl p-6 relative shadow-2xl border border-slate-800 animate-scale-up">
+      <div className="w-full max-w-6xl max-h-[92vh] overflow-y-auto flex flex-col glass-panel rounded-2xl p-6 relative shadow-2xl border border-slate-800 animate-scale-up">
         
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5 mb-5">
@@ -334,6 +368,79 @@ export default function NewEntriesPanel({
                 <option key={s} value={s}>{s}</option>
               ))}
             </select>
+
+            {/* Breeder Filter */}
+            <select
+              value={breederFilter}
+              onChange={(e) => setBreederFilter(e.target.value)}
+              className="bg-slate-900 border border-slate-800 text-slate-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-emerald-500 font-medium"
+            >
+              <option value="">Alle Breeder</option>
+              {availableBreeders.map(b => (
+                <option key={b} value={b}>{b}</option>
+              ))}
+            </select>
+
+            {/* Type Filter */}
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="bg-slate-900 border border-slate-800 text-slate-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-emerald-500 font-medium"
+            >
+              <option value="">Alle Typen</option>
+              <option value="photoperiodic">🌱 Photoperiodic</option>
+              <option value="autoflower">⚡ Autoflower</option>
+              <option value="fast_flowering">🚀 Fast Flowering</option>
+              <option value="triploid">🧬 Triploid</option>
+            </select>
+
+            {/* Match Filter */}
+            <div className="flex bg-slate-900 p-1 rounded-lg border border-slate-800 text-xs">
+              {[['', 'Alle'], ['match', '✓ Match'], ['new', '✦ Neu']].map(([val, label]) => (
+                <button
+                  key={val}
+                  onClick={() => setMatchFilter(val)}
+                  className={`px-3 py-1 rounded-md transition-colors ${
+                    matchFilter === val
+                      ? val === 'match'
+                        ? 'bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30'
+                        : val === 'new'
+                        ? 'bg-teal-500/20 text-teal-300 font-semibold border border-teal-500/30'
+                        : 'bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/30'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {hasClientFilters && (
+              <button
+                onClick={() => { setBreederFilter(''); setTypeFilter(''); setMatchFilter(''); }}
+                className="px-2 py-1 text-[10px] text-slate-500 hover:text-rose-400 border border-slate-800 hover:border-rose-500/30 rounded-lg transition-colors flex items-center gap-1"
+                title="Filter zurücksetzen"
+              >
+                <X className="w-3 h-3" /> Filter
+              </button>
+            )}
+
+            {/* Page size */}
+            <div className="ml-auto flex items-center gap-1.5">
+              <span className="text-[10px] text-slate-500">Zeige:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }}
+                className="bg-slate-900 border border-slate-800 text-slate-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-emerald-500"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+                <option value={0}>Alle</option>
+              </select>
+            </div>
           </div>
 
           {/* Search Box & Bulk Actions */}
@@ -383,6 +490,20 @@ export default function NewEntriesPanel({
 
         </div>
 
+        {/* Entry Count */}
+        {!loading && entries.length > 0 && (
+          <div className="flex items-center gap-2 mb-2 px-1 text-[10px] text-slate-500">
+            <span>
+              {filteredEntries.length === entries.length
+                ? `${entries.length} Einträge`
+                : `${filteredEntries.length} von ${entries.length} Einträgen`}
+            </span>
+            {hasClientFilters && filteredEntries.length !== entries.length && (
+              <span className="text-amber-400">· Filter aktiv</span>
+            )}
+          </div>
+        )}
+
         {/* Entries Table / List */}
         <div className="flex-1 overflow-y-auto min-h-[350px] border border-slate-900 rounded-xl bg-slate-950/50">
           {loading ? (
@@ -390,10 +511,18 @@ export default function NewEntriesPanel({
               <RotateCw className="w-5 h-5 animate-spin mr-2 text-emerald-400" />
               Lade Staging-Funde...
             </div>
-          ) : entries.length === 0 ? (
+          ) : pagedEntries.length === 0 && filteredEntries.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 text-slate-500 text-xs gap-2">
               <CheckCircle2 className="w-8 h-8 text-emerald-500/40" />
               <span>Keine Eintragsfunde für die aktuellen Filter vorhanden.</span>
+              {hasClientFilters && (
+                <button
+                  onClick={() => { setBreederFilter(''); setTypeFilter(''); setMatchFilter(''); }}
+                  className="text-[10px] text-teal-400 hover:text-teal-300 underline"
+                >
+                  Filter zurücksetzen
+                </button>
+              )}
             </div>
           ) : (
             <table className="w-full text-left text-xs text-slate-300 border-collapse">
@@ -402,8 +531,9 @@ export default function NewEntriesPanel({
                   <th className="p-3 w-10 text-center">
                     <input
                       type="checkbox"
-                      checked={selectedIds.length === entries.length && entries.length > 0}
+                      checked={pagedEntries.length > 0 && pagedEntries.every(e => selectedIds.includes(e.id))}
                       onChange={toggleSelectAll}
+                      title={pageSize !== 0 ? 'Alle Seiten auswählen' : undefined}
                       className="rounded border-slate-700 text-emerald-500 focus:ring-0 bg-slate-950"
                     />
                   </th>
@@ -415,7 +545,7 @@ export default function NewEntriesPanel({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-900">
-                {entries.map((entry) => {
+                {pagedEntries.map((entry) => {
                   const isSelected = selectedIds.includes(entry.id);
                   return (
                     <tr 
@@ -632,6 +762,64 @@ export default function NewEntriesPanel({
             </table>
           )}
         </div>
+
+        {/* Pagination */}
+        {!loading && pageSize !== 0 && totalPages > 1 && (
+          <div className="flex items-center justify-center gap-1.5 pt-3 border-t border-slate-900 mt-2">
+            <button
+              onClick={() => setCurrentPage(1)}
+              disabled={safePage === 1}
+              className="px-2 py-1 text-[11px] rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              «
+            </button>
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={safePage === 1}
+              className="px-2.5 py-1 text-[11px] rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              ‹
+            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter(p => p === 1 || p === totalPages || Math.abs(p - safePage) <= 2)
+              .reduce((acc, p, idx, arr) => {
+                if (idx > 0 && p - arr[idx - 1] > 1) acc.push('…');
+                acc.push(p);
+                return acc;
+              }, [])
+              .map((p, i) =>
+                p === '…'
+                  ? <span key={`ellipsis-${i}`} className="px-1 text-slate-600 text-[11px]">…</span>
+                  : <button
+                      key={p}
+                      onClick={() => setCurrentPage(p)}
+                      className={`px-2.5 py-1 text-[11px] rounded-lg border transition-colors ${
+                        p === safePage
+                          ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300 font-bold'
+                          : 'border-slate-800 bg-slate-900 text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      {p}
+                    </button>
+              )}
+
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={safePage === totalPages}
+              className="px-2.5 py-1 text-[11px] rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              ›
+            </button>
+            <button
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={safePage === totalPages}
+              className="px-2 py-1 text-[11px] rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              »
+            </button>
+          </div>
+        )}
 
       </div>
 

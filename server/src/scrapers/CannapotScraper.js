@@ -1,0 +1,366 @@
+import { BaseScraper } from './BaseScraper.js';
+
+export class CannapotScraper extends BaseScraper {
+  constructor(logMessage, scrapeMode = 'price') {
+    super('Cannapot', logMessage, scrapeMode);
+    this.baseUrl = 'https://www.cannapot.com';
+  }
+
+  getHeaders() {
+    return {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Cookie': 'language=de; currency=EUR'
+    };
+  }
+
+  normalizeStrainName(title, breeder) {
+    if (!title) return '';
+    let name = title.trim().replace(/\s+(?:female|fem|regular|reg|samen|seeds)\b/gi, '').trim();
+    let result = super.normalizeStrainName(name, breeder);
+    result = result.replace(/\s+(?:female|fem|regular|reg|samen|seeds)\b/gi, '').trim();
+    return result || name;
+  }
+
+  extractSeedType(text = '') {
+    const lower = text.toLowerCase();
+
+    if (
+      /\b(?:\d+\s*)?fem\b/i.test(lower) ||
+      /\bfeminisier/i.test(lower) ||
+      /\bfeminized\b/i.test(lower) ||
+      /\bfeminised\b/i.test(lower) ||
+      /\bfemale\b/i.test(lower)
+    ) {
+      return 'feminized';
+    }
+
+    if (
+      /\bregular\b/i.test(lower) ||
+      /\bregul[äa]r(?:e|en|er)?\b/i.test(lower) ||
+      /\bregulaere\b/i.test(lower)
+    ) {
+      return 'regular';
+    }
+
+    return null;
+  }
+
+  isProductUrl(u) {
+    if (!u) return false;
+    const lower = u.toLowerCase();
+    if (!lower.includes('/shop/hanfsamen/')) return false;
+    if (!lower.endsWith('.html')) return false;
+    const ignored = ['kontakt', 'konto', 'warenkorb', 'versand', 'empfohlene', 'agb', 'datenschutz', 'sitemap', 'impressum', 'canna-wiki', 'geschenkgutschein'];
+    return !ignored.some(ig => lower.includes(ig));
+  }
+
+  async scrape(scraperStatus, targetUrl = null) {
+    this.log('info', 'Starting Cannapot scraper...');
+    scraperStatus.currentShop = this.shopName;
+
+    const limit = this.getLimit();
+    const productPageMap = new Map(); // url => { type, seedType }
+
+    if (targetUrl && this.isProductUrl(targetUrl)) {
+      const urls = targetUrl.split(',').map(u => u.trim()).filter(Boolean);
+      for (const u of urls) {
+        if (this.isProductUrl(u)) {
+          let type = 'photoperiodic';
+          let seedType = 'feminized';
+          const lower = u.toLowerCase();
+          if (lower.includes('auto')) type = 'autoflower';
+          if (lower.includes('regular') || lower.includes('regulaer')) seedType = 'regular';
+          productPageMap.set(u, { type, seedType });
+        }
+      }
+    } else {
+      this.log('info', 'Discovering product URLs from Cannapot category index...');
+
+      const mainCategoryUrls = [
+        `${this.baseUrl}/shop/hanfsamen?show=all`,
+        `${this.baseUrl}/shop/hanfsamen/lowryder-samen?show=all`,
+        `${this.baseUrl}/shop/hanfsamen/outdoor-hanfsamen?show=all`,
+        `${this.baseUrl}/shop/hanfsamen/CBD-samen?show=all`,
+        `${this.baseUrl}/shop/hanfsamen/regulaere-samen?show=all`,
+        `${this.baseUrl}/shop/hanfsamen/neue-samen?show=all`,
+        `${this.baseUrl}/shop/hanfsamen/sonderangebote?show=all`,
+        `${this.baseUrl}/shop/hanfsamen/cannapot-seeds?show=all`
+      ];
+
+      // First fetch root category page to extract all breeder subcategories
+      try {
+        const rootRes = await this.fetchWithRetry(`${this.baseUrl}/shop/hanfsamen`, { headers: this.getHeaders() });
+        if (rootRes && rootRes.ok) {
+          const rootHtml = await rootRes.text();
+          const hrefs = (rootHtml.match(/href=["'](https:\/\/www\.cannapot\.com\/shop\/hanfsamen\/[^"']+)["']/gi) || [])
+            .map(m => m.replace(/^href=["']|["']$/g, ''));
+
+          for (const h of hrefs) {
+            if (!h.endsWith('.html') && !h.includes('?')) {
+              const showAllUrl = h.includes('?') ? `${h}&show=all` : `${h}?show=all`;
+              if (!mainCategoryUrls.includes(showAllUrl)) {
+                mainCategoryUrls.push(showAllUrl);
+              }
+            }
+          }
+        }
+      } catch (err) {
+        this.log('warning', `Failed fetching root category for breeder discovery: ${err.message}`);
+      }
+
+      this.log('info', `Queued ${mainCategoryUrls.length} category listing pages for crawling.`);
+
+      let processedCount = 0;
+      for (const catUrl of mainCategoryUrls) {
+        if (limit !== null && productPageMap.size >= limit) {
+          this.log('info', `Reached max items limit (${limit}). Stopping category discovery.`);
+          break;
+        }
+
+        try {
+          const res = await this.fetchWithRetry(catUrl, { headers: this.getHeaders() });
+          if (res && res.ok) {
+            const html = await res.text();
+            const hrefs = (html.match(/href=["'](https:\/\/www\.cannapot\.com\/shop\/hanfsamen\/[^"']+\.html)["']/gi) || [])
+              .map(m => m.replace(/^href=["']|["']$/g, ''));
+
+            for (const url of hrefs) {
+              if (this.isProductUrl(url) && !productPageMap.has(url)) {
+                let type = 'photoperiodic';
+                let seedType = 'feminized';
+                const lower = url.toLowerCase();
+                if (lower.includes('auto') || catUrl.includes('lowryder')) type = 'autoflower';
+                if (lower.includes('regular') || lower.includes('regulaer') || catUrl.includes('regulaer')) seedType = 'regular';
+                productPageMap.set(url, { type, seedType });
+              }
+            }
+          }
+        } catch (err) {
+          this.log('warning', `Failed fetching category page ${catUrl}: ${err.message}`);
+        }
+
+        processedCount++;
+        if (processedCount % 20 === 0 || processedCount === mainCategoryUrls.length) {
+          this.log('info', `Category discovery progress: ${processedCount}/${mainCategoryUrls.length} categories scanned (${productPageMap.size} product URLs found so far).`);
+        }
+
+        await this.sleep(100);
+      }
+    }
+
+    const productList = limit !== null
+      ? Array.from(productPageMap.entries()).slice(0, limit)
+      : Array.from(productPageMap.entries());
+
+    this.log('info', `Total unique product pages queued for Cannapot: ${productList.length}`);
+
+    await this.clearOffers();
+
+    for (const [url, meta] of productList) {
+      try {
+        await this.scrapeSingle(url, meta, scraperStatus);
+      } catch (err) {
+        this.log('error', `Failed scraping page ${url}: ${err.message}`);
+      }
+      await this.sleep(300);
+    }
+
+    this.log('info', `Cannapot scraper finished successfully. Scraped ${scraperStatus.productsScraped} offers.`);
+  }
+
+  async scrapeSingle(url, meta = {}, scraperStatus = { productsScraped: 0 }) {
+    this.log('info', `Running single page scrape for: ${url}`);
+
+    let res;
+    try {
+      res = await this.fetchWithRetry(url, { headers: this.getHeaders() });
+    } catch (err) {
+      throw new Error(`Failed fetching page: ${err.message}`);
+    }
+
+    if (!res || !res.ok) {
+      throw new Error(`Failed scraping page status ${res ? res.status : 'no-response'}`);
+    }
+
+    const html = await res.text();
+
+    const textContent = html
+      .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+      .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&rsquo;/g, "'")
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const summaryText = textContent.split(/(?:BESCHREIBUNG|DETAILS|BEWERTUNGEN)/i)[0];
+
+    // H1 Title
+    const h1Match = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+    if (!h1Match) {
+      throw new Error('Could not find H1 title on page');
+    }
+
+    const rawTitle = h1Match[1].replace(/<[^>]+>/g, '').trim();
+
+    // Extract Breeder / Manufacturer
+    let breeder = 'Unknown Breeder';
+    const mfgMatch = html.match(/Hergestellt von:?[\s\S]*?<b>Hergestellt von:?<\/b>\s*([^<]+)/i) ||
+                     html.match(/Hersteller:?<\/span>\s*&nbsp;\s*([^<]+)/i);
+    if (mfgMatch) {
+      const rawBreeder = mfgMatch[1].trim();
+      breeder = this.normalizeBreeder(rawBreeder);
+    }
+
+    if (this.isInvalidStrainName(rawTitle, html, breeder)) {
+      this.log('info', `Skipping invalid/merchandise product: ${rawTitle}`);
+      return null;
+    }
+
+    scraperStatus.currentProduct = rawTitle;
+
+    // Cleaned strain name
+    let cleanTitle = rawTitle.replace(/\s+(?:female|fem|regular|reg|samen|seeds)\b/gi, '').trim();
+    let strainName = this.normalizeStrainName(cleanTitle, breeder);
+    if (!strainName) strainName = cleanTitle;
+
+    // Base price parsing
+    let basePrice = 0;
+    const priceBlockMatch = html.match(/id=["']productPrices["'][\s\S]*?<\/h2>/i);
+    if (priceBlockMatch) {
+      const saleMatch = priceBlockMatch[0].match(/class=["'](?:productSpecialPrice|productSalePrice)["'][^>]*>\s*€\s*&nbsp;\s*([\d.,]+)/i);
+      const normMatch = priceBlockMatch[0].match(/(?:class=["']normalprice["']|€\s*&nbsp;)\s*([\d.,]+)/i);
+      if (saleMatch) {
+        basePrice = parseFloat(saleMatch[1].replace(',', '.'));
+      } else if (normMatch) {
+        basePrice = parseFloat(normMatch[1].replace(',', '.'));
+      }
+    }
+
+    // JSON-LD Description
+    let description = null;
+    const jsonLdMatch = html.match(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/i);
+    if (jsonLdMatch) {
+      try {
+        const data = JSON.parse(jsonLdMatch[1]);
+        if (data.description) {
+          description = data.description.replace(/&nbsp;/g, ' ').replace(/&rsquo;/g, "'").replace(/&amp;/g, '&');
+        }
+      } catch (e) {}
+    }
+
+    // Taxonomy
+    let type = meta.type || 'photoperiodic';
+    let seedType = meta.seedType || 'feminized';
+    let strainType = null;
+    let thc = null;
+    let cbd = null;
+    let floweringTime = null;
+    let genetics = null;
+
+    const lowerText = (rawTitle + ' ' + (description || '') + ' ' + url).toLowerCase();
+
+    if (lowerText.includes('auto') || lowerText.includes('autoflower') || lowerText.includes('lowryder')) {
+      type = 'autoflower';
+    } else if (lowerText.includes('fast flowering') || lowerText.includes('fast version') || lowerText.includes('schnellblühend')) {
+      type = 'fast_flowering';
+    }
+
+    const explicitSeedType = this.extractSeedType(`${rawTitle} ${summaryText} ${url}`);
+    if (explicitSeedType) {
+      seedType = explicitSeedType;
+    } else if (lowerText.includes('regular') || lowerText.includes('regulär') || lowerText.includes('regulaere')) {
+      seedType = 'regular';
+    }
+
+    if (lowerText.includes('indica-domin') || lowerText.includes('indica domin')) strainType = 'indica-dominant';
+    else if (lowerText.includes('sativa-domin') || lowerText.includes('sativa domin')) strainType = 'sativa-dominant';
+    else if (lowerText.includes('hybrid') || lowerText.includes('hybride')) strainType = 'hybrid';
+
+    // Extract genetics from description text if present (e.g. "Genetik: Critical Mass x OG Kush")
+    const genMatch = (description || '').match(/(?:Genetik|Kreuzung):?\s*([^.\n;]+)/i);
+    if (genMatch) genetics = genMatch[1].trim();
+
+    // Collect raw offers and detect per-option seedType (regular vs feminized)
+    const rawOffers = [];
+    const labelMatches = html.match(/<label\b[^>]*class=["'][^"']*attribsRadioButton[^"']*["'][\s\S]*?<\/label>/gi) || [];
+
+    if (labelMatches.length > 0) {
+      for (const lblHtml of labelMatches) {
+        const labelText = lblHtml.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').trim();
+        const seedsMatch = labelText.match(/^(\d+)/);
+        const seeds = seedsMatch ? parseInt(seedsMatch[1], 10) : 1;
+
+        const deltaMatch = labelText.match(/\(\s*\+?\s*€\s*([\d.,]+)\s*\)/i);
+        let price = basePrice;
+        if (deltaMatch) {
+          const delta = parseFloat(deltaMatch[1].replace(',', '.'));
+          price = parseFloat((basePrice + delta).toFixed(2));
+        }
+
+        const offerSeedType = this.extractSeedType(labelText) || seedType;
+
+        if (seeds > 0 && price > 0) {
+          rawOffers.push({ seeds, price, seedType: offerSeedType });
+        }
+      }
+    } else if (basePrice > 0) {
+      const seedsMatch = rawTitle.match(/(\d+)\s*(?:stk|samen|seeds|pack)/i);
+      const seeds = seedsMatch ? parseInt(seedsMatch[1], 10) : 1;
+      rawOffers.push({ seeds, price: basePrice, seedType });
+    }
+
+    // Group rawOffers by seedType (e.g. 'feminized' vs 'regular')
+    const groups = new Map(); // seedType => offerArray
+    for (const off of rawOffers) {
+      const sType = off.seedType || seedType || 'feminized';
+      if (!groups.has(sType)) groups.set(sType, []);
+      groups.get(sType).push(off);
+    }
+
+    let offersCreated = 0;
+    let lastStrainId = null;
+    // Create/upsert a separate strain entry for each distinct seedType option
+    for (const [groupSeedType, offerGroup] of groups.entries()) {
+      const groupStrainId = await this.upsertStrain({
+        name: strainName,
+        breeder,
+        type,
+        seedType: groupSeedType,
+        thc,
+        cbd,
+        strainType,
+        floweringTime,
+        description,
+        genetics,
+        url,
+        rawTitle
+      });
+
+      if (groupStrainId) {
+        lastStrainId = groupStrainId;
+        for (const off of offerGroup) {
+          await this.insertOffer({
+            strainId: groupStrainId,
+            url,
+            seeds: off.seeds,
+            price: off.price,
+            availability: 'available'
+          });
+          offersCreated++;
+          scraperStatus.productsScraped++;
+        }
+      }
+    }
+
+    return {
+      strainId: lastStrainId,
+      name: strainName,
+      breeder,
+      offersCreated,
+      shop: this.shopName
+    };
+  }
+}

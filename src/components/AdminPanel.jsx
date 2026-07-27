@@ -697,7 +697,7 @@ export default function AdminPanel({
                       <button
                         onClick={() => handleStartScrape(s.shop, 'price')}
                         disabled={scraper.isScanning || sanityCheck.isRunning}
-                        title="Scrape Prices (Fast)"
+                        title="Scrape Prices (Full Crawl)"
                         className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold border transition-all flex items-center justify-center gap-1 ${
                           scraper.isScanning || sanityCheck.isRunning
                             ? 'bg-slate-950 text-slate-600 border-slate-950 cursor-not-allowed'
@@ -707,6 +707,21 @@ export default function AdminPanel({
                         <Coins className="w-3.5 h-3.5" />
                         Scrape Prices
                       </button>
+                      <button
+                        onClick={() => handleStartScrape(s.shop, 'price_quick')}
+                        disabled={scraper.isScanning || sanityCheck.isRunning}
+                        title="Scrape Prices from Stored URLs (Quick Update)"
+                        className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold border transition-all flex items-center justify-center gap-1 ${
+                          scraper.isScanning || sanityCheck.isRunning
+                            ? 'bg-slate-950 text-slate-600 border-slate-950 cursor-not-allowed'
+                            : 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20 hover:text-amber-300'
+                        }`}
+                      >
+                        <Zap className="w-3.5 h-3.5" />
+                        Quick Prices
+                      </button>
+                    </div>
+                    <div className="flex gap-1.5">
                       <button
                         onClick={() => handleStartScrape(s.shop, 'metadata')}
                         disabled={scraper.isScanning || sanityCheck.isRunning}
@@ -720,19 +735,20 @@ export default function AdminPanel({
                         <Database className="w-3.5 h-3.5" />
                         Scrape Meta
                       </button>
+                      <button
+                        onClick={() => handleStartSanityCheck(s.shop)}
+                        disabled={scraper.isScanning || sanityCheck.isRunning}
+                        title="Run Sanity Check Test"
+                        className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold border transition-all flex items-center justify-center gap-1 ${
+                          scraper.isScanning || sanityCheck.isRunning
+                            ? 'bg-slate-950 text-slate-600 border-slate-950 cursor-not-allowed'
+                            : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20 hover:bg-indigo-500/20 hover:text-indigo-300'
+                        }`}
+                      >
+                        <Activity className="w-3.5 h-3.5" />
+                        Test
+                      </button>
                     </div>
-                    <button
-                      onClick={() => handleStartSanityCheck(s.shop)}
-                      disabled={scraper.isScanning || sanityCheck.isRunning}
-                      className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold border transition-all flex items-center justify-center gap-1 ${
-                        scraper.isScanning || sanityCheck.isRunning
-                          ? 'bg-slate-950 text-slate-600 border-slate-950 cursor-not-allowed'
-                          : 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20 hover:text-amber-300'
-                      }`}
-                    >
-                      <Activity className="w-3.5 h-3.5" />
-                      Test
-                    </button>
                     <button
                       onClick={() => handleClearShop(s.shop)}
                       disabled={scraper.isScanning || sanityCheck.isRunning}
@@ -860,6 +876,7 @@ export default function AdminPanel({
               <option value="Sensi Seeds">Sensi Seeds</option>
               <option value="Dutch Passion">Dutch Passion</option>
               <option value="Barney's Farm">Barney's Farm</option>
+              <option value="Cannapot">Cannapot</option>
             </select>
           </div>
           <button

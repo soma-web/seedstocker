@@ -611,7 +611,8 @@ export default function App() {
               disabled={scraper.isScanning}
               className="h-11 px-3 bg-slate-950 border border-slate-900 rounded-xl text-slate-200 focus:outline-none focus:border-emerald-500/50 transition-colors text-sm font-medium"
             >
-              <option value="price">Price Scan (Fast)</option>
+              <option value="price">Price Scan (Full Crawl)</option>
+              <option value="price_quick">Quick Price Update (Stored URLs)</option>
               <option value="metadata">Metadata Scan (DOM)</option>
             </select>
 

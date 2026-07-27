@@ -26,6 +26,7 @@ function getShopColor(shop) {
   if (shop === 'Sensi Seeds') return { pill: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', accent: '#10b981' };
   if (shop === 'Dutch Passion') return { pill: 'text-amber-400 bg-amber-500/10 border-amber-500/20', accent: '#f59e0b' };
   if (shop === "Barney's Farm" || shop === "Barneys Farm") return { pill: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20', accent: '#eab308' };
+  if (shop === 'Cannapot') return { pill: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', accent: '#10b981' };
   return { pill: 'text-blue-400 bg-blue-500/10 border-blue-500/20', accent: '#38bdf8' };
 }
 
@@ -176,7 +177,7 @@ function PriceHistorySection({ strainId }) {
     return spread === 0 ? 80 : 130 - ((price - yMin) / spread) * 100;
   };
   const shops = Array.from(new Set(filtered.map(d => d.shop)));
-  const colorMap = { 'Zamnesia': '#f97316', 'House of Seeds': '#38bdf8', 'Hans Brainfood': '#84cc16', 'Gas Station Co. Seeds': '#ef4444', 'Gas Station LU': '#a855f7', 'Sensi Seeds': '#10b981', 'Dutch Passion': '#f59e0b', "Barney's Farm": '#eab308' };
+  const colorMap = { 'Zamnesia': '#f97316', 'House of Seeds': '#38bdf8', 'Hans Brainfood': '#84cc16', 'Gas Station Co. Seeds': '#ef4444', 'Gas Station LU': '#a855f7', 'Sensi Seeds': '#10b981', 'Dutch Passion': '#f59e0b', "Barney's Farm": '#eab308', 'Cannapot': '#10b981' };
 
   return (
     <div className="space-y-5">

@@ -323,17 +323,6 @@ export class BaseScraper {
       return null;
     }
 
-    let strainId;
-
-    // Use case-insensitive, whitespace-normalized matching to prevent duplicates
-    const [existing] = await db.select()
-      .from(strains)
-      .where(and(
-        sql`LOWER(TRIM(${strains.name})) = LOWER(TRIM(${name}))`,
-        sql`LOWER(TRIM(${strains.breeder})) = LOWER(TRIM(${breeder}))`
-      ))
-      .limit(1);
-
     let finalMin = floweringMin;
     let finalMax = floweringMax;
     if (floweringTime !== null && finalMin === null && finalMax === null) {
@@ -351,6 +340,21 @@ export class BaseScraper {
     const cleanedMin = this.cleanFilledValue(finalMin);
     const cleanedMax = this.cleanFilledValue(finalMax);
     const cleanedGenetics = this.cleanFilledValue(genetics);
+    let strainId;
+
+    const strainConditions = [
+      sql`LOWER(TRIM(${strains.name})) = LOWER(TRIM(${name}))`,
+      sql`LOWER(TRIM(${strains.breeder})) = LOWER(TRIM(${breeder}))`
+    ];
+    if (cleanedSeedType) {
+      strainConditions.push(sql`LOWER(TRIM(${strains.seedType})) = LOWER(TRIM(${cleanedSeedType}))`);
+    }
+
+    // Use case-insensitive, whitespace-normalized matching to prevent duplicates
+    const [existing] = await db.select()
+      .from(strains)
+      .where(and(...strainConditions))
+      .limit(1);
 
     if (existing) {
       strainId = existing.id;
@@ -433,13 +437,18 @@ export class BaseScraper {
           .where(sql`LOWER(TRIM(${strains.name})) = LOWER(TRIM(${name}))`)
           .limit(1);
 
+        const stagedConditions = [
+          eq(newScrapedEntries.shop, this.shopName),
+          sql`LOWER(TRIM(${newScrapedEntries.extractedName})) = LOWER(TRIM(${name}))`,
+          sql`LOWER(TRIM(COALESCE(${newScrapedEntries.extractedBreeder}, ''))) = LOWER(TRIM(COALESCE(${breeder}, '')))`
+        ];
+        if (cleanedSeedType) {
+          stagedConditions.push(sql`LOWER(TRIM(COALESCE(${newScrapedEntries.seedType}, ''))) = LOWER(TRIM(COALESCE(${cleanedSeedType}, '')))`);
+        }
+
         const [alreadyStaged] = await db.select()
           .from(newScrapedEntries)
-          .where(and(
-            eq(newScrapedEntries.shop, this.shopName),
-            sql`LOWER(TRIM(${newScrapedEntries.extractedName})) = LOWER(TRIM(${name}))`,
-            sql`LOWER(TRIM(COALESCE(${newScrapedEntries.extractedBreeder}, ''))) = LOWER(TRIM(COALESCE(${breeder}, '')))`
-          ))
+          .where(and(...stagedConditions))
           .limit(1);
 
         if (!alreadyStaged) {
@@ -811,7 +820,7 @@ export class BaseScraper {
       return;
     }
 
-    const [existing] = await db.select()
+    const existingOffers = await db.select()
       .from(scrapedOffers)
       .where(
         and(
@@ -820,7 +829,9 @@ export class BaseScraper {
           eq(scrapedOffers.seeds, seeds)
         )
       )
-      .limit(1);
+      .orderBy(desc(scrapedOffers.fetchedAt));
+
+    const [existing, ...duplicateOffers] = existingOffers;
 
     if (existing) {
       // Update the current price on the offer
@@ -832,6 +843,10 @@ export class BaseScraper {
           fetchedAt: new Date().toISOString()
         })
         .where(eq(scrapedOffers.id, existing.id));
+
+      for (const duplicate of duplicateOffers) {
+        await db.delete(scrapedOffers).where(eq(scrapedOffers.id, duplicate.id));
+      }
     } else {
       // In price mode, don't create new offers — only refresh existing ones
       if (this.scrapeMode === 'price') {

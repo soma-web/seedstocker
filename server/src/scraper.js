@@ -3,6 +3,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SCRAPER_REGISTRY, getScraperByName } from './scrapers/registry.js';
 import { getConfig } from './config.js';
+import { db } from './db.js';
+import { scrapedOffers } from './schema.js';
+import { eq } from 'drizzle-orm';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -82,9 +85,32 @@ export async function triggerScrape(targetShopName = null, scrapeMode = 'price')
       const isEnabled = !configuredShops || shopConfig !== undefined || (targetShopName && targetShopName.toLowerCase() === entry.name.toLowerCase());
 
       if (isEnabled && shouldScrape(entry.name)) {
-        const targetUrl = (shopConfig && typeof shopConfig !== 'string' && shopConfig.url) ? shopConfig.url : (entry.defaultUrl || null);
         const scraper = new entry.ScraperClass(logMessage, scrapeMode);
-        await scraper.scrape(scraperStatus, targetUrl);
+        if (scrapeMode === 'price_quick') {
+          logMessage('info', `Running quick price scrape for ${entry.name} from stored URLs...`);
+          // Query stored URLs for this shop
+          const stored = await db.select({ url: scrapedOffers.url })
+            .from(scrapedOffers)
+            .where(eq(scrapedOffers.shop, entry.name));
+          const uniqueUrls = [...new Set(stored.map(o => o.url))];
+          logMessage('info', `Found ${uniqueUrls.length} stored URLs to scrape for ${entry.name}`);
+          
+          let count = 0;
+          for (const url of uniqueUrls) {
+            try {
+              await scraper.scrapeSingle(url);
+              count++;
+              scraperStatus.productsScraped = count; // Update count
+            } catch (err) {
+              logMessage('error', `Failed to scrape stored URL ${url}: ${err.message}`);
+            }
+            await scraper.sleep(300);
+          }
+          logMessage('success', `Quick price scrape completed for ${entry.name}. Scraped ${count}/${uniqueUrls.length} pages.`);
+        } else {
+          const targetUrl = (shopConfig && typeof shopConfig !== 'string' && shopConfig.url) ? shopConfig.url : (entry.defaultUrl || null);
+          await scraper.scrape(scraperStatus, targetUrl);
+        }
       } else if (isEnabled) {
         logMessage('info', `Skipping ${entry.name} (not requested for this run).`);
       } else {

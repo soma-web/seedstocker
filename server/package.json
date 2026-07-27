@@ -8,8 +8,16 @@
     "start": "node src/index.js",
     "test:encoding": "node src/test-encoding.js",
     "test:normalization": "node src/test-normalization.js",
+    "test:cannapot": "node src/test-cannapot-scraper.js",
     "test:sensiseeds": "node src/test-sensiseeds-scraper.js",
-    "test": "node src/test-encoding.js && node src/test-normalization.js && node src/test-sensiseeds-scraper.js"
+    "test:dutchpassion": "node src/test-dutchpassion-scraper.js",
+    "test:gasstationlu": "node src/test-gasstationlu-scraper.js",
+    "test:zamnesia": "node src/test-zamnesia-scraper.js",
+    "test:barneysfarm": "node src/test-barneysfarm-scraper.js",
+    "test:houseofseeds": "node src/test-houseofseeds-scraper.js",
+    "test:hansbrainfood": "node src/test-hansbrainfood-scraper.js",
+    "test:gasstationco": "node src/test-gasstationco-scraper.js",
+    "test": "node src/test-encoding.js && node src/test-normalization.js && node src/test-cannapot-scraper.js && node src/test-sensiseeds-scraper.js && node src/test-dutchpassion-scraper.js && node src/test-gasstationlu-scraper.js && node src/test-zamnesia-scraper.js && node src/test-barneysfarm-scraper.js && node src/test-houseofseeds-scraper.js && node src/test-hansbrainfood-scraper.js && node src/test-gasstationco-scraper.js"
   },
   "dependencies": {
     "@fastify/cors": "^10.0.1",

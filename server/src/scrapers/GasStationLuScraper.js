@@ -327,10 +327,10 @@ export class GasStationLuScraper extends ShopifyScraper {
           const price = parseFloat(v.price);
 
           let availability = 'available';
-          if (v.available === false) {
+          if (v.available === false || String(v.available) === 'false' || v.available === 0) {
             availability = 'out_of_stock';
-          } else if (v.inventory_quantity !== undefined && v.inventory_quantity <= 0 && v.inventory_policy === 'continue') {
-            availability = 'orderable';
+          } else if (v.inventory_quantity !== undefined && v.inventory_quantity <= 0) {
+            availability = v.inventory_policy === 'continue' ? 'orderable' : 'out_of_stock';
           }
 
           if (!isNaN(price)) {
