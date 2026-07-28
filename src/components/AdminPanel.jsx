@@ -14,9 +14,11 @@ import {
   Terminal, 
   X,
   Check,
-  Zap
+  Zap,
+  AlertTriangle,
+  Search
 } from 'lucide-react';
-import { apiGet, apiPost, apiPut } from '../hooks/useApi';
+import { apiGet, apiPost, apiPut, apiDelete } from '../hooks/useApi';
 
 export default function AdminPanel({
   config,
@@ -52,7 +54,10 @@ export default function AdminPanel({
   queryError,
   queryResult,
   dbStrains,
-  onOpenNewEntries
+  onOpenNewEntries,
+  onRefreshDbStats,
+  onRefreshData,
+  onRefreshConfig
 }) {
   const [enrichShop, setEnrichShop] = useState('');
   const [aiLimit, setAiLimit] = useState('');
@@ -81,6 +86,70 @@ export default function AdminPanel({
   const [loadingFlowering, setLoadingFlowering] = useState(false);
   const [populatingFloweringText, setPopulatingFloweringText] = useState(false);
   const [floweringError, setFloweringError] = useState(null);
+
+  const [deleteStrainId, setDeleteStrainId] = useState('');
+  const [deletePreview, setDeletePreview] = useState(null);
+  const [loadingPreview, setLoadingPreview] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
+  const [deleteSuccess, setDeleteSuccess] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [addToBlacklist, setAddToBlacklist] = useState(true);
+
+  const handleLookupStrainToDelete = async (idToLookup) => {
+    const targetId = String(idToLookup !== undefined ? idToLookup : deleteStrainId).trim();
+    if (!targetId) {
+      setDeleteError('Bitte geben Sie eine Strain-ID ein.');
+      setDeletePreview(null);
+      return;
+    }
+
+    setLoadingPreview(true);
+    setDeleteError(null);
+    setDeleteSuccess(null);
+
+    try {
+      const data = await apiGet(`/api/strains/${targetId}`);
+      if (data && data.id) {
+        setDeletePreview(data);
+        setDeleteStrainId(String(data.id));
+      } else {
+        setDeleteError(`Strain mit ID "${targetId}" wurde nicht gefunden.`);
+        setDeletePreview(null);
+      }
+    } catch (err) {
+      setDeleteError(`Fehler beim Suchen von Strain ID ${targetId}: ${err.message}`);
+      setDeletePreview(null);
+    } finally {
+      setLoadingPreview(false);
+    }
+  };
+
+  const handleConfirmDeleteStrain = async () => {
+    const targetId = deletePreview ? deletePreview.id : deleteStrainId.trim();
+    if (!targetId) return;
+
+    setDeleteLoading(true);
+    setDeleteError(null);
+    setDeleteSuccess(null);
+
+    try {
+      const res = await apiDelete(`/api/strains/${targetId}?blacklist=${addToBlacklist}`, { blacklist: addToBlacklist });
+      setDeleteSuccess(res.message || `Strain "${deletePreview?.name || targetId}" wurde erfolgreich gelöscht.`);
+      setDeletePreview(null);
+      setDeleteStrainId('');
+      setShowDeleteConfirm(false);
+
+      if (onRefreshDbStats) onRefreshDbStats();
+      if (onRefreshData) onRefreshData();
+      if (onRefreshConfig && addToBlacklist) onRefreshConfig();
+    } catch (err) {
+      setDeleteError(`Fehler beim Löschen: ${err.message}`);
+      setShowDeleteConfirm(false);
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
   useEffect(() => {
     apiGet('/api/strains/missing-thc')
@@ -792,6 +861,245 @@ export default function AdminPanel({
 
         </div>
 
+      </div>
+
+      {/* Remove Strain Entry by ID Card */}
+      <div className="glass-panel rounded-2xl p-6 mt-8 border border-red-500/20 bg-slate-950/40">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
+          <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+            <Trash2 className="w-5 h-5 text-red-400" />
+            Strain aus Datenbank entfernen (Remove Entry by ID)
+          </h2>
+          <span className="px-3 py-1 bg-red-500/10 border border-red-500/20 text-red-400 rounded-full text-xs font-semibold self-start sm:self-auto">
+            Gezieltes Löschen
+          </span>
+        </div>
+        <p className="text-xs text-slate-500 mb-6">
+          Geben Sie die ID eines Strains ein oder wählen Sie einen Strain aus der Liste aus, um den Eintrag und alle zugehörigen Angebote, Preisverläufe und KI-Beschreibungen aus der Datenbank zu entfernen.
+        </p>
+
+        {/* Form Controls */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          {/* Quick Select dropdown from existing dbStrains if available */}
+          {dbStrains && dbStrains.length > 0 && (
+            <div className="w-full sm:w-80">
+              <select
+                value={deleteStrainId}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setDeleteStrainId(val);
+                  if (val) {
+                    handleLookupStrainToDelete(val);
+                  } else {
+                    setDeletePreview(null);
+                  }
+                }}
+                className="w-full h-12 px-4 bg-slate-950 border border-slate-900 rounded-xl text-slate-200 focus:outline-none focus:border-red-500/50 text-sm font-medium"
+              >
+                <option value="">-- Strain aus Liste auswählen --</option>
+                {dbStrains.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    [{s.id}] {s.name} ({s.breeder || 'Unbekannt'})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="flex-1 flex gap-2">
+            <input
+              type="text"
+              value={deleteStrainId}
+              onChange={(e) => {
+                setDeleteStrainId(e.target.value);
+                setDeleteSuccess(null);
+                setDeleteError(null);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleLookupStrainToDelete();
+                }
+              }}
+              placeholder="Strain ID eingeben (z.B. 42)..."
+              className="flex-1 h-12 px-4 bg-slate-950 border border-slate-900 rounded-xl text-slate-100 placeholder-slate-600 focus:outline-none focus:border-red-500/50 text-sm font-mono"
+            />
+            <button
+              onClick={() => handleLookupStrainToDelete()}
+              disabled={loadingPreview || !deleteStrainId.trim()}
+              className={`px-5 h-12 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 shrink-0 ${
+                loadingPreview || !deleteStrainId.trim()
+                  ? 'bg-slate-950 text-slate-600 border border-slate-900 cursor-not-allowed'
+                  : 'bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200'
+              }`}
+            >
+              {loadingPreview ? (
+                <RotateCw className="w-4 h-4 animate-spin" />
+              ) : (
+                <Search className="w-4 h-4 text-emerald-400" />
+              )}
+              Strain prüfen
+            </button>
+          </div>
+        </div>
+
+        {/* Feedback Alerts */}
+        {deleteError && (
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl text-xs font-semibold mb-4 flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 shrink-0 text-red-400" />
+            {deleteError}
+          </div>
+        )}
+
+        {deleteSuccess && (
+          <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-4 rounded-xl text-xs font-semibold mb-4 flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+            {deleteSuccess}
+          </div>
+        )}
+
+        {/* Strain Preview Card */}
+        {deletePreview && (
+          <div className="bg-slate-950/80 border border-red-500/30 rounded-xl p-5 mb-4 space-y-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-900 pb-4">
+              <div className="flex items-center gap-3">
+                {deletePreview.image ? (
+                  <img
+                    src={deletePreview.image}
+                    alt={deletePreview.name}
+                    className="w-14 h-14 object-cover rounded-xl border border-slate-800 shrink-0"
+                  />
+                ) : (
+                  <div className="w-14 h-14 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-center text-slate-600 text-xs shrink-0 font-mono">
+                    No Pic
+                  </div>
+                )}
+                <div>
+                  <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
+                    {deletePreview.name}
+                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-slate-900 text-slate-400 border border-slate-800 font-mono">
+                      ID: {deletePreview.id}
+                    </span>
+                  </h3>
+                  <p className="text-xs text-emerald-400 font-medium">
+                    Züchter / Breeder: {deletePreview.breeder || 'Unbekannt'}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={deleteLoading}
+                className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-red-500/20 transition-all shrink-0"
+              >
+                <Trash2 className="w-4 h-4" />
+                Diesen Strain jetzt löschen
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+              <div className="bg-slate-900/60 p-2.5 rounded-lg border border-slate-900">
+                <span className="text-[10px] text-slate-500 block uppercase font-semibold">Strain Type</span>
+                <span className="text-slate-200 font-mono">{deletePreview.strainType || 'N/A'}</span>
+              </div>
+              <div className="bg-slate-900/60 p-2.5 rounded-lg border border-slate-900">
+                <span className="text-[10px] text-slate-500 block uppercase font-semibold">THC Gehalt</span>
+                <span className="text-slate-200 font-mono">{deletePreview.thc || 'N/A'}</span>
+              </div>
+              <div className="bg-slate-900/60 p-2.5 rounded-lg border border-slate-900">
+                <span className="text-[10px] text-slate-500 block uppercase font-semibold">Blütezeit</span>
+                <span className="text-slate-200 font-mono">{deletePreview.floweringTime || 'N/A'}</span>
+              </div>
+              <div className="bg-slate-900/60 p-2.5 rounded-lg border border-slate-900">
+                <span className="text-[10px] text-slate-500 block uppercase font-semibold">Shop-Angebote</span>
+                <span className="text-emerald-400 font-mono font-bold">{deletePreview.offers ? deletePreview.offers.length : 0} Angebote</span>
+              </div>
+            </div>
+
+            <div className="bg-red-500/5 border border-red-500/10 p-3 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[11px] text-slate-400">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+                <span>
+                  Achtung: Beim Löschen werden auch <strong>{deletePreview.offers ? deletePreview.offers.length : 0} Angebote</strong>, Preisverläufe sowie KI-Beschreibungen unwiderruflich entfernt.
+                </span>
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer text-slate-200 font-semibold shrink-0 bg-slate-950/80 px-3 py-1.5 rounded-lg border border-slate-800">
+                <input
+                  type="checkbox"
+                  checked={addToBlacklist}
+                  onChange={(e) => setAddToBlacklist(e.target.checked)}
+                  className="w-4 h-4 accent-red-500 rounded cursor-pointer"
+                />
+                <span>Auf Blacklist (Blocked Words) setzen</span>
+              </label>
+            </div>
+          </div>
+        )}
+
+        {/* Confirmation Modal */}
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-slate-900 border border-red-500/30 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
+              <div className="flex items-center gap-3 text-red-400">
+                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+                  <AlertTriangle className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-100 text-base">Strain endgültig löschen?</h3>
+                  <p className="text-xs text-slate-400">Diese Aktion kann nicht rückgängig gemacht werden.</p>
+                </div>
+              </div>
+
+              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs space-y-1">
+                <div><span className="text-slate-500 font-semibold">Strain:</span> <span className="text-slate-100 font-bold">{deletePreview?.name}</span></div>
+                <div><span className="text-slate-500 font-semibold">ID:</span> <span className="text-slate-300 font-mono">{deletePreview?.id}</span></div>
+                <div><span className="text-slate-500 font-semibold">Breeder:</span> <span className="text-slate-300">{deletePreview?.breeder || 'N/A'}</span></div>
+              </div>
+
+              <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800">
+                <label className="flex items-center gap-2.5 cursor-pointer text-xs font-medium text-slate-200">
+                  <input
+                    type="checkbox"
+                    checked={addToBlacklist}
+                    onChange={(e) => setAddToBlacklist(e.target.checked)}
+                    className="w-4 h-4 accent-red-500 rounded cursor-pointer"
+                  />
+                  <span>Strain-Namen ("{deletePreview?.name}") auf die Blacklist setzen</span>
+                </label>
+                <p className="text-[10px] text-slate-500 mt-1 leading-normal ml-6">
+                  Verhindert, dass Scraper diesen Strain/Produktnamen in zukünftigen Scrapes erneut erfassen und in die Datenbank einfügen.
+                </p>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={deleteLoading}
+                  className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl text-xs transition-all"
+                >
+                  Abbrechen
+                </button>
+                <button
+                  onClick={handleConfirmDeleteStrain}
+                  disabled={deleteLoading}
+                  className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl text-xs shadow-lg shadow-red-500/20 transition-all flex items-center justify-center gap-1.5"
+                >
+                  {deleteLoading ? (
+                    <>
+                      <RotateCw className="w-4 h-4 animate-spin" />
+                      Lösche Strain...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4" />
+                      Ja, Löschen
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Single Product Scraper Card */}

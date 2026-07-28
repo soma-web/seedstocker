@@ -94,11 +94,10 @@ export default async function adminRoutes(app) {
           AND id NOT IN (SELECT strain_id FROM rewritten_descriptions)
       `).run();
       
-      sqlite.prepare('DELETE FROM scraped_offers').run();
-      sqlite.prepare('DELETE FROM price_history').run();
+      // NOTE: scraped_offers and price_history are preserved
       sqlite.prepare('VACUUM').run();
 
-      return { success: true, message: 'Database reset successfully. Retained strains with AI and custom descriptions.' };
+      return { success: true, message: 'Database reset successfully. Retained strains with AI/custom descriptions, offers, and price history.' };
     } catch (err) {
       reply.status(500).send({ error: err.message });
     }
@@ -118,15 +117,9 @@ export default async function adminRoutes(app) {
     try {
       const { shop } = req.body;
 
-      sqlite.transaction(() => {
-        sqlite.prepare('DELETE FROM scraped_offers WHERE shop = ?').run(shop);
-        sqlite.prepare('DELETE FROM price_history WHERE shop = ?').run(shop);
-        // NOTE: Strains are NEVER deleted here — only offers and price history are removed.
-        // Strains are a curated catalogue and must survive shop resets / re-scrapes.
-      })();
-
-      logMessage('success', `Cleared all database entries for shop: ${shop}`);
-      return { success: true, message: `All entries for ${shop} cleared.` };
+      // NOTE: Offers and price history are never deleted.
+      logMessage('info', `Clear shop requested for ${shop} — offers and price history are preserved.`);
+      return { success: true, message: `Offers and price history for ${shop} are preserved.` };
     } catch (err) {
       reply.status(500).send({ error: err.message });
     }

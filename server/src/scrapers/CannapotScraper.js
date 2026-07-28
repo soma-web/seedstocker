@@ -55,6 +55,94 @@ export class CannapotScraper extends BaseScraper {
     return !ignored.some(ig => lower.includes(ig));
   }
 
+  extractGenetics(description = '', textContent = '', html = '') {
+    const fullText = (description || '') + ' ' + textContent + ' ' + html;
+    const zusamMatch = fullText.match(/Zusammensetzung:?\s*([^<>\n\r]+)/i);
+    if (zusamMatch) {
+      let rawGen = zusamMatch[1].replace(/<[^>]+>/g, '').trim();
+      rawGen = rawGen.replace(/\.\s+[A-Z].*/, '').trim();
+      if (rawGen) return rawGen;
+    }
+
+    const genMatch = fullText.match(/(?:Genetik|Kreuzung):?\s*([^.\n;<]+)/i);
+    if (genMatch) {
+      let rawGen = genMatch[1].replace(/<[^>]+>/g, '').trim();
+      if (rawGen) return rawGen;
+    }
+
+    return null;
+  }
+
+  extractFloweringTime(description = '', textContent = '', html = '') {
+    const fullText = (description || '') + ' ' + textContent + ' ' + html;
+    const flowMatch = fullText.match(/(?:Blütezeit|Blütendauer|Flowering\s+time):?\s*([^<>\n\r.;]+)/i);
+    if (flowMatch) {
+      let rawVal = flowMatch[1].replace(/<[^>]+>/g, '').trim();
+      if (rawVal) {
+        return this.cleanFloweringTime(rawVal);
+      }
+    }
+    return null;
+  }
+
+  extractThc(description = '', textContent = '', html = '') {
+    const fullText = (description || '') + ' ' + textContent + ' ' + html;
+    const thcMatch = fullText.match(/(?:THC-Gehalt|THC|THC-Content|Potenz):?\s*([^<>\n\r.;]+)/i);
+    if (thcMatch) {
+      let rawVal = thcMatch[1].replace(/<[^>]+>/g, '').trim();
+      if (rawVal) {
+        return this.cleanThc(rawVal);
+      }
+    }
+    return null;
+  }
+
+  determineStrainTypeFromText(targetText = '') {
+    const lower = (targetText || '').toLowerCase();
+    const hasIndica = lower.includes('indica');
+    const hasSativa = lower.includes('sativa');
+
+    if (hasIndica && hasSativa) {
+      return 'hybrid';
+    } else if (hasIndica) {
+      if (lower.includes('indica-domin') || lower.includes('indica domin') || lower.includes('indica-lastig')) {
+        return 'indica-dominant';
+      }
+      return 'indica';
+    } else if (hasSativa) {
+      if (lower.includes('sativa-domin') || lower.includes('sativa domin') || lower.includes('sativa-lastig')) {
+        return 'sativa-dominant';
+      }
+      return 'sativa';
+    } else if (lower.includes('hybrid') || lower.includes('hybride')) {
+      return 'hybrid';
+    }
+
+    return null;
+  }
+
+  determinePlantType(title = '', text = '', url = '') {
+    const lower = `${title} ${text} ${url}`.toLowerCase();
+    if (
+      lower.includes('auto') ||
+      lower.includes('automatic') ||
+      lower.includes('automatisch') ||
+      lower.includes('autoflower') ||
+      lower.includes('autoflowering') ||
+      lower.includes('lowryder')
+    ) {
+      return 'autoflower';
+    }
+    if (
+      lower.includes('fast flowering') ||
+      lower.includes('fast version') ||
+      lower.includes('schnellblühend')
+    ) {
+      return 'fast_flowering';
+    }
+    return 'photoperiodic';
+  }
+
   async scrape(scraperStatus, targetUrl = null) {
     this.log('info', 'Starting Cannapot scraper...');
     scraperStatus.currentShop = this.shopName;
@@ -69,7 +157,7 @@ export class CannapotScraper extends BaseScraper {
           let type = 'photoperiodic';
           let seedType = 'feminized';
           const lower = u.toLowerCase();
-          if (lower.includes('auto')) type = 'autoflower';
+          if (lower.includes('auto') || lower.includes('automatic')) type = 'autoflower';
           if (lower.includes('regular') || lower.includes('regulaer')) seedType = 'regular';
           productPageMap.set(u, { type, seedType });
         }
@@ -130,7 +218,7 @@ export class CannapotScraper extends BaseScraper {
                 let type = 'photoperiodic';
                 let seedType = 'feminized';
                 const lower = url.toLowerCase();
-                if (lower.includes('auto') || catUrl.includes('lowryder')) type = 'autoflower';
+                if (lower.includes('auto') || lower.includes('automatic') || catUrl.includes('lowryder')) type = 'autoflower';
                 if (lower.includes('regular') || lower.includes('regulaer') || catUrl.includes('regulaer')) seedType = 'regular';
                 productPageMap.set(url, { type, seedType });
               }
@@ -251,20 +339,32 @@ export class CannapotScraper extends BaseScraper {
       } catch (e) {}
     }
 
+    // Extract genetics, floweringTime, and THC from description / page text
+    const genetics = this.extractGenetics(description, textContent, html);
+    const floweringTime = this.extractFloweringTime(description, textContent, html);
+    const thc = this.extractThc(description, textContent, html);
+
     // Taxonomy
-    let type = meta.type || 'photoperiodic';
+    let type = meta.type || this.determinePlantType(rawTitle, (description || '') + ' ' + textContent, url);
     let seedType = meta.seedType || 'feminized';
-    let strainType = null;
-    let thc = null;
     let cbd = null;
-    let floweringTime = null;
-    let genetics = null;
 
-    const lowerText = (rawTitle + ' ' + (description || '') + ' ' + url).toLowerCase();
+    const lowerText = (rawTitle + ' ' + (description || '') + ' ' + textContent + ' ' + url).toLowerCase();
 
-    if (lowerText.includes('auto') || lowerText.includes('autoflower') || lowerText.includes('lowryder')) {
+    if (
+      lowerText.includes('auto') ||
+      lowerText.includes('automatic') ||
+      lowerText.includes('automatisch') ||
+      lowerText.includes('autoflower') ||
+      lowerText.includes('autoflowering') ||
+      lowerText.includes('lowryder')
+    ) {
       type = 'autoflower';
-    } else if (lowerText.includes('fast flowering') || lowerText.includes('fast version') || lowerText.includes('schnellblühend')) {
+    } else if (
+      lowerText.includes('fast flowering') ||
+      lowerText.includes('fast version') ||
+      lowerText.includes('schnellblühend')
+    ) {
       type = 'fast_flowering';
     }
 
@@ -275,13 +375,7 @@ export class CannapotScraper extends BaseScraper {
       seedType = 'regular';
     }
 
-    if (lowerText.includes('indica-domin') || lowerText.includes('indica domin')) strainType = 'indica-dominant';
-    else if (lowerText.includes('sativa-domin') || lowerText.includes('sativa domin')) strainType = 'sativa-dominant';
-    else if (lowerText.includes('hybrid') || lowerText.includes('hybride')) strainType = 'hybrid';
-
-    // Extract genetics from description text if present (e.g. "Genetik: Critical Mass x OG Kush")
-    const genMatch = (description || '').match(/(?:Genetik|Kreuzung):?\s*([^.\n;]+)/i);
-    if (genMatch) genetics = genMatch[1].trim();
+    const strainType = this.determineStrainTypeFromText(`${genetics || ''} ${description || ''} ${textContent} ${rawTitle}`);
 
     // Collect raw offers and detect per-option seedType (regular vs feminized)
     const rawOffers = [];

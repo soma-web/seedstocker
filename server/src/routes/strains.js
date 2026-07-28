@@ -1,4 +1,5 @@
 import { sqlite } from '../db.js';
+import { getConfig, writeConfig } from '../config.js';
 
 function dedupeOffers(rows) {
   const deduped = new Map();
@@ -156,7 +157,7 @@ export default async function strainRoutes(app) {
     }
   });
 
-  app.get('/api/strains/:id/detail', async (req, reply) => {
+  const getStrainDetailHandler = async (req, reply) => {
     try {
       const { id } = req.params;
       const strain = sqlite.prepare('SELECT * FROM strains WHERE id = ?').get(id);
@@ -228,15 +229,33 @@ export default async function strainRoutes(app) {
     } catch (err) {
       reply.status(500).send({ error: err.message });
     }
-  });
+  };
+
+  app.get('/api/strains/:id/detail', getStrainDetailHandler);
+  app.get('/api/strains/:id', getStrainDetailHandler);
 
   app.delete('/api/strains/:id', async (req, reply) => {
     try {
       const { id } = req.params;
+      const blacklist = req.query.blacklist === 'true' || req.body?.blacklist === true;
       const strain = sqlite.prepare('SELECT id, name FROM strains WHERE id = ?').get(id);
       if (!strain) return reply.status(404).send({ error: 'Strain not found' });
 
+      let blacklisted = false;
+      if (blacklist && strain.name) {
+        const config = getConfig();
+        const currentBlocked = Array.isArray(config.blockedWords) ? config.blockedWords : [];
+        const nameClean = strain.name.trim();
+        const nameLower = nameClean.toLowerCase();
+        if (nameClean && !currentBlocked.some(w => w.trim().toLowerCase() === nameLower)) {
+          currentBlocked.push(nameClean);
+          writeConfig({ ...config, blockedWords: currentBlocked });
+          blacklisted = true;
+        }
+      }
+
       sqlite.transaction(() => {
+        sqlite.prepare('UPDATE new_scraped_entries SET suggested_strain_id = NULL WHERE suggested_strain_id = ?').run(id);
         sqlite.prepare('DELETE FROM scraped_offers WHERE strain_id = ?').run(id);
         sqlite.prepare('DELETE FROM price_history WHERE strain_id = ?').run(id);
         sqlite.prepare('DELETE FROM strain_shop_descriptions WHERE strain_id = ?').run(id);
@@ -245,7 +264,11 @@ export default async function strainRoutes(app) {
         sqlite.prepare('DELETE FROM strains WHERE id = ?').run(id);
       })();
 
-      return { success: true, message: `Strain "${strain.name}" deleted.` };
+      const message = blacklisted
+        ? `Strain "${strain.name}" gelöscht und Name auf die Blacklist (Blocked Words) gesetzt.`
+        : `Strain "${strain.name}" gelöscht.`;
+
+      return { success: true, message, blacklisted };
     } catch (err) {
       reply.status(500).send({ error: err.message });
     }
@@ -292,6 +315,12 @@ export default async function strainRoutes(app) {
 
       const strain = sqlite.prepare('SELECT * FROM strains WHERE id = ?').get(id);
       if (!strain) return reply.status(404).send({ error: 'Strain not found' });
+
+      if (name !== undefined) {
+        if (typeof name !== 'string' || !name.trim()) {
+          return reply.status(400).send({ error: 'Strain name cannot be empty.' });
+        }
+      }
 
       sqlite.transaction(() => {
         // Update strain fields

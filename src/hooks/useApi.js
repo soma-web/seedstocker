@@ -22,10 +22,13 @@ export async function apiPost(endpoint, body = {}) {
   return res.json();
 }
 
-export async function apiDelete(endpoint) {
-  const res = await fetch(`${API_BASE_URL}${endpoint}`, {
-    method: 'DELETE'
-  });
+export async function apiDelete(endpoint, body = null) {
+  const options = { method: 'DELETE' };
+  if (body !== null && body !== undefined) {
+    options.headers = { 'Content-Type': 'application/json' };
+    options.body = JSON.stringify(body);
+  }
+  const res = await fetch(`${API_BASE_URL}${endpoint}`, options);
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
     throw new Error(errorData.error || `HTTP error! Status: ${res.status}`);

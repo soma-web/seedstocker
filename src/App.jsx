@@ -772,6 +772,9 @@ export default function App() {
           queryResult={queryResult}
           dbStrains={dbStrains}
           onOpenNewEntries={() => setIsNewEntriesOpen(true)}
+          onRefreshDbStats={fetchDbStats}
+          onRefreshData={fetchData}
+          onRefreshConfig={fetchConfig}
         />
       )}
 

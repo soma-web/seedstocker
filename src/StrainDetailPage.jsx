@@ -11,7 +11,10 @@ import {
   Star,
   Sparkles,
   Package,
-  Trash2
+  Trash2,
+  Pencil,
+  Check,
+  X
 } from 'lucide-react';
 
 import { API_BASE_URL } from './hooks/useApi';
@@ -529,8 +532,9 @@ export default function StrainDetailPage({ strainId, onBack, onNavigate }) {
               <>
                 <button
                   onClick={handleStartEdit}
-                  className="flex items-center gap-2 px-4 h-10 rounded-xl border border-slate-800 bg-slate-900/60 text-slate-305 hover:text-white hover:border-slate-700 backdrop-blur-md transition-all text-sm font-medium"
+                  className="flex items-center gap-2 px-4 h-10 rounded-xl border border-slate-800 bg-slate-900/60 text-slate-300 hover:text-white hover:border-slate-700 backdrop-blur-md transition-all text-sm font-medium"
                 >
+                  <Pencil className="w-4 h-4 text-emerald-400" />
                   Edit Details
                 </button>
                 <button
@@ -547,12 +551,14 @@ export default function StrainDetailPage({ strainId, onBack, onNavigate }) {
                   onClick={handleSaveEdit}
                   className="flex items-center gap-2 px-4 h-10 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-all text-sm font-bold shadow-md shadow-emerald-500/20"
                 >
+                  <Check className="w-4 h-4" />
                   Save Changes
                 </button>
                 <button
                   onClick={() => setIsEditing(false)}
-                  className="flex items-center gap-2 px-4 h-10 rounded-xl border border-slate-800 bg-slate-950 text-slate-450 hover:text-slate-200 transition-all text-sm font-medium"
+                  className="flex items-center gap-2 px-4 h-10 rounded-xl border border-slate-800 bg-slate-950 text-slate-400 hover:text-slate-200 transition-all text-sm font-medium"
                 >
+                  <X className="w-4 h-4" />
                   Cancel
                 </button>
               </>
@@ -563,12 +569,12 @@ export default function StrainDetailPage({ strainId, onBack, onNavigate }) {
             <div className="flex flex-wrap items-center gap-2 mb-4">
               {isEditing ? (
                 <>
-                  <div className="flex flex-col gap-1 animate-pulse">
+                  <div className="flex flex-col gap-1">
                     <span className="text-[8px] uppercase tracking-widest font-bold text-slate-500">Strain Type</span>
                     <select
                       value={editFields.type}
                       onChange={e => setEditFields({ ...editFields, type: e.target.value })}
-                      className="bg-slate-900 border border-slate-800 text-slate-250 px-3 py-1.5 rounded-lg text-xs font-bold focus:outline-none focus:border-emerald-500"
+                      className="bg-slate-900 border border-slate-800 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold focus:outline-none focus:border-emerald-500"
                     >
                       <option value="photoperiodic">🌱 Photoperiodic</option>
                       <option value="autoflower">⚡ Autoflower</option>
@@ -577,12 +583,12 @@ export default function StrainDetailPage({ strainId, onBack, onNavigate }) {
                       <option value="regular">🌿 Regular</option>
                     </select>
                   </div>
-                  <div className="flex flex-col gap-1 animate-pulse">
+                  <div className="flex flex-col gap-1">
                     <span className="text-[8px] uppercase tracking-widest font-bold text-slate-500">Seed Type</span>
                     <select
                       value={editFields.seedType}
                       onChange={e => setEditFields({ ...editFields, seedType: e.target.value })}
-                      className="bg-slate-900 border border-slate-800 text-slate-250 px-3 py-1.5 rounded-lg text-xs font-bold focus:outline-none focus:border-emerald-500"
+                      className="bg-slate-900 border border-slate-800 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold focus:outline-none focus:border-emerald-500"
                     >
                       <option value="feminized">♀ Feminized</option>
                       <option value="regular">Regular</option>
@@ -602,24 +608,45 @@ export default function StrainDetailPage({ strainId, onBack, onNavigate }) {
             </div>
 
             {isEditing ? (
-              <div className="flex flex-col gap-1 mb-3 animate-pulse">
-                <span className="text-[8px] uppercase tracking-widest font-bold text-slate-500">Strain Name</span>
+              <div className="flex flex-col gap-1.5 mb-3 max-w-2xl">
+                <span className="text-[9px] uppercase tracking-widest font-bold text-emerald-400 flex items-center gap-1.5">
+                  <Pencil className="w-3 h-3" /> Strain Name
+                </span>
                 <input
                   type="text"
                   value={editFields.name}
                   onChange={e => setEditFields({ ...editFields, name: e.target.value })}
-                  className="text-2xl sm:text-3xl font-black tracking-tight leading-none text-white bg-slate-900/60 border border-slate-800 px-3 py-1.5 rounded-xl w-full max-w-2xl focus:outline-none focus:border-emerald-500"
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') handleSaveEdit();
+                    if (e.key === 'Escape') setIsEditing(false);
+                  }}
+                  className="text-3xl sm:text-4xl font-black tracking-tight leading-none text-white bg-slate-900/90 border-2 border-emerald-500/60 px-4 py-2.5 rounded-xl w-full focus:outline-none focus:border-emerald-400 shadow-lg shadow-emerald-950/50"
                   placeholder="Strain Name"
+                  autoFocus
                 />
               </div>
             ) : (
-              <h1 className="text-5xl sm:text-6xl font-black tracking-tight leading-none text-white mb-3" style={{ textShadow: '0 2px 40px rgba(0,0,0,0.6)' }}>
-                {strain.name}
-              </h1>
+              <div className="flex items-center gap-3 mb-3 group">
+                <h1
+                  onClick={handleStartEdit}
+                  className="text-5xl sm:text-6xl font-black tracking-tight leading-none text-white cursor-pointer hover:text-emerald-300 transition-colors"
+                  style={{ textShadow: '0 2px 40px rgba(0,0,0,0.6)' }}
+                  title="Click to edit strain name & details"
+                >
+                  {strain.name}
+                </h1>
+                <button
+                  onClick={handleStartEdit}
+                  title="Edit Strain Name"
+                  className="p-2 rounded-xl bg-slate-900/60 border border-slate-800/80 text-slate-400 hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-slate-900 transition-all opacity-80 group-hover:opacity-100 shrink-0"
+                >
+                  <Pencil className="w-5 h-5" />
+                </button>
+              </div>
             )}
 
             {isEditing ? (
-              <div className="flex flex-col gap-1 mb-4 animate-pulse">
+              <div className="flex flex-col gap-1 mb-4">
                 <span className="text-[8px] uppercase tracking-widest font-bold text-slate-500">Breeder</span>
                 <div className="flex items-center gap-2 text-emerald-400">
                   <Leaf className="w-4 h-4" />
@@ -627,7 +654,7 @@ export default function StrainDetailPage({ strainId, onBack, onNavigate }) {
                     type="text"
                     value={editFields.breeder}
                     onChange={e => setEditFields({ ...editFields, breeder: e.target.value })}
-                    className="text-sm font-semibold text-emerald-350 bg-slate-900/60 border border-slate-800 px-3 py-1 rounded-lg w-full max-w-md focus:outline-none focus:border-emerald-500"
+                    className="text-sm font-semibold text-emerald-300 bg-slate-900/60 border border-slate-800 px-3 py-1 rounded-lg w-full max-w-md focus:outline-none focus:border-emerald-500"
                     placeholder="Breeder"
                   />
                 </div>
