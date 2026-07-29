@@ -64,6 +64,6 @@ jobs:
           done
 
           echo "Restarting application service with updated database..."
-          ssh -p $SSH_PORT ${SSH_USER}@${SSH_HOST} "systemctl --user start seedstocker || supervisorctl start seedstocker || true"
+          ssh -p $SSH_PORT ${SSH_USER}@${SSH_HOST} "systemctl --user start zeedit || supervisorctl start zeedit || true"
 
           echo "Database deployment completed successfully!"
