@@ -2,6 +2,7 @@ import { sqlite } from '../db.js';
 import { logMessage } from '../scraper.js';
 import { SCRAPER_REGISTRY, getAllShopNames } from '../scrapers/registry.js';
 import { getConfig, writeConfig } from '../config.js';
+import { runDbIntegrityCheck } from '../test-db-integrity.js';
 
 export default async function adminRoutes(app) {
 
@@ -153,6 +154,15 @@ export default async function adminRoutes(app) {
       return { rows, type: 'select' };
     } catch (err) {
       reply.status(400).send({ error: err.message });
+    }
+  });
+
+  app.get('/api/db/integrity', async (req, reply) => {
+    try {
+      const results = runDbIntegrityCheck(app.dbFilePath);
+      return results;
+    } catch (err) {
+      reply.status(500).send({ error: err.message });
     }
   });
 }

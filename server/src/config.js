@@ -126,7 +126,7 @@ export function getServerPort() {
     const parsed = parseInt(config.port, 10);
     if (!isNaN(parsed) && parsed > 0) return parsed;
   }
-  return 3002;
+  return 3003;
 }
 
 export { configPath };
