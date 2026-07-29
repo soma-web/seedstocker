@@ -1,0 +1,56 @@
+name: CI & Deployment Pipeline
+
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+    branches: ["*"]
+  workflow_dispatch:
+
+jobs:
+  test-and-build:
+    name: Run All Tests & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Project Dependencies
+        run: npm run setup
+
+      - name: Build Frontend Application
+        run: npm run build
+
+      - name: Execute All Test Suites & DB Integrity Checks
+        run: npm test
+
+  deploy:
+    name: Deploy to Remote Server
+    needs: test-and-build
+    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Execute Remote SSH Deployment
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            echo "Starting deployment on remote server..."
+            cd ${{ secrets.DEPLOY_PATH || '/var/www/virtual/seedit/zeedit-project' }}
+            git pull origin ${{ github.ref_name }}
+            npm run setup
+            npm run build
+            echo "Restarting application service..."
+            systemctl --user restart seedstocker || supervisorctl restart seedstocker || true
+            echo "Deployment completed successfully!"

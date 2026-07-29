@@ -10,7 +10,8 @@
     "scrape": "npm --prefix server run scrape",
     "scrape:quick": "npm --prefix server run scrape:quick",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "npm --prefix server run test"
   },
   "dependencies": {
     "clsx": "^2.1.1",
