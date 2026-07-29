@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { 
   RotateCw, 
   Layers, 
@@ -19,6 +19,20 @@ import {
   Search
 } from 'lucide-react';
 import { apiGet, apiPost, apiPut, apiDelete } from '../hooks/useApi';
+import StrainMergePanel from './StrainMergePanel';
+
+const DEFAULT_SHOPS = [
+  'House of Seeds',
+  'Zamnesia',
+  'Hans Brainfood',
+  'Gas Station Co. Seeds',
+  'Gas Station LU',
+  'Sensi Seeds',
+  'Dutch Passion',
+  "Barney's Farm",
+  'Cannapot',
+  'Humboldt Seed Company EU'
+];
 
 export default function AdminPanel({
   config,
@@ -59,6 +73,12 @@ export default function AdminPanel({
   onRefreshData,
   onRefreshConfig
 }) {
+  const activeShopStats = useMemo(() => {
+    if (dbStats && dbStats.shopStats && dbStats.shopStats.length > 0) {
+      return dbStats.shopStats;
+    }
+    return DEFAULT_SHOPS.map(shop => ({ shop, strainsCount: 0, offersCount: 0 }));
+  }, [dbStats]);
   const [enrichShop, setEnrichShop] = useState('');
   const [aiLimit, setAiLimit] = useState('');
   const [thcLimit, setThcLimit] = useState('15');
@@ -511,6 +531,111 @@ export default function AdminPanel({
               <Sparkles className="w-4 h-4" />
               Staging & Import Panel öffnen
             </button>
+          </div>
+        </div>
+
+        {/* Shop Scraper Actions & Controls Panel */}
+        <div className="glass-panel rounded-2xl p-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div>
+              <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+                <Coins className="w-5 h-5 text-emerald-400" />
+                Shop Scraper Controls & Actions
+              </h2>
+              <p className="text-xs text-slate-400 mt-1">
+                Führe Aktionen wie Scrape Prices, Quick Prices, Scrape Meta, Sanity Check Test oder Clear für jeden Shop einzeln aus.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1 rounded-full text-xs font-bold bg-slate-900 text-slate-300 border border-slate-800">
+                {activeShopStats.length} Shops registriert
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {activeShopStats.map(s => (
+              <div key={s.shop} className="bg-slate-950/60 border border-slate-900 rounded-xl p-4 flex flex-col justify-between gap-3 hover:border-slate-800 transition-colors">
+                <div className="flex items-center justify-between">
+                  <div className="min-w-0">
+                    <span className="block text-sm font-bold text-slate-100 truncate">{s.shop}</span>
+                    <span className="block text-[10px] text-slate-400 mt-0.5 font-mono">
+                      {s.strainsCount} strains • {s.offersCount} offers
+                    </span>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1.5 pt-2 border-t border-slate-900/60">
+                  <div className="flex gap-1.5">
+                    <button
+                      onClick={() => handleStartScrape(s.shop, 'price')}
+                      disabled={scraper.isScanning || sanityCheck.isRunning}
+                      title="Scrape Prices (Full Crawl)"
+                      className={`flex-1 py-2 rounded-lg text-[11px] font-bold border transition-all flex items-center justify-center gap-1.5 ${
+                        scraper.isScanning || sanityCheck.isRunning
+                          ? 'bg-slate-950 text-slate-600 border-slate-950 cursor-not-allowed'
+                          : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 hover:text-emerald-300'
+                      }`}
+                    >
+                      <Coins className="w-3.5 h-3.5" />
+                      Scrape Prices
+                    </button>
+                    <button
+                      onClick={() => handleStartScrape(s.shop, 'price_quick')}
+                      disabled={scraper.isScanning || sanityCheck.isRunning}
+                      title="Scrape Prices from Stored URLs (Quick Update)"
+                      className={`flex-1 py-2 rounded-lg text-[11px] font-bold border transition-all flex items-center justify-center gap-1.5 ${
+                        scraper.isScanning || sanityCheck.isRunning
+                          ? 'bg-slate-950 text-slate-600 border-slate-950 cursor-not-allowed'
+                          : 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20 hover:text-amber-300'
+                      }`}
+                    >
+                      <Zap className="w-3.5 h-3.5" />
+                      Quick Prices
+                    </button>
+                  </div>
+                  <div className="flex gap-1.5">
+                    <button
+                      onClick={() => handleStartScrape(s.shop, 'metadata')}
+                      disabled={scraper.isScanning || sanityCheck.isRunning}
+                      title="Scrape Full Metadata (DOM Scan)"
+                      className={`flex-1 py-2 rounded-lg text-[11px] font-bold border transition-all flex items-center justify-center gap-1.5 ${
+                        scraper.isScanning || sanityCheck.isRunning
+                          ? 'bg-slate-950 text-slate-600 border-slate-950 cursor-not-allowed'
+                          : 'bg-teal-500/10 text-teal-400 border-teal-500/20 hover:bg-teal-500/20 hover:text-teal-300'
+                      }`}
+                    >
+                      <Database className="w-3.5 h-3.5" />
+                      Scrape Meta
+                    </button>
+                    <button
+                      onClick={() => handleStartSanityCheck(s.shop)}
+                      disabled={scraper.isScanning || sanityCheck.isRunning}
+                      title="Run Sanity Check Test"
+                      className={`flex-1 py-2 rounded-lg text-[11px] font-bold border transition-all flex items-center justify-center gap-1.5 ${
+                        scraper.isScanning || sanityCheck.isRunning
+                          ? 'bg-slate-950 text-slate-600 border-slate-950 cursor-not-allowed'
+                          : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20 hover:bg-indigo-500/20 hover:text-indigo-300'
+                      }`}
+                    >
+                      <Activity className="w-3.5 h-3.5" />
+                      Test
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => handleClearShop(s.shop)}
+                    disabled={scraper.isScanning || sanityCheck.isRunning}
+                    className={`w-full py-1.5 rounded-lg text-[11px] font-bold border transition-all flex items-center justify-center gap-1.5 ${
+                      scraper.isScanning || sanityCheck.isRunning
+                        ? 'bg-slate-950 text-slate-600 border-slate-950 cursor-not-allowed'
+                        : 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20 hover:text-red-300'
+                    }`}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Clear Shop Offers
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -2185,6 +2310,13 @@ export default function AdminPanel({
           </div>
         )}
       </div>
+
+      {/* Strain Merge & Deduplication Panel */}
+      <StrainMergePanel 
+        dbStrains={dbStrains} 
+        onRefreshData={onRefreshData} 
+        onRefreshDbStats={onRefreshDbStats} 
+      />
 
       {/* SQL Playground Panel */}
       <div className="glass-panel rounded-2xl p-6 mt-8">

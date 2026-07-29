@@ -1,0 +1,123 @@
+{
+  "port": 3003,
+  "proxy": {
+    "enabled": true,
+    "username": "crdprrmx",
+    "password": "8vgp1qj9jbwg",
+    "list": [
+      "31.59.20.176:6754",
+      "31.56.127.193:7684",
+      "45.38.107.97:6014",
+      "198.105.121.200:6462",
+      "64.137.96.74:6641",
+      "198.23.243.226:6361",
+      "38.154.185.97:6370",
+      "84.247.60.125:6095",
+      "142.111.67.146:5611",
+      "191.96.254.138:6185"
+    ]
+  },
+  "geminiApiKey": "KEY HERE",
+  "chatgptApiKey": "sk-KEY HERE",
+  "useChatGpt": true,
+  "chatgptModel": "gpt-5.4-mini",
+  "useLocalLlm": false,
+  "localLlmUrl": "http://localhost:1234/v1/chat/completions",
+  "localLlmModel": "google/gemma-4-12b-qat",
+  "maxItemsPerShop": 1500,
+  "debug": true,
+  "blockedWords": [
+    "barney's farm dose",
+    "barneys farm dose",
+    "barney farm dose",
+    "dose",
+    "test_reloadadventskalender",
+    "headshop",
+    "ac infinity",
+    "calmag",
+    "grinder",
+    "zusatzzahlung",
+    "ph down",
+    "raw",
+    "puffco",
+    "greenception",
+    "gc pure",
+    "greenception gc pure",
+    "herbgarden",
+    "netztopf",
+    "scrog-netz",
+    "scrog",
+    "bloomstar",
+    "paket-deal",
+    "paket deal",
+    "paket",
+    "dynavap",
+    "digital scale",
+    "scale",
+    "shortcut",
+    "fabric pot",
+    "grindrr",
+    "storz",
+    "microscope",
+    "gifted cbd",
+    "no freebie",
+    "hemp wraps",
+    "juicy hemp",
+    "shogun sumi",
+    "active boost",
+    "vaporizer",
+    "vova dry herb",
+    "thermometer",
+    "hygrometer",
+    "lighter",
+    "herb shuttles",
+    "glas tip",
+    "classic rolls",
+    "perlite",
+    "plagron",
+    "aquamaster",
+    "compo pen",
+    "Organic Rolling Papers with Filter Tips",
+    "500 PURIZE XTRA Slim Size Carbon filters Multicolor",
+    "Can Lite Filter 600m³/h 160mm",
+    "kaufen bei Cannapot"
+  ],
+  "shops": [
+    {
+      "name": "Zamnesia",
+      "url": "https://www.zamnesia.de/35-cannabissamen/295-feminisiert-hanfsamen, https://www.zamnesia.de/35-cannabissamen/294-autoflowering-hanfsamen, https://www.zamnesia.de/35-cannabissamen/296-regulare-hanfsamen, https://www.zamnesia.de/35-cannabissamen/634-f1-samen"
+    },
+    {
+      "name": "House of Seeds",
+      "url": "https://house-of-seeds.de/products.json"
+    },
+    {
+      "name": "Hans Brainfood",
+      "url": "https://hansbrainfood.de/products.json"
+    },
+    {
+      "name": "Gas Station Co. Seeds",
+      "url": "https://gasstationcoseeds.de/products.json"
+    },
+    {
+      "name": "Gas Station LU",
+      "url": "https://gas-station.lu/products.json"
+    },
+    {
+      "name": "Sensi Seeds",
+      "url": "https://sensiseeds.com/de/hanfsamen"
+    },
+    {
+      "name": "Dutch Passion",
+      "url": "https://dutch-passion.com/de/hanfsamen"
+    },
+    {
+      "name": "Barney's Farm",
+      "url": null
+    },
+    {
+      "name": "Cannapot",
+      "url": "https://www.cannapot.com/shop/hanfsamen"
+    }
+  ]
+}

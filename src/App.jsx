@@ -207,12 +207,12 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
-  // Load db stats when debug is enabled and path is /admin, or when staging panel is opened
+  // Load db stats when path is /admin or when staging panel is opened
   useEffect(() => {
-    if ((config.debug && currentPath === '/admin') || isNewEntriesOpen) {
+    if (currentPath === '/admin' || isNewEntriesOpen) {
       fetchDbStats();
     }
-  }, [config.debug, currentPath, isNewEntriesOpen]);
+  }, [currentPath, isNewEntriesOpen]);
 
   // Effect to fetch initial strains and breeders
   useEffect(() => {
@@ -665,26 +665,22 @@ export default function App() {
           >
             Rewritten Prose
           </button>
-          {config.debug && (
-            <>
-              <button
-                onClick={() => navigateTo('/admin')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
-                  currentPath === '/admin'
-                    ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
-                    : 'border-slate-900 bg-slate-950/40 text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
-                }`}
-              >
-                System Administration
-              </button>
-              <button
-                onClick={() => setIsNewEntriesOpen(true)}
-                className="px-4 py-2 rounded-xl text-xs font-bold border transition-all border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
-              >
-                Staging & Import
-              </button>
-            </>
-          )}
+          <button
+            onClick={() => navigateTo('/admin')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
+              currentPath === '/admin'
+                ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
+                : 'border-slate-900 bg-slate-950/40 text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
+            }`}
+          >
+            System Administration
+          </button>
+          <button
+            onClick={() => setIsNewEntriesOpen(true)}
+            className="px-4 py-2 rounded-xl text-xs font-bold border transition-all border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+          >
+            Staging & Import
+          </button>
         </div>
       </div>
 

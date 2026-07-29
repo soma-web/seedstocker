@@ -1,6 +1,6 @@
 # Used Services
 - webshare.io for proxy if the scraper gets 429 returned
-- OpenAI for ai generation, usage can be found here: https:http://localhost:5173/strain/746345ab-69d3-4502-bde3-74855cf08bbf//platform.openai.com/usage
+- OpenAI for ai generation, usage can be found here: https://platform.openai.com/usage
 
 # React + Vite
 

@@ -7,6 +7,7 @@ import { SensiSeedsScraper } from './SensiSeedsScraper.js';
 import { DutchPassionScraper } from './DutchPassionScraper.js';
 import { BarneysFarmScraper } from './BarneysFarmScraper.js';
 import { CannapotScraper } from './CannapotScraper.js';
+import { HumboldtSeedCompanyScraper } from './HumboldtSeedCompanyScraper.js';
 
 /**
  * Central scraper registry. Every new shop scraper is added here once,
@@ -76,6 +77,13 @@ export const SCRAPER_REGISTRY = [
     domain: 'cannapot.com',
     shopifyJson: false,
     defaultUrl: 'https://www.cannapot.com/shop/hanfsamen'
+  },
+  {
+    name: 'Humboldt Seed Company EU',
+    ScraperClass: HumboldtSeedCompanyScraper,
+    domain: 'humboldtseedcompany.es',
+    shopifyJson: false,
+    defaultUrl: 'https://humboldtseedcompany.es/de/feminized-seeds/'
   }
 ];
 

@@ -46,6 +46,12 @@ function runCannapotScraperTests() {
   assert.strictEqual(scraper.extractThc('THC-Gehalt: 20-24%'), '22%');
   assert.strictEqual(scraper.extractThc('THC: Sehr hoch'), '21%');
 
+  // Strain Name Normalization Tests (strip trailing [] or [ ])
+  assert.strictEqual(scraper.normalizeStrainName('Super Skunk []', 'Sensi Seeds'), 'Super Skunk');
+  assert.strictEqual(scraper.normalizeStrainName('Super Skunk [ ]', 'Sensi Seeds'), 'Super Skunk');
+  assert.strictEqual(scraper.normalizeStrainName('Super Skunk [fem]', 'Sensi Seeds'), 'Super Skunk');
+  assert.strictEqual(scraper.normalizeStrainName('Super Skunk [reg] [ ]', 'Sensi Seeds'), 'Super Skunk');
+
   console.log('All Cannapot scraper tests PASSED successfully!');
 }
 

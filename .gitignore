@@ -23,3 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 graphify-out
+
+# Config files with sensitive keys
+server/config/scraper.json
+

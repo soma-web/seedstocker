@@ -13,6 +13,7 @@ function cleanLlmText(rawText) {
   if (!rawText) return '';
   let text = String(rawText).trim();
   text = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+  text = text.replace(/\*\*/g, '').trim();
   return text;
 }
 

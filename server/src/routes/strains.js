@@ -394,6 +394,195 @@ export default async function strainRoutes(app) {
     }
   });
 
+  app.post('/api/strains/merge-preview', async (req, reply) => {
+    try {
+      const { targetId, sourceId } = req.body || {};
+      if (!targetId || !sourceId) {
+        return reply.status(400).send({ error: 'Beide Strain-IDs (targetId und sourceId) müssen angegeben werden.' });
+      }
+      if (targetId === sourceId) {
+        return reply.status(400).send({ error: 'Ziel-Strain und Quell-Strain dürfen nicht identisch sein.' });
+      }
+
+      const target = sqlite.prepare('SELECT * FROM strains WHERE id = ?').get(targetId);
+      const source = sqlite.prepare('SELECT * FROM strains WHERE id = ?').get(sourceId);
+
+      if (!target) return reply.status(404).send({ error: `Ziel-Strain mit ID "${targetId}" wurde nicht gefunden.` });
+      if (!source) return reply.status(404).send({ error: `Quell-Strain mit ID "${sourceId}" wurde nicht gefunden.` });
+
+      const offersCount = sqlite.prepare('SELECT COUNT(*) AS count FROM scraped_offers WHERE strain_id = ?').get(sourceId).count;
+      const priceHistoryCount = sqlite.prepare('SELECT COUNT(*) AS count FROM price_history WHERE strain_id = ?').get(sourceId).count;
+      const newEntriesCount = sqlite.prepare('SELECT COUNT(*) AS count FROM new_scraped_entries WHERE suggested_strain_id = ?').get(sourceId).count;
+
+      const sourceShopDescs = sqlite.prepare('SELECT shop FROM strain_shop_descriptions WHERE strain_id = ?').all(sourceId);
+      const targetShopDescs = new Set(sqlite.prepare('SELECT shop FROM strain_shop_descriptions WHERE strain_id = ?').all(targetId).map(d => d.shop));
+      
+      const newShopsToTransfer = sourceShopDescs.filter(d => !targetShopDescs.has(d.shop)).map(d => d.shop);
+
+      const sourceHasRewritten = !!sqlite.prepare('SELECT 1 FROM rewritten_descriptions WHERE strain_id = ?').get(sourceId);
+      const targetHasRewritten = !!sqlite.prepare('SELECT 1 FROM rewritten_descriptions WHERE strain_id = ?').get(targetId);
+
+      const sourceHasAi = !!sqlite.prepare('SELECT 1 FROM ai_descriptions WHERE strain_id = ?').get(sourceId);
+      const targetHasAi = !!sqlite.prepare('SELECT 1 FROM ai_descriptions WHERE strain_id = ?').get(targetId);
+
+      // Metadata fill-in check
+      const metadataToFill = [];
+      const fieldsToCheck = [
+        ['breeder', 'Züchter'],
+        ['type', 'Typ'],
+        ['seed_type', 'Samen-Typ'],
+        ['thc', 'THC-Gehalt'],
+        ['cbd', 'CBD-Gehalt'],
+        ['strain_type', 'Indica/Sativa Ratio'],
+        ['flowering_time', 'Blütezeit'],
+        ['flowering_min', 'Blütezeit Min'],
+        ['flowering_max', 'Blütezeit Max'],
+        ['environment', 'Umgebung'],
+        ['plant_height', 'Wuchshöhe'],
+        ['harvest_month', 'Erntemonat'],
+        ['effects', 'Wirkungen'],
+        ['rating', 'Bewertung'],
+        ['seedfinder_url', 'Seedfinder URL'],
+        ['yield', 'Ertrag'],
+        ['genetics', 'Genetik']
+      ];
+
+      for (const [key, label] of fieldsToCheck) {
+        const targetVal = target[key];
+        const sourceVal = source[key];
+        const targetEmpty = targetVal === null || targetVal === undefined || targetVal === '';
+        const sourceFilled = sourceVal !== null && sourceVal !== undefined && sourceVal !== '';
+        if (targetEmpty && sourceFilled) {
+          metadataToFill.push({ key, label, value: sourceVal });
+        }
+      }
+
+      return {
+        target: {
+          id: target.id,
+          name: target.name,
+          breeder: target.breeder,
+          type: target.type
+        },
+        source: {
+          id: source.id,
+          name: source.name,
+          breeder: source.breeder,
+          type: source.type
+        },
+        summary: {
+          offersCount,
+          priceHistoryCount,
+          newEntriesCount,
+          newShopsToTransfer,
+          transferRewritten: sourceHasRewritten && !targetHasRewritten,
+          transferAi: sourceHasAi && !targetHasAi,
+          metadataToFill
+        }
+      };
+    } catch (err) {
+      reply.status(500).send({ error: err.message });
+    }
+  });
+
+  app.post('/api/strains/merge', async (req, reply) => {
+    try {
+      const { targetId, sourceId } = req.body || {};
+      if (!targetId || !sourceId) {
+        return reply.status(400).send({ error: 'Beide Strain-IDs (targetId und sourceId) müssen angegeben werden.' });
+      }
+      if (targetId === sourceId) {
+        return reply.status(400).send({ error: 'Ziel-Strain und Quell-Strain dürfen nicht identisch sein.' });
+      }
+
+      const target = sqlite.prepare('SELECT * FROM strains WHERE id = ?').get(targetId);
+      const source = sqlite.prepare('SELECT * FROM strains WHERE id = ?').get(sourceId);
+
+      if (!target) return reply.status(404).send({ error: `Ziel-Strain mit ID "${targetId}" wurde nicht gefunden.` });
+      if (!source) return reply.status(404).send({ error: `Quell-Strain mit ID "${sourceId}" wurde nicht gefunden.` });
+
+      sqlite.transaction(() => {
+        // 1. Re-link offers & price history
+        sqlite.prepare('UPDATE scraped_offers SET strain_id = ? WHERE strain_id = ?').run(targetId, sourceId);
+        sqlite.prepare('UPDATE price_history SET strain_id = ? WHERE strain_id = ?').run(targetId, sourceId);
+
+        // 2. Re-link new scraped entries
+        sqlite.prepare('UPDATE new_scraped_entries SET suggested_strain_id = ? WHERE suggested_strain_id = ?').run(targetId, sourceId);
+
+        // 3. Handle shop descriptions
+        const sourceDescs = sqlite.prepare('SELECT shop FROM strain_shop_descriptions WHERE strain_id = ?').all(sourceId);
+        for (const desc of sourceDescs) {
+          const targetHas = sqlite.prepare('SELECT 1 FROM strain_shop_descriptions WHERE strain_id = ? AND shop = ?').get(targetId, desc.shop);
+          if (!targetHas) {
+            sqlite.prepare('UPDATE strain_shop_descriptions SET strain_id = ? WHERE strain_id = ? AND shop = ?').run(targetId, sourceId, desc.shop);
+          } else {
+            sqlite.prepare('DELETE FROM strain_shop_descriptions WHERE strain_id = ? AND shop = ?').run(sourceId, desc.shop);
+          }
+        }
+
+        // 4. Handle rewritten descriptions
+        const sourceRewritten = sqlite.prepare('SELECT 1 FROM rewritten_descriptions WHERE strain_id = ?').get(sourceId);
+        const targetRewritten = sqlite.prepare('SELECT 1 FROM rewritten_descriptions WHERE strain_id = ?').get(targetId);
+        if (sourceRewritten && !targetRewritten) {
+          sqlite.prepare('UPDATE rewritten_descriptions SET strain_id = ? WHERE strain_id = ?').run(targetId, sourceId);
+        } else if (sourceRewritten) {
+          sqlite.prepare('DELETE FROM rewritten_descriptions WHERE strain_id = ?').run(sourceId);
+        }
+
+        // 5. Handle AI descriptions
+        const sourceAi = sqlite.prepare('SELECT 1 FROM ai_descriptions WHERE strain_id = ?').get(sourceId);
+        const targetAi = sqlite.prepare('SELECT 1 FROM ai_descriptions WHERE strain_id = ?').get(targetId);
+        if (sourceAi && !targetAi) {
+          sqlite.prepare('UPDATE ai_descriptions SET strain_id = ? WHERE strain_id = ?').run(targetId, sourceId);
+        } else if (sourceAi) {
+          sqlite.prepare('DELETE FROM ai_descriptions WHERE strain_id = ?').run(sourceId);
+        }
+
+        // 6. Fill missing metadata fields on target
+        const fields = [
+          'breeder', 'type', 'seed_type', 'thc', 'cbd', 'strain_type',
+          'flowering_time', 'flowering_min', 'flowering_max', 'environment',
+          'plant_height', 'harvest_month', 'effects', 'rating',
+          'seedfinder_url', 'yield', 'genetics'
+        ];
+
+        const updates = [];
+        const updateParams = [];
+
+        for (const field of fields) {
+          const targetVal = target[field];
+          const sourceVal = source[field];
+          const targetEmpty = targetVal === null || targetVal === undefined || targetVal === '';
+          const sourceFilled = sourceVal !== null && sourceVal !== undefined && sourceVal !== '';
+          if (targetEmpty && sourceFilled) {
+            updates.push(`${field} = ?`);
+            updateParams.push(sourceVal);
+          }
+        }
+
+        if (updates.length > 0) {
+          updates.push('updated_at = ?');
+          updateParams.push(new Date().toISOString());
+          updateParams.push(targetId);
+
+          sqlite.prepare(`UPDATE strains SET ${updates.join(', ')} WHERE id = ?`).run(...updateParams);
+        }
+
+        // 7. Delete source strain
+        sqlite.prepare('DELETE FROM strains WHERE id = ?').run(sourceId);
+      })();
+
+      return {
+        success: true,
+        message: `Strain "${source.name}" (${source.id}) wurde erfolgreich in "${target.name}" (${target.id}) integriert und gelöscht.`,
+        targetId,
+        sourceId
+      };
+    } catch (err) {
+      reply.status(500).send({ error: err.message });
+    }
+  });
+
   app.get('/api/breeders', async (req, reply) => {
     try {
       const rows = sqlite.prepare(`
@@ -408,3 +597,4 @@ export default async function strainRoutes(app) {
     }
   });
 }
+

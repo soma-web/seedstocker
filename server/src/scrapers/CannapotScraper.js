@@ -16,10 +16,20 @@ export class CannapotScraper extends BaseScraper {
 
   normalizeStrainName(title, breeder) {
     if (!title) return '';
-    let name = title.trim().replace(/\s+(?:female|fem|regular|reg|samen|seeds)\b/gi, '').trim();
+    let name = title
+      .trim()
+      .replace(/\s+(?:female|fem|regular|reg|samen|seeds)\b/gi, '')
+      .replace(/\[\s*\]/g, '')
+      .trim();
+
     let result = super.normalizeStrainName(name, breeder);
-    result = result.replace(/\s+(?:female|fem|regular|reg|samen|seeds)\b/gi, '').trim();
-    return result || name;
+    result = result
+      .replace(/\s+(?:female|fem|regular|reg|samen|seeds)\b/gi, '')
+      .replace(/\[\s*\]/g, '')
+      .replace(/[\s\-_,.()\[\]]+$/, '')
+      .trim();
+
+    return result || name.replace(/\[\s*\]/g, '').replace(/[\s\-_,.()\[\]]+$/, '').trim();
   }
 
   extractSeedType(text = '') {
@@ -310,7 +320,10 @@ export class CannapotScraper extends BaseScraper {
     scraperStatus.currentProduct = rawTitle;
 
     // Cleaned strain name
-    let cleanTitle = rawTitle.replace(/\s+(?:female|fem|regular|reg|samen|seeds)\b/gi, '').trim();
+    let cleanTitle = rawTitle
+      .replace(/\s+(?:female|fem|regular|reg|samen|seeds)\b/gi, '')
+      .replace(/\[\s*\]/g, '')
+      .trim();
     let strainName = this.normalizeStrainName(cleanTitle, breeder);
     if (!strainName) strainName = cleanTitle;
 

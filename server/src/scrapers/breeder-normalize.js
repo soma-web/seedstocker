@@ -88,6 +88,11 @@ const BREEDER_ALIASES = new Map([
   ['humboldt seeds co', 'Humboldt Seed Company'],
   ['humboldt seeds co.', 'Humboldt Seed Company'],
   ['humboldt seeds company', 'Humboldt Seed Company'],
+  ['mendo dope farms', 'Mendo Dope Farms'],
+  ['mendo dope', 'Mendo Dope Farms'],
+  ['huckleberry hill farms', 'Huckleberry Hill Farms'],
+  ['huckleberry hill', 'Huckleberry Hill Farms'],
+  ['ridgeline genetics', 'Ridgeline Genetics'],
   ['nasha genetics', 'Nasha Genetics'],
   ['nasha', 'Nasha Genetics'],
 
