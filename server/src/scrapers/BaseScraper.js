@@ -128,7 +128,16 @@ export class BaseScraper {
     const titleLower = (title || '').toLowerCase();
     const textLower = (text || '').toLowerCase();
 
-    // 1. Autoflower
+    // 1. Triploid (check triploid first so triploid strains aren't misclassified)
+    if (
+      titleLower.includes('triploid') ||
+      textLower.includes('triploid') ||
+      textLower.includes('triploide')
+    ) {
+      return 'triploid';
+    }
+
+    // 2. Autoflower
     if (
       titleLower.includes('auto') ||
       /\bauto\b/i.test(titleLower) ||
@@ -138,7 +147,7 @@ export class BaseScraper {
       return 'autoflower';
     }
 
-    // 2. Fast Flowering
+    // 3. Fast Flowering
     if (
       titleLower.includes('fast flowering') ||
       titleLower.includes('fast version') ||
@@ -148,15 +157,6 @@ export class BaseScraper {
       textLower.includes('schnellblühend')
     ) {
       return 'fast_flowering';
-    }
-
-    // 3. Triploid
-    if (
-      titleLower.includes('triploid') ||
-      textLower.includes('triploid') ||
-      textLower.includes('triploide')
-    ) {
-      return 'triploid';
     }
 
     // 4. Default
@@ -171,63 +171,40 @@ export class BaseScraper {
 
     // Ignore non-seed merchandise (Headshop, AC Infinity, Calmag, Grinder, Zusatzzahlung, pH Down, RAW brand, Puffco, Greenception, Herbgarden, Netztopf)
     if (
-      breederLower === 'headshop' || 
-      breederLower === 'head shop' || 
-      breederLower.includes('ac infinity') || 
-      lower.includes('ac infinity') ||
-      breederLower.includes('calmag') ||
-      lower.includes('calmag') ||
-      lower.includes('grinder') ||
-      lower.includes('zusatzzahlung') ||
+      breederLower === 'headshop' ||
+      breederLower === 'head shop' ||
+      breederLower.includes('ac infinity') ||
       breederLower.includes('zusatzzahlung') ||
-      lower.includes('ph down') ||
-      lower.includes('ph-down') ||
       breederLower.includes('ph down') ||
-      /\braw\b/i.test(lower) ||
       /\braw\b/i.test(breederLower) ||
-      lower.includes('puffco') ||
-      breederLower.includes('puffco') ||
-      lower.includes('greenception') ||
-      lower.includes('herbgarden') ||
-      lower.includes('netztopf')
+      breederLower.includes('puffco')
     ) {
       return true;
     }
 
-    // Ignore any strains containing "pack"/"packs" or "mystery" (mix packs / bundles)
-    if (/\bpacks?\b/i.test(lower) || lower.includes('mystery')) {
-      return true;
-    }
-
-    // Ignore any strains containing "mix" (mix packs / bundles / assortments)
-    if (lower.includes('mix')) {
-      return true;
-    }
-
-    const invalidKeywords = [
-      'bestseller',
-      'collection',
-      'mix pack',
-      'mix-pack',
-      'mixpack',
-      'gift card',
-      'gutschein',
-      'bundle',
-      'wood display',
-      'bodendisplay',
-      'vorratspackung',
-      'ungeschält',
-      'geschält',
-      'adventskalender',
-      'mix',
-      'dose',
-      'barney\'s farm dose',
-      'barneys farm dose',
-      'barney farm dose',
-      'metalldose',
-      'stashdose'
+    // Exact whole-word boundary matching for non-seed merchandise & accessory keywords
+    const wordBoundaryKeywords = [
+      'ac infinity', 'calmag', 'grinder', 'grinders', 'zusatzzahlung', 'ph down', 'ph-down',
+      'puffco', 'greenception', 'herbgarden', 'netztopf', 'bestseller', 'collection',
+      'mix pack', 'mix-pack', 'mixpack', 'gift card', 'gutschein', 'bundle', 'wood display',
+      'bodendisplay', 'vorratspackung', 'ungeschält', 'geschält', 'adventskalender',
+      'metalldose', 'stashdose', 'ashtray', 'ashtrays', 'rolling paper', 'rolling papers',
+      'joint holder', 'joint-holder', 'joint tube', 'joint-tube', 'lighter', 'lighters',
+      'clipper', 'vaporizer', 'vaporizers', 'bong', 'bongs'
     ];
-    if (invalidKeywords.some(kw => lower.includes(kw))) {
+
+    const isMatchWord = wordBoundaryKeywords.some(word => {
+      const escaped = word.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      const regex = new RegExp(`\\b${escaped}\\b`, 'i');
+      return regex.test(lower) || regex.test(breederLower);
+    });
+
+    if (isMatchWord) {
+      return true;
+    }
+
+    // Word boundary checks for single short words like mix, dose, pack, packs, mystery
+    if (/\b(mix|mixes|dose|dosen|packs?|mystery)\b/i.test(lower)) {
       return true;
     }
 
@@ -248,6 +225,26 @@ export class BaseScraper {
     }
 
     return false;
+  }
+
+  cleanSeedType(val) {
+    if (!val) return null;
+    const lower = String(val).trim().toLowerCase();
+    if (lower === 'regular' || lower === 'regulär' || lower === 'reg') {
+      return 'regular';
+    }
+    if (
+      lower === 'feminized' ||
+      lower === 'feminisierte' ||
+      lower === 'feminisiert' ||
+      lower === 'fem' ||
+      lower === 'autoflowering' ||
+      lower === 'autoflower' ||
+      lower === 'auto'
+    ) {
+      return 'feminized';
+    }
+    return null;
   }
 
   cleanFilledValue(val) {
@@ -299,9 +296,9 @@ export class BaseScraper {
     const bLower = breeder.toLowerCase();
     const nLower = name.toLowerCase();
     if (
-      bLower === 'headshop' || 
-      bLower === 'head shop' || 
-      bLower.includes('ac infinity') || 
+      bLower === 'headshop' ||
+      bLower === 'head shop' ||
+      bLower.includes('ac infinity') ||
       nLower.includes('ac infinity') ||
       bLower.includes('calmag') ||
       nLower.includes('calmag') ||
@@ -331,8 +328,12 @@ export class BaseScraper {
       finalMax = range.max;
     }
 
-    const cleanedType = this.cleanFilledValue(type);
-    const cleanedSeedType = this.cleanFilledValue(seedType);
+    let cleanedType = this.cleanFilledValue(type);
+    const seedTypeLower = (seedType || '').toLowerCase();
+    if ((seedTypeLower === 'autoflowering' || seedTypeLower === 'autoflower' || seedTypeLower === 'auto') && (!cleanedType || cleanedType === 'photoperiodic')) {
+      cleanedType = 'autoflower';
+    }
+    const cleanedSeedType = this.cleanSeedType(seedType) || this.cleanFilledValue(seedType);
     const cleanedThc = this.cleanFilledValue(thc);
     const cleanedCbd = this.cleanFilledValue(cbd);
     const cleanedStrainType = this.cleanFilledValue(strainType);

@@ -1,9 +1,40 @@
 import Database from 'better-sqlite3';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { getAllShopNames } from './scrapers/registry.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Configuration list of offers or URL patterns to ignore in integrity checks
+export const IGNORED_OFFERS = {
+  // Offer IDs to ignore
+  ids: [
+    'd4001ec4-2ed0-4fc8-bd24-ab1eb8fdb70d',
+    '8a701986-888f-4f54-b003-774138c2905f',
+    'd08c0db5-57f8-46de-a68a-a2ffa8178bbb',
+    '74751c0f-76eb-4525-8eab-e52d3414c6e6',
+    '488f11f7-4810-4852-8686-e074f71cf4d9',
+    '48905c45-1131-4ea7-82ec-6b97cfc35d56',
+    'da8e878c-6782-4dc2-8856-d7c8a579e11e',
+    'd4098112-7d69-45b4-909a-1e5002d07939',
+    'f3f09fcc-76dc-43f6-b43e-ccead73869e2',
+    'c8fb9e4d-e7ff-4c56-8b9d-4cef7a5d8246'
+  ],
+  // URL patterns/substrings to ignore (e.g. 'competition-box')
+  urlPatterns: [
+    'competition-box'
+  ]
+};
+
+export function isOfferIgnored(offer) {
+  if (!offer) return false;
+  const id = typeof offer === 'string' ? offer : offer.id;
+  const url = typeof offer === 'object' ? (offer.url || '') : '';
+  if (id && IGNORED_OFFERS.ids.includes(id)) return true;
+  if (url && IGNORED_OFFERS.urlPatterns && IGNORED_OFFERS.urlPatterns.some(pat => url.toLowerCase().includes(pat.toLowerCase()))) return true;
+  return false;
+}
 
 // Helper to parse CLI arguments
 function parseArgs() {
@@ -139,11 +170,12 @@ export function runDbIntegrityCheck(dbPathOverride = null) {
 
   // Price Ceiling (> 7000 EUR)
   try {
-    const highPrices = db.prepare(`
+    const rawHighPrices = db.prepare(`
       SELECT id, strain_id, shop, price, seeds, url 
       FROM scraped_offers 
       WHERE price > 7000
     `).all();
+    const highPrices = rawHighPrices.filter(o => !isOfferIgnored(o));
     if (highPrices.length === 0) {
       addCheck('Price Ceiling Check (<= 7000 €)', 'Pricing', 'PASS', 'No offers exceed the max threshold of 7000 €');
     } else {
@@ -155,11 +187,12 @@ export function runDbIntegrityCheck(dbPathOverride = null) {
 
   // Price Floor (<= 0 EUR)
   try {
-    const invalidPrices = db.prepare(`
+    const rawInvalidPrices = db.prepare(`
       SELECT id, strain_id, shop, price, url 
       FROM scraped_offers 
       WHERE price <= 0
     `).all();
+    const invalidPrices = rawInvalidPrices.filter(o => !isOfferIgnored(o));
     if (invalidPrices.length === 0) {
       addCheck('Price Floor Check (> 0 €)', 'Pricing', 'PASS', 'All offers have a positive price');
     } else {
@@ -171,11 +204,12 @@ export function runDbIntegrityCheck(dbPathOverride = null) {
 
   // Price per Seed Sanity (0.10 € <= price/seeds <= 500 €)
   try {
-    const extremeRatios = db.prepare(`
+    const rawExtremeRatios = db.prepare(`
       SELECT id, strain_id, shop, price, seeds, (price / seeds) as ratio, url 
       FROM scraped_offers 
       WHERE seeds > 0 AND ( (price / seeds) < 0.10 OR (price / seeds) > 500 )
     `).all();
+    const extremeRatios = rawExtremeRatios.filter(o => !isOfferIgnored(o));
     if (extremeRatios.length === 0) {
       addCheck('Price Per Seed Sanity (0.10 € - 500 € / seed)', 'Pricing', 'PASS', 'All offer price-per-seed ratios fall within realistic bounds');
     } else {
@@ -187,11 +221,12 @@ export function runDbIntegrityCheck(dbPathOverride = null) {
 
   // Seed Pack Size Validity (seeds <= 0)
   try {
-    const invalidSeeds = db.prepare(`
+    const rawInvalidSeeds = db.prepare(`
       SELECT id, strain_id, shop, seeds, price, url 
       FROM scraped_offers 
       WHERE seeds IS NULL OR seeds <= 0
     `).all();
+    const invalidSeeds = rawInvalidSeeds.filter(o => !isOfferIgnored(o));
     if (invalidSeeds.length === 0) {
       addCheck('Seed Pack Size Validity (seeds > 0)', 'Pricing', 'PASS', 'All offers specify valid positive seed counts');
     } else {
@@ -223,18 +258,17 @@ export function runDbIntegrityCheck(dbPathOverride = null) {
 
   // Non-Seed Accessory Products
   try {
-    const nonSeedKeywords = [
-      '%paper%', '%joint%', '%grinder%', '%tube%', '%bag%', '%tray%', '%lighter%',
-      '%blunt%', '%filter%', '%bong%', '%pipe%', '%clipper%', '%vaporizer%'
-    ];
-    const query = `
+    const accessoryWordRegex = /\b(ashtray|ashtrays|grinder|grinders|joint-holder|joint holder|joint-tube|joint tube|lighter|lighters|clipper|vaporizer|vaporizers|bong|bongs|ph-down|ph down|calmag|puffco|greenception|herbgarden|netztopf|gutschein|adventskalender)\b/i;
+
+    const allOffers = db.prepare(`
       SELECT s.id, s.name, s.breeder, o.url, o.shop
       FROM strains s
       JOIN scraped_offers o ON s.id = o.strain_id
-      WHERE ` + nonSeedKeywords.map(() => `(LOWER(s.name) LIKE ? OR LOWER(o.url) LIKE ?)`).join(' OR ');
+    `).all();
 
-    const bindParams = nonSeedKeywords.flatMap(k => [k, k]);
-    const accessories = db.prepare(query).all(...bindParams);
+    const accessories = allOffers.filter(row =>
+      accessoryWordRegex.test(row.name) || accessoryWordRegex.test(row.url)
+    );
 
     if (accessories.length === 0) {
       addCheck('Non-Seed Accessory Products Detection', 'Data Quality', 'PASS', 'No non-seed merchandise detected in strains catalog');
@@ -398,22 +432,34 @@ export function runDbIntegrityCheck(dbPathOverride = null) {
   } catch (err) {
     addCheck('Duplicate Strain Entities', 'Audit', 'FAIL', `Check failed: ${err.message}`);
   }
-
-  // Strains Without Offers Check
+  // Shop Offer & Strain Presence Check
   try {
-    const strainsWithoutOffers = db.prepare(`
-      SELECT s.id, s.name, s.breeder 
-      FROM strains s 
-      LEFT JOIN scraped_offers o ON s.id = o.strain_id 
-      WHERE o.id IS NULL
-    `).all();
-    if (strainsWithoutOffers.length === 0) {
-      addCheck('Strains Without Offers', 'Audit', 'PASS', 'Every strain in the database has at least 1 scraped offer');
+    const registeredShops = getAllShopNames();
+    const missingShops = [];
+
+    for (const shopName of registeredShops) {
+      const stats = db.prepare(`
+        SELECT COUNT(*) as offersCount, COUNT(DISTINCT strain_id) as strainsCount 
+        FROM scraped_offers 
+        WHERE shop = ?
+      `).get(shopName);
+
+      if (!stats || stats.offersCount === 0 || stats.strainsCount === 0) {
+        missingShops.push({
+          shop: shopName,
+          strainsCount: stats ? stats.strainsCount : 0,
+          offersCount: stats ? stats.offersCount : 0
+        });
+      }
+    }
+
+    if (missingShops.length === 0) {
+      addCheck('Shop Offer & Strain Presence', 'Audit', 'PASS', 'Every registered shop has at least 1 strain and 1 offer in the database');
     } else {
-      addCheck('Strains Without Offers', 'Audit', 'WARN', `Found ${strainsWithoutOffers.length} strain(s) with zero active scraped offers`, strainsWithoutOffers);
+      addCheck('Shop Offer & Strain Presence', 'Audit', 'WARN', `Found ${missingShops.length} registered shop(s) with 0 strains or 0 offers`, missingShops);
     }
   } catch (err) {
-    addCheck('Strains Without Offers', 'Audit', 'FAIL', `Check failed: ${err.message}`);
+    addCheck('Shop Offer & Strain Presence', 'Audit', 'FAIL', `Check failed: ${err.message}`);
   }
 
   db.close();

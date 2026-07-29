@@ -225,9 +225,9 @@ export class HumboldtSeedCompanyScraper extends BaseScraper {
     scraperStatus.currentProduct = `${strainName} (${breeder})`;
 
     // Determine strain type (autoflower, fast_flowering, triploid, photoperiodic)
-    let type = itemMeta.catType;
-    if (!type) {
-      type = this.determineStrainType(rawTitle, html);
+    let type = this.determineStrainType(rawTitle, html + ' ' + url);
+    if (type === 'photoperiodic' && itemMeta.catType) {
+      type = itemMeta.catType;
     }
 
     // Determine seedType (feminized, regular)
