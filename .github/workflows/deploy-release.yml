@@ -1,0 +1,63 @@
+name: Release Database Deployment Pipeline
+
+on:
+  push:
+    branches:
+      - release
+      - "release/*"
+  workflow_dispatch:
+
+jobs:
+  test-and-deploy-db:
+    name: Run Tests & Deploy SQLite Database
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository with Git LFS
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm run setup
+
+      - name: Build Application
+        run: npm run build
+
+      - name: Run All Tests & DB Integrity Checks
+        run: npm test
+
+      - name: Setup SSH Agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+
+      - name: Deploy Database Files to Remote Server
+        run: |
+          SSH_HOST="${{ secrets.SSH_HOST }}"
+          SSH_USER="${{ secrets.SSH_USER }}"
+          SSH_PORT="${{ secrets.SSH_PORT || 22 }}"
+          TARGET_DIR="/var/www/virtual/zeedit/zeedit-project/Database"
+
+          echo "Adding host keys to known_hosts..."
+          mkdir -p ~/.ssh
+          ssh-keyscan -p $SSH_PORT $SSH_HOST >> ~/.ssh/known_hosts
+
+          echo "Ensuring destination directory exists on server..."
+          ssh -p $SSH_PORT ${SSH_USER}@${SSH_HOST} "mkdir -p $TARGET_DIR"
+
+          echo "Uploading SQLite database files..."
+          for file in server/data/seedstocker.db server/data/seedstocker.db-shm server/data/seedstocker.db-wal; do
+            if [ -f "$file" ]; then
+              echo "Copying $file -> ${TARGET_DIR}/"
+              scp -P $SSH_PORT "$file" "${SSH_USER}@${SSH_HOST}:${TARGET_DIR}/"
+            fi
+          done
+
+          echo "Database deployment completed successfully!"
