@@ -1,4 +1,4 @@
-import Database from 'better-sqlite3';
+import { DatabaseSync as Database } from 'node:sqlite';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getAllShopNames } from './scrapers/registry.js';

@@ -67,3 +67,9 @@ jobs:
           ssh -p $SSH_PORT ${SSH_USER}@${SSH_HOST} "systemctl --user start zeedit || supervisorctl start zeedit || true"
 
           echo "Database deployment completed successfully!"
+          
+      - name: Trigger Homepage Cache Revalidation
+        run: |
+          REVALIDATE_SECRET="${{ secrets.REVALIDATE_SECRET }}"
+          curl -s -X POST https://zeedit.de/api/revalidate \
+            -H "x-revalidate-token: ${REVALIDATE_SECRET}" || true
