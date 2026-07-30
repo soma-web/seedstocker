@@ -316,7 +316,7 @@ export class BaseScraper {
       nLower.includes('herbgarden') ||
       nLower.includes('netztopf')
     ) {
-      this.log('info', `Skipping strain "${name}" - Non-seed merchandise (Headshop/AC Infinity/Calmag/Grinder/Zusatzzahlung/pH Down/RAW/Puffco/Greenception/Herbgarden/Netztopf)`);
+      this.log('info', `Skipping strain "${name}" - Non-seed merchandise (Headshop/AC Infinity/Calmag/Grinder/Zusatzzahlung/pH Down/RAW/Puffco/Greenception/Herbgarden/Netztopf)${url ? ` — URL: ${url}` : ''}`);
       return null;
     }
 
@@ -352,10 +352,21 @@ export class BaseScraper {
     }
 
     // Use case-insensitive, whitespace-normalized matching to prevent duplicates
-    const [existing] = await db.select()
+    let [existing] = await db.select()
       .from(strains)
       .where(and(...strainConditions))
       .limit(1);
+
+    // Fallback: if seedType condition was included and no match was found, retry by name + breeder alone
+    if (!existing && cleanedSeedType) {
+      [existing] = await db.select()
+        .from(strains)
+        .where(and(
+          sql`LOWER(TRIM(${strains.name})) = LOWER(TRIM(${name}))`,
+          sql`LOWER(TRIM(${strains.breeder})) = LOWER(TRIM(${breeder}))`
+        ))
+        .limit(1);
+    }
 
     if (existing) {
       strainId = existing.id;
@@ -400,7 +411,7 @@ export class BaseScraper {
     } else {
       // In price mode, don't create new strains — only update prices on known ones
       if (this.scrapeMode === 'price') {
-        this.log('info', `[price mode] Skipping unknown strain "${name}" (${breeder}) — not in database.`);
+        this.log('info', `[price mode] Skipping unknown strain "${name}" (${breeder}) — not in database${url ? ` — URL: ${url}` : ''}`);
         return null;
       }
 
@@ -851,7 +862,7 @@ export class BaseScraper {
     } else {
       // In price mode, don't create new offers — only refresh existing ones
       if (this.scrapeMode === 'price') {
-        this.log('info', `[price mode] Skipping new offer for strain ${strainId}, seeds=${seeds} — not in database.`);
+        this.log('info', `[price mode] Skipping new offer for strain ${strainId}, seeds=${seeds} — not in database${url ? ` — URL: ${url}` : ''}`);
         return;
       }
       await db.insert(scrapedOffers).values({

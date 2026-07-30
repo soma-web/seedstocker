@@ -42,9 +42,23 @@ function runGasStationLuScraperTests() {
   assert.strictEqual(scraper.normalizeBreeder('Gas Station', 'Dr. Doom by Copycat Genetix'), 'Copycat Genetix');
   assert.strictEqual(scraper.normalizeBreeder('NineWeeksHarvest'), 'Nine Week Harvest');
   assert.strictEqual(scraper.normalizeBreeder('Nine Weeks Harvest'), 'Nine Week Harvest');
+  assert.strictEqual(scraper.normalizeBreeder('Gas Station', 'BF White Widow XXL 5 seeds'), "Barney's Farm");
+  assert.strictEqual(scraper.normalizeBreeder('BF'), "Barney's Farm");
   assert.strictEqual(scraper.normalizeBreeder(null), 'Gas Station LU');
 
   // --- 2. Strain Name Normalization Tests ---
+  assert.strictEqual(
+    scraper.normalizeStrainName('BF White Widow XXL 5 seeds', "Barney's Farm"),
+    'White Widow XXL'
+  );
+  assert.strictEqual(
+    scraper.normalizeStrainName('US Sour Diesel 5 seeds', 'Humboldt Seed Company'),
+    'Sour Diesel'
+  );
+  assert.strictEqual(
+    scraper.normalizeStrainName('22 6 seeds', 'Cali Connection'),
+    '22 (Jack Herer x OG Kush )'
+  );
   assert.strictEqual(
     scraper.normalizeStrainName('Dr. Doom S1 (Dr. Sleep x Frog Poison) 10 feminized seeds', 'Copycat Genetix'),
     'Dr. Doom S1'

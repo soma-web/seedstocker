@@ -9,17 +9,23 @@ export class GasStationLuScraper extends ShopifyScraper {
   normalizeBreeder(rawVendor, title = '') {
     let raw = rawVendor ? rawVendor.trim() : '';
 
+    // Check if title or vendor has "BF" as a separate word (Barney's Farm)
+    if (/\bBF\b/i.test(title) || /\bBF\b/i.test(raw)) {
+      return "Barney's Farm";
+    }
+
     // If vendor is missing or generic "Gas Station", try to find breeder in title
     if (!raw || raw.toLowerCase() === 'gas station' || raw.toLowerCase() === 'gas-station' || raw.toLowerCase() === 'unknown') {
+      let titleBreeder = null;
       // 0. Look for breeder in square brackets at the beginning (e.g. "[Ripper Seeds] ...")
       const bracketMatch = title.match(/^\[([^\]]+)\]/);
       if (bracketMatch) {
-        raw = bracketMatch[1].trim();
+        titleBreeder = bracketMatch[1].trim();
       } else {
         // 1. Look for "by <Breeder>"
         const byMatch = title.match(/\sby\s+([^|(\n]+)/i);
         if (byMatch) {
-          raw = byMatch[1].trim();
+          titleBreeder = byMatch[1].trim();
         } else {
           // 2. Check dash delimiter ("Breeder - Strain" or "Strain - Breeder")
           const dashParts = title.split(/\s*[-–—]\s*/);
@@ -37,10 +43,11 @@ export class GasStationLuScraper extends ShopifyScraper {
           // 3. Check pipe delimiter ("Strain | Breeder")
           const pipeMatch = title.match(/\s*\|\s*([^|(\n]+)/);
           if (pipeMatch) {
-            raw = pipeMatch[1].trim();
+            titleBreeder = pipeMatch[1].trim();
           }
         }
       }
+      raw = titleBreeder || 'Gas Station LU';
     }
 
     if (!raw) return 'Gas Station LU';
@@ -58,6 +65,9 @@ export class GasStationLuScraper extends ShopifyScraper {
     if (!title) return '';
 
     let name = title.trim();
+
+    // Remove standalone "BF" and "US" words (e.g. "BF White Widow XXL" -> "White Widow XXL", "US Sour Diesel" -> "Sour Diesel")
+    name = name.replace(/\b(BF|US)\b\s*/gi, '');
 
     // Remove square brackets and anything inside them (e.g. "[Ripper Seeds] Zombie Bride" -> "Zombie Bride")
     name = name.replace(/\[[^\]]*\]/g, '');
@@ -89,6 +99,11 @@ export class GasStationLuScraper extends ShopifyScraper {
     // 4. Delegate to base ShopifyScraper for additional keyword cleaning
     let result = super.normalizeStrainName(name, breeder);
     result = result.replace(/[\s|]+$/, '').trim();
+
+    // Special mapping for Gas Station LU: "22" -> "22 (Jack Herer x OG Kush )"
+    if (result === '22') {
+      return '22 (Jack Herer x OG Kush )';
+    }
 
     return result || title.trim();
   }

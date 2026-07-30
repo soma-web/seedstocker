@@ -123,8 +123,9 @@ export class HansBrainfoodScraper extends ShopifyScraper {
                        titleLower.includes('seeds') ||
                        titleLower.includes('sämling');
                          
+        const pUrl = p.handle ? `${baseUrl}/products/${p.handle}` : '';
         if (!isSeed || productType === 'displays' || tagsString.includes('pos-only') || tagsString.includes('pos only') || tagsString.includes('wholesale-only') || this.isInvalidStrainName(p.title, p.body_html)) {
-          this.log('info', `Skipping non-strain or faulty product "${p.title}"`);
+          this.log('info', `Skipping non-strain or faulty product "${p.title}"${pUrl ? ` — URL: ${pUrl}` : ''}`);
           continue;
         }
         
@@ -160,7 +161,9 @@ export class HansBrainfoodScraper extends ShopifyScraper {
             thc: specs.thc,
             cbd: specs.cbd,
             strainType: specs.strainType,
-            floweringTime: specs.floweringTime
+            floweringTime: specs.floweringTime,
+            url: pUrl,
+            rawTitle: p.title
           });
         } catch (dbErr) {
           this.log('error', `Database error for strain ${name}: ${dbErr.message}`);

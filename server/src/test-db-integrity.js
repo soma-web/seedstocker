@@ -236,6 +236,35 @@ export function runDbIntegrityCheck(dbPathOverride = null) {
     addCheck('Seed Pack Size Validity', 'Pricing', 'FAIL', `Check failed: ${err.message}`);
   }
 
+  // Price History Excessive Variance Check (max_price / min_price >= 2.5x)
+  try {
+    const rawHighVariance = db.prepare(`
+      SELECT 
+        ph.strain_id, 
+        s.name AS strain_name, 
+        s.breeder, 
+        ph.shop, 
+        ph.seeds, 
+        MIN(ph.price) AS min_price, 
+        MAX(ph.price) AS max_price, 
+        COUNT(ph.id) AS history_count, 
+        ROUND(MAX(ph.price) / MIN(ph.price), 2) AS ratio
+      FROM price_history ph
+      JOIN strains s ON s.id = ph.strain_id
+      GROUP BY ph.strain_id, ph.shop, ph.seeds
+      HAVING history_count >= 2 AND (MAX(ph.price) / MIN(ph.price)) >= 2.5
+    `).all();
+
+    const highVariance = rawHighVariance.filter(o => !isOfferIgnored(o));
+    if (highVariance.length === 0) {
+      addCheck('Price History Variance Check (ratio < 2.5x)', 'Pricing', 'PASS', 'No excessive price variance detected in offer histories');
+    } else {
+      addCheck('Price History Variance Check (ratio < 2.5x)', 'Pricing', 'WARN', `Found ${highVariance.length} offer history record(s) with >2.5x price variance`, highVariance);
+    }
+  } catch (err) {
+    addCheck('Price History Variance Check', 'Pricing', 'FAIL', `Check failed: ${err.message}`);
+  }
+
   // -----------------------------------------------------------------
   // 3. STRAIN & DATA QUALITY CHECKS
   // -----------------------------------------------------------------

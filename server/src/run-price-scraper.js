@@ -17,6 +17,8 @@ fs.mkdirSync(logsDir, { recursive: true });
 
 const errorsLogPath = path.join(logsDir, 'errors_and_warnings.txt');
 const pricesLogPath = path.join(logsDir, 'scraped_prices.txt');
+const skippedStrainsLogPath = path.join(logsDir, 'skipped_strains.txt');
+const skippedShopItemsLogPath = path.join(logsDir, 'skipped_shop_items.txt');
 const generalLogPath = path.resolve(__dirname, '../data/scraper.log');
 
 // Metrics counter
@@ -24,6 +26,8 @@ const metrics = {
   startTime: Date.now(),
   endTime: null,
   priceCount: 0,
+  skippedStrainsCount: 0,
+  skippedShopItemsCount: 0,
   errorCount: 0,
   warningCount: 0,
   invalidCount: 0,
@@ -38,6 +42,12 @@ if (!fs.existsSync(errorsLogPath)) {
 if (!fs.existsSync(pricesLogPath)) {
   fs.writeFileSync(pricesLogPath, `# SeedStocker Scraped Prices Log\n# Created: ${new Date().toISOString()}\n\n`, 'utf8');
 }
+if (!fs.existsSync(skippedStrainsLogPath)) {
+  fs.writeFileSync(skippedStrainsLogPath, `# SeedStocker Skipped Strains Log (Unknown in DB during price mode)\n# Created: ${new Date().toISOString()}\n\n`, 'utf8');
+}
+if (!fs.existsSync(skippedShopItemsLogPath)) {
+  fs.writeFileSync(skippedShopItemsLogPath, `# SeedStocker Skipped Shop Items Log (Merchandise, Accessories, Blocked Words, Bundles)\n# Created: ${new Date().toISOString()}\n\n`, 'utf8');
+}
 
 // Global logger for CLI process
 function logMessage(type, message) {
@@ -49,6 +59,28 @@ function logMessage(type, message) {
   if (type === 'warning') metrics.warningCount++;
   if (type === 'invalid') metrics.invalidCount++;
   if (type === 'price') metrics.priceCount++;
+
+  // Track & categorize skipped strains vs non-seed shop items
+  const isSkipping = message.includes('Skipping') && !message.includes('Skipping shop');
+  if (isSkipping) {
+    const isUnknownStrain = message.includes('not in database') || message.includes('unknown strain') || message.includes('new offer for strain');
+    
+    if (isUnknownStrain) {
+      metrics.skippedStrainsCount++;
+      try {
+        fs.appendFileSync(skippedStrainsLogPath, `[${timestamp}][SKIPPED_STRAIN] ${message}\n`, 'utf8');
+      } catch (err) {
+        console.error(`Failed to write to ${skippedStrainsLogPath}: ${err.message}`);
+      }
+    } else {
+      metrics.skippedShopItemsCount++;
+      try {
+        fs.appendFileSync(skippedShopItemsLogPath, `[${timestamp}][SKIPPED_SHOP_ITEM] ${message}\n`, 'utf8');
+      } catch (err) {
+        console.error(`Failed to write to ${skippedShopItemsLogPath}: ${err.message}`);
+      }
+    }
+  }
 
   console.log(consoleLine);
 
@@ -121,6 +153,8 @@ function printSummaryReport(options) {
     ` Shops Processed   : ${metrics.shopsProcessed.length} (${metrics.shopsProcessed.join(', ') || 'None'})`,
     ` Shops Skipped     : ${metrics.shopsSkipped.length}`,
     ` Prices Recorded   : ${metrics.priceCount}`,
+    ` Skipped Strains   : ${metrics.skippedStrainsCount} (see skipped_strains.txt)`,
+    ` Skipped Shop Items: ${metrics.skippedShopItemsCount} (see skipped_shop_items.txt)`,
     ` Warnings          : ${metrics.warningCount}`,
     ` Errors            : ${metrics.errorCount}`,
     '',
@@ -132,6 +166,8 @@ function printSummaryReport(options) {
     ' --- LOG FILES ---',
     ` Scraper Log       : ${generalLogPath}`,
     ` Price Log         : ${pricesLogPath}`,
+    ` Skipped Strains   : ${skippedStrainsLogPath}`,
+    ` Skipped Shop Items: ${skippedShopItemsLogPath}`,
     ` Error Log         : ${errorsLogPath}`,
     '================================================================================'
   ];

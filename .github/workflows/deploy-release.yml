@@ -55,9 +55,15 @@ jobs:
           echo "Stopping application service to safely release SQLite file handles..."
           ssh -p $SSH_PORT ${SSH_USER}@${SSH_HOST} "systemctl --user stop zeedit || supervisorctl stop zeedit || true"
 
+           echo "deleting files -> ${TARGET_DIR}/"
+           ssh -p $SSH_PORT ${SSH_USER}@${SSH_HOST} "rm ${TARGET_DIR}/seedstocker.db"
+           ssh -p $SSH_PORT ${SSH_USER}@${SSH_HOST} "rm ${TARGET_DIR}/seedstocker.db-shm"
+           ssh -p $SSH_PORT ${SSH_USER}@${SSH_HOST} "rm ${TARGET_DIR}/seedstocker.db-wal"
+
           echo "Uploading SQLite database files..."
           for file in server/data/seedstocker.db server/data/seedstocker.db-shm server/data/seedstocker.db-wal; do
             if [ -f "$file" ]; then
+            
               echo "Copying $file -> ${TARGET_DIR}/"
               scp -P $SSH_PORT "$file" "${SSH_USER}@${SSH_HOST}:${TARGET_DIR}/"
             fi
