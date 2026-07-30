@@ -80,7 +80,7 @@ function runNormalizationTests() {
   assert.strictEqual(scraper.normalizeBreeder('RQS'), 'Royal Queen Seeds');
   assert.strictEqual(scraper.normalizeBreeder('royal queen'), 'Royal Queen Seeds');
   assert.strictEqual(scraper.normalizeBreeder('Dutch Passion Seeds'), 'Dutch Passion');
-  assert.strictEqual(scraper.normalizeBreeder("barny's farm"), "barney's farm");
+  assert.strictEqual(scraper.normalizeBreeder("barny's farm"), "Barney's Farm");
   assert.strictEqual(scraper.normalizeBreeder('Some Unknown Breeder'), 'Some Unknown Breeder');
   assert.strictEqual(scraper.normalizeBreeder(null), 'Unknown Breeder');
 
