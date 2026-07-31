@@ -426,4 +426,82 @@ export class HumboldtSeedCompanyScraper extends BaseScraper {
       shop: this.shopName
     };
   }
+
+  parseOffersFromHtml(html) {
+    const offers = [];
+
+    // 1. Try WooCommerce variations JSON attribute
+    const variationsMatch = html.match(/data-product_variations=["']([\s\S]*?)["']/i);
+    if (variationsMatch) {
+      try {
+        const decoded = variationsMatch[1]
+          .replace(/&quot;/g, '"')
+          .replace(/&#039;/g, "'")
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>');
+        const variationsData = JSON.parse(decoded);
+
+        for (const v of variationsData) {
+          const qtyAttr = v.attributes ? (v.attributes['attribute_pa_choose-quantity'] || v.attributes['attribute_pa_quantity'] || Object.values(v.attributes)[0] || '') : '';
+          let seeds = this.parseSeedCount(qtyAttr);
+          if (!seeds) {
+            const seedM = qtyAttr.match(/pack-(\d+)-seeds/i) || qtyAttr.match(/(\d+)/);
+            if (seedM) seeds = parseInt(seedM[1], 10);
+          }
+          if (!seeds && v.image && v.image.title) {
+            seeds = this.parseSeedCount(v.image.title);
+          }
+
+          const price = v.display_price !== undefined ? parseFloat(v.display_price) : (v.display_regular_price !== undefined ? parseFloat(v.display_regular_price) : null);
+          const availability = (v.is_in_stock && v.is_purchasable) ? 'available' : 'out_of_stock';
+
+          if (seeds && price && !isNaN(price) && price > 0) {
+            offers.push({ seeds, price, availability });
+          }
+        }
+      } catch (e) {}
+    }
+
+    // 2. Fallback: Check h4/strong seed pack info (e.g. 10 Samen | 100,00 €)
+    if (offers.length === 0) {
+      const h4Match = html.match(/(\d+)\s*Samen\s*\|\s*([0-9]+(?:[,.][0-9]+)?)\s*€/i);
+      if (h4Match) {
+        const seeds = parseInt(h4Match[1], 10);
+        const price = parseFloat(h4Match[2].replace(',', '.'));
+        if (seeds && price && !isNaN(price) && price > 0) {
+          offers.push({ seeds, price, availability: 'available' });
+        }
+      }
+    }
+
+    // 3. Fallback: JSON-LD offers
+    if (offers.length === 0) {
+      const jsonLdMatches = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
+      if (jsonLdMatches) {
+        for (const m of jsonLdMatches) {
+          try {
+            const data = JSON.parse(m.replace(/<script[^>]*>/i, '').replace(/<\/script>/i, ''));
+            if (data['@type'] === 'Product' && data.offers) {
+              const rawOffers = Array.isArray(data.offers) ? data.offers : [data.offers];
+              for (const offer of rawOffers) {
+                if (offer.price) {
+                  const price = parseFloat(offer.price);
+                  const titleMatch = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+                  const rawTitle = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, '').trim() : '';
+                  const seedsMatch = rawTitle.match(/(\d+)\s*(?:Samen|Seeds)/i) || html.match(/(\d+)\s*(?:Samen|Seeds)/i);
+                  const seeds = seedsMatch ? parseInt(seedsMatch[1], 10) : 1;
+                  if (price > 0) {
+                    offers.push({ seeds, price, availability: 'available' });
+                  }
+                }
+              }
+            }
+          } catch {}
+        }
+      }
+    }
+
+    return offers;
+  }
 }

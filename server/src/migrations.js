@@ -7,6 +7,11 @@
  */
 
 export function initializeDatabase(sqlite) {
+  try {
+    sqlite.exec('PRAGMA journal_mode = WAL;');
+    sqlite.exec('PRAGMA busy_timeout = 30000;');
+  } catch {}
+
   // Create the migration tracking table first
   sqlite.exec(`
     CREATE TABLE IF NOT EXISTS _migrations (

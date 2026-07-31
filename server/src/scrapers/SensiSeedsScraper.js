@@ -1,4 +1,7 @@
 import { BaseScraper } from './BaseScraper.js';
+import { db } from '../db.js';
+import { strains } from '../schema.js';
+import { eq } from 'drizzle-orm';
 
 function decodeHTMLEntities(str) {
   if (!str) return '';
@@ -115,39 +118,82 @@ export class SensiSeedsScraper extends BaseScraper {
     return offers;
   }
 
+  extractSeedType(rawTitle = '', attributes = {}, url = '', html = '') {
+    // 1. Check attribute grid values
+    const attrValues = Object.entries(attributes || {})
+      .filter(([key]) => key.includes('samen') || key.includes('typ') || key.includes('geschlecht') || key.includes('type'))
+      .map(([, val]) => (val || '').toLowerCase())
+      .join(' ');
+
+    if (attrValues) {
+      if (/\bregulär\b|\breguläre\b|\bregular\b|\bregulare\b|\bregs\b/i.test(attrValues)) {
+        return 'regular';
+      }
+      if (/\bfeminisiert\b|\bfeminisierte\b|\bfeminized\b|\bfeminised\b|\bweiblich\b/i.test(attrValues)) {
+        return 'feminized';
+      }
+    }
+
+    // 2. Check URL path
+    const urlLower = (url || '').toLowerCase();
+    if (urlLower.includes('regulare-samen') || urlLower.includes('reguläre-samen') || urlLower.includes('/regulare/') || urlLower.includes('/regulaere/')) {
+      return 'regular';
+    }
+    if (urlLower.includes('feminisierte-samen') || urlLower.includes('/feminisiert/') || urlLower.includes('/weiblich/')) {
+      return 'feminized';
+    }
+
+    // 3. Check raw title
+    const titleLower = (rawTitle || '').toLowerCase();
+    if (/\bregulär\b|\breguläre\b|\bregular\b|\bregulare\b/i.test(titleLower)) {
+      return 'regular';
+    }
+    if (/\bfeminisiert\b|\bfeminisierte\b|\bfeminized\b|\bfeminised\b|\bweiblich\b/i.test(titleLower)) {
+      return 'feminized';
+    }
+
+    // 4. Check HTML content (breadcrumbs/categories)
+    const htmlLower = (html || '').toLowerCase();
+    if (htmlLower.includes('regulare-samen') || htmlLower.includes('reguläre hanfsamen')) {
+      return 'regular';
+    }
+
+    return 'feminized';
+  }
+
   async scrape(scraperStatus, targetUrl = null) {
     this.log('info', 'Starting Sensi Seeds scraper...');
     scraperStatus.currentShop = this.shopName;
-    
+
 
     const limit = this.getLimit();
     const productUrls = new Set();
     const baseCategoryUrl = 'https://sensiseeds.com/de/hanfsamen';
-    
+
     let categoryUrls = [baseCategoryUrl];
     if (targetUrl) {
       categoryUrls = targetUrl.split(',').map(u => u.trim()).filter(Boolean);
     }
-    
+
     for (const catUrl of categoryUrls) {
       if (limit !== null && productUrls.size >= limit) break;
-      
+
       // If single product URL directly provided
       if (catUrl.includes('/de/') && !catUrl.includes('hanfsamen') && !catUrl.includes('pagenumber=')) {
         productUrls.add(catUrl);
         continue;
       }
-      
+
       this.log('info', `Crawling category index: ${catUrl}`);
       let page = 1;
       let keepCrawling = true;
-      
+
       while (keepCrawling) {
         if (limit !== null && productUrls.size >= limit) break;
-        
+
         const pageUrl = catUrl.includes('?') ? `${catUrl}&pagenumber=${page}` : `${catUrl}?pagenumber=${page}`;
         this.log('info', `Fetching category page: ${pageUrl}`);
-        
+
         let res;
         try {
           res = await this.fetchWithRetry(pageUrl, {
@@ -160,19 +206,19 @@ export class SensiSeedsScraper extends BaseScraper {
           this.log('error', `Failed fetching category page ${pageUrl}: ${err.message}`);
           break;
         }
-        
+
         if (!res.ok) {
           this.log('warning', `Category page ${pageUrl} returned status ${res.status}. Stopping pagination for this URL.`);
           break;
         }
-        
+
         const html = await res.text();
         const itemBoxes = html.split(/<div class="product-item"|<div class="item-box"/i).slice(1);
-        
+
         let newFoundOnPage = 0;
         for (const box of itemBoxes) {
           if (limit !== null && productUrls.size >= limit) break;
-          
+
           const hrefMatch = box.match(/href="(\/de\/[^"]+)"/);
           if (hrefMatch) {
             const path = hrefMatch[1];
@@ -192,7 +238,7 @@ export class SensiSeedsScraper extends BaseScraper {
             }
           }
         }
-        
+
         this.log('info', `Page ${page} yielded ${newFoundOnPage} product links (total queued: ${productUrls.size})`);
         if (newFoundOnPage === 0) {
           keepCrawling = false;
@@ -201,9 +247,9 @@ export class SensiSeedsScraper extends BaseScraper {
         }
       }
     }
-    
+
     this.log('info', `Queued ${productUrls.size} product URLs for parsing.`);
-    
+
     for (const url of productUrls) {
       try {
         await this.scrapeProductPage(url, scraperStatus);
@@ -211,13 +257,13 @@ export class SensiSeedsScraper extends BaseScraper {
         this.log('error', `Error scraping product ${url}: ${err.message}`);
       }
     }
-    
+
     this.log('success', `Finished Sensi Seeds scraper. Scraped ${scraperStatus.productsScraped} total products.`);
   }
 
   async scrapeProductPage(url, scraperStatus) {
     this.log('info', `Scraping product page: ${url}`);
-    
+
     const res = await this.fetchWithRetry(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
@@ -237,7 +283,7 @@ export class SensiSeedsScraper extends BaseScraper {
     if (kViewMatch) {
       try {
         kViewData = eval('(' + kViewMatch[1] + ')');
-      } catch {}
+      } catch { }
     }
 
     // 2. Title and Genetics
@@ -289,13 +335,8 @@ export class SensiSeedsScraper extends BaseScraper {
     scraperStatus.currentProduct = `${strainName} (${breeder})`;
 
     // 6. Seed Type & Strain Type
+    const seedType = this.extractSeedType(rawTitle, attributes, url, html);
     const samenTyp = (attributes['samen typ'] || '').toLowerCase();
-    
-    let seedType = 'feminized';
-    if (samenTyp.includes('regulär') || rawTitle.toLowerCase().includes('regular') || url.toLowerCase().includes('regulare')) {
-      seedType = 'regular';
-    }
-
     const type = this.determineStrainType(rawTitle, samenTyp + ' ' + url);
 
     const strainType = attributes['sativa / indica'] || null;
@@ -314,6 +355,24 @@ export class SensiSeedsScraper extends BaseScraper {
       url,
       rawTitle
     });
+
+    if (strainId && this.scrapeMode === 'price') {
+      const [dbStrain] = await db.select({ seedType: strains.seedType, type: strains.type })
+        .from(strains)
+        .where(eq(strains.id, strainId))
+        .limit(1);
+
+      if (dbStrain) {
+        if (dbStrain.seedType && dbStrain.seedType.toLowerCase() !== seedType.toLowerCase()) {
+          this.log('info', `[price mode] Skipping price offer for "${strainName}" (${breeder}) on ${url} — seedType mismatch (DB: ${dbStrain.seedType}, Page: ${seedType})`);
+          return;
+        }
+        if (dbStrain.type && dbStrain.type.toLowerCase() !== type.toLowerCase()) {
+          this.log('info', `[price mode] Skipping price offer for "${strainName}" (${breeder}) on ${url} — type mismatch (DB: ${dbStrain.type}, Page: ${type})`);
+          return;
+        }
+      }
+    }
 
     // 8. Extract Offers (Pack Sizes & Prices)
     const offers = this.parseOffersFromHtml(html);
@@ -346,7 +405,7 @@ export class SensiSeedsScraper extends BaseScraper {
 
   async scrapeSingle(url) {
     this.log('info', `Running single page scrape for: ${url}`);
-    
+
     const res = await this.fetchWithRetry(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
@@ -365,7 +424,7 @@ export class SensiSeedsScraper extends BaseScraper {
     if (kViewMatch) {
       try {
         kViewData = eval('(' + kViewMatch[1] + ')');
-      } catch {}
+      } catch { }
     }
 
     const h1TitleRaw = html.match(/<h1[^>]*class="[^"]*product-title[^"]*"[^>]*>([\s\S]*?)<\/h1>/i)?.[1]?.trim() || kViewData?.ProductName || '';
@@ -408,13 +467,8 @@ export class SensiSeedsScraper extends BaseScraper {
       throw new Error(`Skipping invalid strain title or bundle: ${rawTitle}`);
     }
 
+    const seedType = this.extractSeedType(rawTitle, attributes, url, html);
     const samenTyp = (attributes['samen typ'] || '').toLowerCase();
-    
-    let seedType = 'feminized';
-    if (samenTyp.includes('regulär') || rawTitle.toLowerCase().includes('regular') || url.toLowerCase().includes('regulare')) {
-      seedType = 'regular';
-    }
-
     const type = this.determineStrainType(rawTitle, samenTyp + ' ' + url);
 
     const strainType = attributes['sativa / indica'] || null;
@@ -432,6 +486,36 @@ export class SensiSeedsScraper extends BaseScraper {
       url,
       rawTitle
     });
+
+    if (strainId && this.scrapeMode === 'price') {
+      const [dbStrain] = await db.select({ seedType: strains.seedType, type: strains.type })
+        .from(strains)
+        .where(eq(strains.id, strainId))
+        .limit(1);
+
+      if (dbStrain) {
+        if (dbStrain.seedType && dbStrain.seedType.toLowerCase() !== seedType.toLowerCase()) {
+          this.log('info', `[price mode] Skipping price offer for "${strainName}" (${breeder}) on ${url} — seedType mismatch (DB: ${dbStrain.seedType}, Page: ${seedType})`);
+          return {
+            strainId: null,
+            name: strainName,
+            breeder,
+            offersCreated: 0,
+            shop: this.shopName
+          };
+        }
+        if (dbStrain.type && dbStrain.type.toLowerCase() !== type.toLowerCase()) {
+          this.log('info', `[price mode] Skipping price offer for "${strainName}" (${breeder}) on ${url} — type mismatch (DB: ${dbStrain.type}, Page: ${type})`);
+          return {
+            strainId: null,
+            name: strainName,
+            breeder,
+            offersCreated: 0,
+            shop: this.shopName
+          };
+        }
+      }
+    }
 
     const offers = this.parseOffersFromHtml(html);
     let offersCreated = 0;

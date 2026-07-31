@@ -36,7 +36,7 @@ export class CannapotScraper extends BaseScraper {
     const lower = text.toLowerCase();
 
     if (
-      /\b(?:\d+\s*)?fem\b/i.test(lower) ||
+      /\b(?:\d+\s*)?fem\.?\b/i.test(lower) ||
       /\bfeminisier/i.test(lower) ||
       /\bfeminized\b/i.test(lower) ||
       /\bfeminised\b/i.test(lower) ||
@@ -46,6 +46,7 @@ export class CannapotScraper extends BaseScraper {
     }
 
     if (
+      /\breg\.?\b/i.test(lower) ||
       /\bregular\b/i.test(lower) ||
       /\bregul[äa]r(?:e|en|er)?\b/i.test(lower) ||
       /\bregulaere\b/i.test(lower)
@@ -400,10 +401,11 @@ export class CannapotScraper extends BaseScraper {
         const seedsMatch = labelText.match(/^(\d+)/);
         const seeds = seedsMatch ? parseInt(seedsMatch[1], 10) : 1;
 
-        const deltaMatch = labelText.match(/\(\s*\+?\s*€\s*([\d.,]+)\s*\)/i);
+        const deltaMatch = labelText.match(/\(\s*([+-])?\s*€\s*([\d.,]+)\s*\)/i);
         let price = basePrice;
         if (deltaMatch) {
-          const delta = parseFloat(deltaMatch[1].replace(',', '.'));
+          const sign = deltaMatch[1] === '-' ? -1 : 1;
+          const delta = sign * parseFloat(deltaMatch[2].replace(',', '.'));
           price = parseFloat((basePrice + delta).toFixed(2));
         }
 
@@ -469,5 +471,53 @@ export class CannapotScraper extends BaseScraper {
       offersCreated,
       shop: this.shopName
     };
+  }
+
+  parseOffersFromHtml(html) {
+    const offers = [];
+
+    let basePrice = 0;
+    const priceBlockMatch = html.match(/id=["']productPrices["'][\s\S]*?<\/h2>/i);
+    if (priceBlockMatch) {
+      const saleMatch = priceBlockMatch[0].match(/class=["'](?:productSpecialPrice|productSalePrice)["'][^>]*>\s*€\s*&nbsp;\s*([\d.,]+)/i);
+      const normMatch = priceBlockMatch[0].match(/(?:class=["']normalprice["']|€\s*&nbsp;)\s*([\d.,]+)/i);
+      if (saleMatch) {
+        basePrice = parseFloat(saleMatch[1].replace(',', '.'));
+      } else if (normMatch) {
+        basePrice = parseFloat(normMatch[1].replace(',', '.'));
+      }
+    }
+
+    if (isNaN(basePrice)) basePrice = 0;
+
+    const labelMatches = html.match(/<label\b[^>]*class=["'][^"']*attribsRadioButton[^"']*["'][\s\S]*?<\/label>/gi) || [];
+
+    if (labelMatches.length > 0) {
+      for (const lblHtml of labelMatches) {
+        const labelText = lblHtml.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').trim();
+        const seedsMatch = labelText.match(/^(\d+)/);
+        const seeds = seedsMatch ? parseInt(seedsMatch[1], 10) : 1;
+
+        const deltaMatch = labelText.match(/\(\s*([+-])?\s*€\s*([\d.,]+)\s*\)/i);
+        let price = basePrice;
+        if (deltaMatch) {
+          const sign = deltaMatch[1] === '-' ? -1 : 1;
+          const delta = sign * parseFloat(deltaMatch[2].replace(',', '.'));
+          price = parseFloat((basePrice + delta).toFixed(2));
+        }
+
+        if (seeds > 0 && price > 0) {
+          offers.push({ seeds, price });
+        }
+      }
+    } else if (basePrice > 0) {
+      const titleMatch = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+      const rawTitle = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, '').trim() : '';
+      const seedsMatch = rawTitle.match(/(\d+)\s*(?:stk|samen|seeds|pack)/i);
+      const seeds = seedsMatch ? parseInt(seedsMatch[1], 10) : 1;
+      offers.push({ seeds, price: basePrice });
+    }
+
+    return offers;
   }
 }

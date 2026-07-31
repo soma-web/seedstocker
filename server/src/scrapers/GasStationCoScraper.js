@@ -6,6 +6,94 @@ export class GasStationCoScraper extends ShopifyScraper {
     super('Gas Station Co. Seeds', logMessage, scrapeMode);
   }
 
+  parseSeedCount(text) {
+    if (!text) return null;
+    const str = String(text).toLowerCase();
+
+    const patterns = [
+      /(\d+)[\s-]*(?:samen|seeds|stk|stück|stk\.|pk|pack|er|x)/i,
+      /pack(?:ung)?[\s-]*[({[]?\s*(?:von|of)?\s*(\d+)\s*[)}\]]?/i,
+      /(\d+)\s*pack/i,
+      /\b(\d+)\b/
+    ];
+
+    for (const p of patterns) {
+      const m = str.match(p);
+      if (m) {
+        const num = parseInt(m[1], 10);
+        if (!isNaN(num) && num > 0 && num <= 1000) {
+          return num;
+        }
+      }
+    }
+    return super.parseSeedCount ? super.parseSeedCount(text) : null;
+  }
+
+  parseOffersFromHtml(html) {
+    if (!html) return [];
+
+    // 1. Try <select name="id"> options in HTML DOM
+    const selectMatch = html.match(/<select[^>]*name=["']id["'][^>]*>([\s\S]*?)<\/select>/i);
+    if (selectMatch) {
+      const optionMatches = selectMatch[1].matchAll(/<option[^>]*>([\s\S]*?)<\/option>/gi);
+      const selectOffers = [];
+      for (const opt of optionMatches) {
+        const text = opt[1].replace(/<[^>]+>/g, '').trim();
+        const parts = text.split('-').map(p => p.trim());
+        const label = parts[0] || '';
+        const priceStr = parts[1] || '';
+        const priceMatch = priceStr.match(/[\d.,]+/);
+        if (priceMatch) {
+          const price = parseFloat(priceMatch[0].replace(/\./g, '').replace(',', '.'));
+          const seeds = this.parseSeedCount(label) || 1;
+          if (!isNaN(price) && price > 0) {
+            selectOffers.push({ seeds, price, availability: 'available' });
+          }
+        }
+      }
+      if (selectOffers.length > 0) {
+        return selectOffers;
+      }
+    }
+
+    // 2. Try window.Shopify.Product or script containing ProductJson
+    const productJsonMatch = html.match(/window\.Shopify\.Product\s*=\s*([\s\S]*?);/i)
+                          || html.match(/<script[^>]*id=["']ProductJson-[^"']*["'][^>]*>([\s\S]*?)<\/script>/i);
+
+    if (productJsonMatch) {
+      try {
+        const data = JSON.parse(productJsonMatch[1]);
+        if (data && Array.isArray(data.variants)) {
+          return data.variants.map(v => ({
+            seeds: this.parseSeedCount(v.title) || this.parseSeedCount(v.option1) || 1,
+            price: parseFloat(v.price) / (v.price > 1000 ? 100 : 1),
+            availability: v.available ? 'available' : 'out_of_stock',
+            variantTitle: v.title
+          })).filter(o => !isNaN(o.price) && o.price > 0);
+        }
+      } catch {}
+    }
+
+    // 3. Fallback to schema.org Product / ProductGroup JSON-LD
+    const jsonLdRe = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+    let match;
+    while ((match = jsonLdRe.exec(html)) !== null) {
+      try {
+        const parsed = JSON.parse(match[1]);
+        const offers = parsed.offers?.offers || parsed.offers || (parsed.hasVariant ? parsed.hasVariant.map(v => v.offers) : null);
+        if (Array.isArray(offers) && offers.length > 0) {
+          return offers.map(o => ({
+            seeds: this.parseSeedCount(o.name || o.title || '') || 1,
+            price: parseFloat(o.price || o.priceSpecification?.price),
+            availability: o.availability?.includes('InStock') ? 'available' : 'out_of_stock'
+          })).filter(o => !isNaN(o.price) && o.price > 0);
+        }
+      } catch {}
+    }
+
+    return [];
+  }
+
   normalizeStrainName(title, breeder) {
     let name = title.trim();
 

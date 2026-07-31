@@ -215,44 +215,63 @@ export class DutchPassionScraper extends BaseScraper {
       genetics: genetics
     });
 
-    const variants = [];
-    if (productGroup.hasVariant && Array.isArray(productGroup.hasVariant)) {
-      for (const v of productGroup.hasVariant) {
-        const sizeStr = v.size || v.name || '';
-        const countMatch = sizeStr.match(/(\d+)\s*(?:Reguläre\s*)?Samen/i);
-        const seeds = countMatch ? parseInt(countMatch[1], 10) : null;
-        const price = v.offers?.price !== undefined ? parseFloat(v.offers.price) : null;
-        const inStock = v.offers?.availability ? v.offers.availability.includes('InStock') : true;
+    const offers = this.parseOffersFromHtml(html);
 
-        if (seeds && price && !isNaN(seeds) && !isNaN(price) && seeds > 0 && price > 0) {
-          variants.push({ seeds, price, inStock });
-        }
-      }
-    }
-
-    if (variants.length === 0) {
+    if (offers.length === 0) {
       this.log('warning', `No valid seed variants found for strain "${strainName}" at ${url}`);
       return;
     }
 
-    for (const v of variants) {
+    for (const v of offers) {
       await this.insertOffer({
         strainId,
         seeds: v.seeds,
         price: v.price,
-        isAvailable: v.inStock,
+        availability: v.availability,
         url: url
       });
     }
 
     scraperStatus.productsScraped++;
-    this.log('success', `Saved strain "${strainName}" (${breeder}) with ${variants.length} offers.`);
+    this.log('success', `Saved strain "${strainName}" (${breeder}) with ${offers.length} offers.`);
     return {
       strainId,
       name: strainName,
       breeder,
-      offersCreated: variants.length
+      offersCreated: offers.length
     };
+  }
+
+  parseOffersFromHtml(html) {
+    const offers = [];
+    const ldMatches = [...html.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi)];
+    let productGroup = null;
+
+    for (const m of ldMatches) {
+      if (m[1].includes('ProductGroup')) {
+        try {
+          productGroup = JSON.parse(m[1]);
+          break;
+        } catch {}
+      }
+    }
+
+    if (productGroup?.hasVariant && Array.isArray(productGroup.hasVariant)) {
+      for (const v of productGroup.hasVariant) {
+        const sizeStr = v.size || v.name || '';
+        const countMatch = sizeStr.match(/(\d+)\s*(?:Reguläre\s*)?Samen/i) || sizeStr.match(/(\d+)/);
+        const seeds = countMatch ? parseInt(countMatch[1], 10) : null;
+        const price = v.offers?.price !== undefined ? parseFloat(v.offers.price) : null;
+        const availStr = String(v.offers?.availability || '').toLowerCase();
+        const availability = (availStr.includes('instock') || availStr.includes('in_stock')) ? 'available' : 'available';
+
+        if (seeds && price && !isNaN(seeds) && !isNaN(price) && seeds > 0 && price > 0) {
+          offers.push({ seeds, price, availability });
+        }
+      }
+    }
+
+    return offers;
   }
 
   async scrapeSingle(url) {

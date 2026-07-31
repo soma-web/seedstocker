@@ -507,4 +507,76 @@ export class ZamnesiaScraper extends BaseScraper {
     }
     return description || '';
   }
+
+  parseOffersFromHtml(html) {
+    const offers = [];
+    const addCombinationRegex = /addCombination\s*\(\s*(.*?)\s*\)\s*;/g;
+    let match;
+    const psCombinations = [];
+    while ((match = addCombinationRegex.exec(html)) !== null) {
+      const argsStr = match[1];
+      const args = this.parseArgs(argsStr);
+      if (args.length >= 11) {
+        const comboId = args[0];
+        const attrIdsMatch = args[1].match(/new Array\((.*?)\)/i) || args[1].match(/\[(.*?)\]/);
+        const attrIds = attrIdsMatch 
+          ? attrIdsMatch[1].replace(/'/g, '').replace(/"/g, '').split(',').map(s => s.trim()).filter(Boolean)
+          : [];
+        const price = parseFloat(args[10]);
+        const qty = parseInt(args[2], 10);
+        const availability = qty > 0 ? 'available' : 'out_of_stock';
+        psCombinations.push({ comboId, attrIds, price, availability });
+      }
+    }
+
+    const attrLabelMap = {};
+    const optRe = /<option\b[^>]*value="(\d+)"[^>]*(?:title="([^"]*)")?[^>]*>([^<]*)<\/option>/gi;
+    let optM;
+    while ((optM = optRe.exec(html)) !== null) {
+      const attrId = optM[1];
+      const titleLabel = (optM[2] || '').trim();
+      const innerLabel = (optM[3] || '').trim();
+      const label = titleLabel || innerLabel;
+      if (label) attrLabelMap[attrId] = label;
+    }
+
+    if (psCombinations.length === 0) {
+      const jsonLdRegex = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+      let jsonLdMatch;
+      let singlePrice = null;
+      let singleAvailability = 'available';
+      while ((jsonLdMatch = jsonLdRegex.exec(html)) !== null) {
+        try {
+          const data = JSON.parse(jsonLdMatch[1]);
+          if (data['@type'] === 'Product' && data.offers && data.offers.price) {
+            singlePrice = parseFloat(data.offers.price);
+            if (data.offers.availability) {
+              const av = String(data.offers.availability).toLowerCase();
+              if (av.includes('outofstock')) {
+                singleAvailability = 'out_of_stock';
+              } else if (av.includes('preorder') || av.includes('backorder')) {
+                singleAvailability = 'orderable';
+              }
+            }
+          }
+        } catch {}
+      }
+      if (singlePrice && !isNaN(singlePrice)) {
+        psCombinations.push({ comboId: 'single', attrIds: [], price: singlePrice, availability: singleAvailability });
+      }
+    }
+
+    for (const combo of psCombinations) {
+      const labels = combo.attrIds.map(id => attrLabelMap[id] || '').join(' ');
+      const seeds = this.parseSeedCount(labels) || this.parseSeedCount(combo.attrIds.map(id => attrLabelMap[id] || id).join(' ')) || 1;
+      const price = combo.price;
+      const availability = combo.availability || 'available';
+
+      if (seeds > 0 && price > 0) {
+        offers.push({ seeds, price, availability });
+      }
+    }
+
+    return offers;
+  }
 }

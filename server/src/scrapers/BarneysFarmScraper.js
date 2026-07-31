@@ -230,34 +230,18 @@ export class BarneysFarmScraper extends BaseScraper {
     });
 
     // Parse offers
-    const liMatches = html.match(/<li\b[^>]*>[\s\S]*?<\/li>/gi) || [];
-    const packLis = liMatches.filter(li => li.includes('packsize_num') || li.includes('packsize_price'));
-
+    const rawOffers = this.parseOffersFromHtml(html);
     let offersCreated = 0;
-    for (const li of packLis) {
-      const numMatch = li.match(/class=["']packsize_num["'][^>]*>([\s\S]*?)<\/span>/i);
-      const priceMatch = li.match(/class=["']packsize_price["'][^>]*>([\s\S]*?)<\/span>/i);
-
-      const numText = numMatch ? numMatch[1].replace(/<[^>]+>/g, '').trim() : '';
-      const priceText = priceMatch ? priceMatch[1].replace(/<[^>]+>/g, '').replace('&euro;', '€').trim() : '';
-
-      const seedsMatch = numText.match(/(\d+)/);
-      const seeds = seedsMatch ? parseInt(seedsMatch[1], 10) : 1;
-
-      const pMatch = priceText.match(/([\d.,]+)/);
-      const price = pMatch ? parseFloat(pMatch[1].replace(',', '.')) : 0;
-
-      if (seeds > 0 && price > 0) {
-        await this.insertOffer({
-          strainId,
-          url,
-          seeds,
-          price,
-          availability: 'available'
-        });
-        offersCreated++;
-        scraperStatus.productsScraped++;
-      }
+    for (const off of rawOffers) {
+      await this.insertOffer({
+        strainId,
+        url,
+        seeds: off.seeds,
+        price: off.price,
+        availability: 'available'
+      });
+      offersCreated++;
+      scraperStatus.productsScraped++;
     }
 
     return {
@@ -266,5 +250,34 @@ export class BarneysFarmScraper extends BaseScraper {
       breeder: "Barney's Farm",
       offersCreated,
     };
+  }
+
+  parseOffersFromHtml(html) {
+    const offers = [];
+    const liMatches = html.match(/<li\b[^>]*>[\s\S]*?<\/li>/gi) || [];
+    const packLis = liMatches.filter(li => li.includes('packsize_num') || li.includes('packsize_price'));
+
+    for (const li of packLis) {
+      const numMatch = li.match(/class=["']packsize_num["'][^>]*>([\s\S]*?)<\/span>/i);
+      const priceMatch = li.match(/class=["']packsize_price["'][^>]*>([\s\S]*?)<\/span>/i);
+
+      const numText = numMatch ? numMatch[1].replace(/<[^>]+>/g, '').trim() : '';
+      let priceText = priceMatch ? priceMatch[1].replace(/<[^>]+>/g, '').replace('&euro;', '€').trim() : '';
+
+      // Strip sale / line-through price if original higher price is shown in span style
+      priceText = priceText.replace(/<span[^>]*style="[^"]*line-through[^"]*"[^>]*>[\s\S]*?<\/span>/gi, '');
+
+      const seedsMatch = numText.match(/(\d+)/);
+      const seeds = seedsMatch ? parseInt(seedsMatch[1], 10) : 1;
+
+      const pMatch = priceText.match(/([\d.,]+)/);
+      const price = pMatch ? parseFloat(pMatch[1].replace(',', '.')) : 0;
+
+      if (seeds > 0 && price > 0) {
+        offers.push({ seeds, price });
+      }
+    }
+
+    return offers;
   }
 }

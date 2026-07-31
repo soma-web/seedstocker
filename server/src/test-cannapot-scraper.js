@@ -13,6 +13,10 @@ function runCannapotScraperTests() {
 
   // Seed Type Tests
   assert.strictEqual(scraper.extractSeedType('6 fem'), 'feminized');
+  assert.strictEqual(scraper.extractSeedType('10 reg'), 'regular');
+  assert.strictEqual(scraper.extractSeedType('10 reg.'), 'regular');
+  assert.strictEqual(scraper.extractSeedType('10 reg ( +€ 63,20 )'), 'regular');
+  assert.strictEqual(scraper.extractSeedType('5 fem ( +€ 21,60 )'), 'feminized');
   assert.strictEqual(scraper.extractSeedType('6 feminisierte Samen'), 'feminized');
   assert.strictEqual(scraper.extractSeedType('reguläre Samen'), 'regular');
   assert.strictEqual(scraper.extractSeedType('regular seeds'), 'regular');

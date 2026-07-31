@@ -20,6 +20,7 @@
     "test:hansbrainfood": "node src/test-hansbrainfood-scraper.js",
     "test:gasstationco": "node src/test-gasstationco-scraper.js",
     "test:db-integrity": "node src/test-db-integrity.js",
+    "export:variance": "node src/export-price-variance-report.js",
     "test": "node src/test-encoding.js && node src/test-normalization.js && node src/test-cannapot-scraper.js && node src/test-sensiseeds-scraper.js && node src/test-dutchpassion-scraper.js && node src/test-gasstationlu-scraper.js && node src/test-zamnesia-scraper.js && node src/test-barneysfarm-scraper.js && node src/test-houseofseeds-scraper.js && node src/test-hansbrainfood-scraper.js && node src/test-gasstationco-scraper.js && node src/test-db-integrity.js"
   },
   "dependencies": {
