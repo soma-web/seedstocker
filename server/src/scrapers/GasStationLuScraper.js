@@ -109,18 +109,47 @@ export class GasStationLuScraper extends ShopifyScraper {
   }
 
   parseSeedCount(variantTitle, productTitle = '') {
-    // 1. Check variantTitle first if present and not "Default Title"
-    if (variantTitle && typeof variantTitle === 'string' && variantTitle.trim().toLowerCase() !== 'default title') {
-      const vMatch = variantTitle.match(/(\d+)/);
-      if (vMatch) {
-        const count = parseInt(vMatch[1], 10);
+    const isDefault = (str) => !str || typeof str !== 'string' || str.trim().toLowerCase() === 'default title' || str.trim() === '';
+
+    const sanitizeTitle = (str) => {
+      if (!str) return '';
+      return str
+        .replace(/#\d+/g, '')
+        .replace(/\b\d+\s*[\u00d7xX]\s*/g, '');
+    };
+
+    if (!isDefault(variantTitle)) {
+      const cleanV = variantTitle.trim();
+
+      const promoMatch = cleanV.match(/^(\d+)\s*\+/);
+      if (promoMatch) {
+        const count = parseInt(promoMatch[1], 10);
+        if (!isNaN(count) && count > 0) return count;
+      }
+
+      const sanitizedV = sanitizeTitle(cleanV);
+      const explicitV = sanitizedV.match(/(\d+)\+?\s*(?:feminized|feminised|regular|regulär|autoflower|autoflowering)?\s*(?:seeds|samen|stk|stück|pack|pk)\b/i);
+      if (explicitV) {
+        const count = parseInt(explicitV[1], 10);
+        if (!isNaN(count) && count > 0) return count;
+      }
+
+      const numV = cleanV.match(/^\s*(\d+)\s*(?:pack|pk|er|stk|stück|seeds|samen)?\s*$/i);
+      if (numV) {
+        const count = parseInt(numV[1], 10);
+        if (!isNaN(count) && count > 0) return count;
+      }
+
+      const explicitFullV = sanitizedV.match(/(\d+)\+?\s*(?:feminized|feminised|regular|regulär|autoflower|autoflowering)?\s*seeds/i);
+      if (explicitFullV) {
+        const count = parseInt(explicitFullV[1], 10);
         if (!isNaN(count) && count > 0) return count;
       }
     }
 
-    // 2. Check productTitle for seed count patterns (e.g., "10 seeds", "5 feminized seeds", "8+ seeds")
-    if (productTitle && typeof productTitle === 'string') {
-      const pMatch = productTitle.match(/(\d+)\+?\s*(?:feminized|feminised|regular|regulär|autoflower|autoflowering)?\s*seeds/i);
+    if (!isDefault(productTitle)) {
+      const sanitizedP = sanitizeTitle(productTitle);
+      const pMatch = sanitizedP.match(/(\d+)\+?\s*(?:feminized|feminised|regular|regulär|autoflower|autoflowering)?\s*seeds/i);
       if (pMatch) {
         const count = parseInt(pMatch[1], 10);
         if (!isNaN(count) && count > 0) return count;
@@ -359,6 +388,74 @@ export class GasStationLuScraper extends ShopifyScraper {
   async scrapeSingle(url) {
     this.log('info', `On-demand single page scrape starting for ${url}`);
     
+    if (url.includes('/products/')) {
+      const cleanUrl = url.split('?')[0].replace(/\/$/, '');
+      const jsonUrl = cleanUrl.endsWith('.json') ? cleanUrl : `${cleanUrl}.json`;
+      try {
+        const jsonRes = await this.fetchWithRetry(jsonUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'application/json'
+          }
+        });
+        if (jsonRes && jsonRes.ok) {
+          const contentType = jsonRes.headers.get('content-type') || '';
+          if (contentType.includes('application/json')) {
+            const data = await jsonRes.json();
+            if (data && data.product) {
+              const p = data.product;
+              const title = p.title;
+              if (!this.isInvalidStrainName(title)) {
+                const breeder = this.normalizeBreeder(p.vendor, title);
+                const name = this.normalizeStrainName(title, breeder);
+                const description = p.body_html || '';
+                const tags = p.tags || [];
+                const type = this.determineStrainType(title, (Array.isArray(tags) ? tags.join(' ') : String(tags)) + ' ' + description);
+                const seedType = this.extractSeedType(title, Array.isArray(tags) ? tags : [], description);
+                const specs = this.parseShopifySpecs(description, Array.isArray(tags) ? tags : []);
+
+                const strainId = await this.upsertStrain({
+                  name,
+                  breeder,
+                  type,
+                  seedType,
+                  thc: specs.thc,
+                  cbd: specs.cbd,
+                  strainType: specs.strainType,
+                  floweringTime: specs.floweringTime,
+                  description,
+                  genetics: specs.genetics || null
+                });
+
+                let offersCreated = 0;
+                for (const v of (p.variants || [])) {
+                  const optTitle = v.title || v.option1 || '';
+                  const seeds = this.parseSeedCount(optTitle, title) || 1;
+                  const price = parseFloat(v.price);
+                  const availability = v.available ? 'available' : 'out_of_stock';
+                  const variantUrl = `${cleanUrl}?variant=${v.id}`;
+                  if (!isNaN(price) && price > 0) {
+                    await this.insertOffer({
+                      strainId,
+                      shop: this.shopName,
+                      url: variantUrl,
+                      seeds,
+                      price,
+                      availability
+                    });
+                    offersCreated++;
+                  }
+                }
+                return { name, breeder, shop: this.shopName, offersCreated };
+              }
+            }
+          }
+        }
+      } catch (err) {
+        this.log('warning', `Failed fetching product JSON for ${url}, falling back to HTML parsing: ${err.message}`);
+      }
+    }
+
     let res;
     try {
       res = await this.fetchWithRetry(url, {
@@ -502,7 +599,14 @@ export class GasStationLuScraper extends ShopifyScraper {
 
     if (Array.isArray(offersList) && offersList.length > 0) {
       for (const o of offersList) {
-        const optTitle = o.name || o.title || '';
+        let optTitle = o.name || o.title || '';
+        if (!optTitle && o.url && variants.length > 0) {
+          const varIdMatch = o.url.match(/variant=(\d+)/);
+          if (varIdMatch) {
+            const vObj = variants.find(v => String(v.id) === varIdMatch[1]);
+            if (vObj) optTitle = vObj.title || vObj.name || vObj.option1 || '';
+          }
+        }
         const seeds = this.parseSeedCount(optTitle, title) || 1;
         const price = parseFloat(o.price);
         const availability = o.availability?.includes('InStock') ? 'available' : 'out_of_stock';

@@ -38,25 +38,49 @@ function parseArgs() {
   const options = {
     targetShop: null,
     targetUrl: null,
+    targetStrainId: null,
     limit: null,
     maxAgeHours: null,
     concurrency: 3,
     dryRun: false
   };
 
-  for (const arg of args) {
-    if (arg.startsWith('--shop=')) {
-      options.targetShop = arg.split('=')[1].replace(/^["']|["']$/g, '').trim();
-    } else if (arg.startsWith('--url=')) {
-      options.targetUrl = arg.split('=')[1].replace(/^["']|["']$/g, '').trim();
-    } else if (arg.startsWith('--limit=')) {
-      options.limit = parseInt(arg.split('=')[1], 10) || null;
-    } else if (arg.startsWith('--max-age-hours=')) {
-      options.maxAgeHours = parseFloat(arg.split('=')[1]) || null;
-    } else if (arg.startsWith('--concurrency=')) {
-      options.concurrency = parseInt(arg.split('=')[1], 10) || 3;
-    } else if (arg === '--dry-run') {
+  const cleanVal = (val) => val ? String(val).replace(/^["']|["']$/g, '').trim() : null;
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+
+    if (arg === '--dry-run') {
       options.dryRun = true;
+      continue;
+    }
+
+    let key = arg;
+    let val = null;
+
+    if (arg.includes('=')) {
+      const parts = arg.split('=');
+      key = parts[0];
+      val = parts.slice(1).join('=');
+    } else if (i + 1 < args.length && !args[i + 1].startsWith('--')) {
+      val = args[i + 1];
+      i++; // consume value argument
+    }
+
+    const cleanedVal = cleanVal(val);
+
+    if (key === '--shop') {
+      options.targetShop = cleanedVal;
+    } else if (key === '--url') {
+      options.targetUrl = cleanedVal;
+    } else if (key === '--strain-id' || key === '--strain') {
+      options.targetStrainId = cleanedVal;
+    } else if (key === '--limit') {
+      options.limit = parseInt(cleanedVal, 10) || null;
+    } else if (key === '--max-age-hours') {
+      options.maxAgeHours = parseFloat(cleanedVal) || null;
+    } else if (key === '--concurrency') {
+      options.concurrency = parseInt(cleanedVal, 10) || 3;
     }
   }
 
@@ -108,12 +132,22 @@ function logMessage(type, message) {
 // Helper to parse seeds count from titles/options
 function parseSeedsCount(text) {
   if (!text) return null;
-  const str = String(text).toLowerCase();
+  const str = String(text).trim();
+
+  // N+M promo format (e.g., "3+1", "5+2", "10+4", "6 + 3x")
+  const promoMatch = str.match(/^(\d+)\s*\+/);
+  if (promoMatch) {
+    const num = parseInt(promoMatch[1], 10);
+    if (!isNaN(num) && num > 0 && num <= 1000) return num;
+  }
+
+  // Sanitize pheno numbers (#10) and lineage cross multipliers (10 x Strain)
+  const sanitized = str.replace(/#\d+/g, '').replace(/\b\d+\s*[\u00d7xX]\s*[A-Za-z]/g, '');
 
   // Regex patterns for seed counts
-  const match = str.match(/(\d+)[\s-]*(?:samen|seeds|stk|stück|stk\.|pk|pack|er|x)/i) ||
-    str.match(/pack(?:ung)?[\s-]*(?:von|of)?[\s-]*(\d+)/i) ||
-    str.match(/^(\d+)$/);
+  const match = sanitized.match(/(\d+)\+?[\s-]*(?:samen|seeds|stk|stück|stk\.|pk|pack|er)\b/i) ||
+    sanitized.match(/pack(?:ung)?[\s-]*(?:von|of)?[\s-]*(\d+)/i) ||
+    sanitized.match(/^(\d+)$/);
 
   if (match) {
     const num = parseInt(match[1], 10);
@@ -125,7 +159,7 @@ function parseSeedsCount(text) {
 }
 
 // Parse Shopify product JSON
-async function fetchShopifyProductJson(url) {
+async function fetchShopifyProductJson(url, scraperInst = null) {
   try {
     const cleanUrl = url.split('?')[0].replace(/\/$/, '');
     const jsonUrl = encodeURI(cleanUrl.endsWith('.json') ? cleanUrl : `${cleanUrl}.json`);
@@ -262,7 +296,7 @@ async function scrapeUrlPrices(shopName, url, scraperInst = null) {
   const isShopify = registryEntry?.shopifyJson || url.includes('/products/');
 
   if (isShopify) {
-    const shopifyResult = await fetchShopifyProductJson(url);
+    const shopifyResult = await fetchShopifyProductJson(url, scraperInst);
     if (shopifyResult && (shopifyResult.variants?.length > 0 || shopifyResult.isNotFound)) {
       return shopifyResult;
     }
@@ -331,6 +365,7 @@ async function main() {
   logMessage('info', 'Starting Direct URL Price Scraper CLI...');
   if (options.targetShop) logMessage('info', `Target Shop Filter: "${options.targetShop}"`);
   if (options.targetUrl) logMessage('info', `Target Single URL: "${options.targetUrl}"`);
+  if (options.targetStrainId) logMessage('info', `Target Strain ID: "${options.targetStrainId}"`);
   if (options.maxAgeHours) logMessage('info', `Filter Max Age Hours: ${options.maxAgeHours}h`);
   if (options.limit) logMessage('info', `Limit URLs: ${options.limit}`);
   if (options.dryRun) logMessage('info', `DRY RUN MODE ENABLED (No DB updates)`);
@@ -348,7 +383,8 @@ async function main() {
       scraped_offers.availability,
       scraped_offers.fetched_at AS fetchedAt,
       strains.name AS strainName,
-      strains.breeder AS strainBreeder
+      strains.breeder AS strainBreeder,
+      strains.seed_type AS strainSeedType
     FROM scraped_offers
     JOIN strains ON strains.id = scraped_offers.strain_id
     WHERE 1=1
@@ -363,6 +399,11 @@ async function main() {
   if (options.targetUrl) {
     query += ` AND scraped_offers.url = ?`;
     params.push(options.targetUrl);
+  }
+
+  if (options.targetStrainId) {
+    query += ` AND scraped_offers.strain_id = ?`;
+    params.push(options.targetStrainId);
   }
 
   if (options.maxAgeHours) {
@@ -449,12 +490,19 @@ async function main() {
 
     // Map scraped items back to existing offer records for this URL
     for (const existingOffer of group.offers) {
-      // Find matching scraped item by seeds count
-      let matchedItem = scrapedItems.find(item => item.seeds && item.seeds === existingOffer.seeds);
+      // Find matching scraped item by seeds count AND seedType compatibility
+      let matchedItem = scrapedItems.find(item => {
+        if (!item.seeds || item.seeds !== existingOffer.seeds) return false;
+        if (item.seedType && existingOffer.strainSeedType && item.seedType !== existingOffer.strainSeedType) return false;
+        return true;
+      });
 
-      // Fallback: If page has only 1 variant / price offer, match it to the existing offer for this URL
+      // Fallback: If page has only 1 variant / price offer, match it to the existing offer for this URL (if seedType compatible)
       if (!matchedItem && scrapedItems.length === 1) {
-        matchedItem = scrapedItems[0];
+        const item = scrapedItems[0];
+        if (!item.seedType || !existingOffer.strainSeedType || item.seedType === existingOffer.strainSeedType) {
+          matchedItem = item;
+        }
       }
 
       if (matchedItem) {
@@ -484,9 +532,11 @@ async function main() {
 
     // Also insert any newly discovered seed variants on the web page that don't exist in DB yet
     const mainStrainId = group.offers[0]?.strainId;
+    const mainStrainSeedType = group.offers[0]?.strainSeedType;
     if (mainStrainId) {
       const existingSeedCounts = new Set(group.offers.map(o => o.seeds));
       for (const item of scrapedItems) {
+        if (item.seedType && mainStrainSeedType && item.seedType !== mainStrainSeedType) continue;
         if (item.seeds && item.price && !existingSeedCounts.has(item.seeds)) {
           logMessage('price', `[NEW VARIANT ADDED] Shop: ${group.shop} | StrainID: ${mainStrainId} | Seeds: ${item.seeds} | Price: ${item.price} EUR | URL: ${group.url}`);
           if (!options.dryRun) {
@@ -537,6 +587,7 @@ function printSummaryReport(options) {
     ` Total Duration    : ${durationSec}s`,
     ` Target Shop Filter: ${options.targetShop || 'ALL Registered Shops'}`,
     ` Target Single URL : ${options.targetUrl || 'NONE'}`,
+    ` Target Strain ID  : ${options.targetStrainId || 'NONE'}`,
     ` Dry Run Mode      : ${options.dryRun ? 'YES' : 'NO'}`,
     '',
     ' --- WORKFLOW & METRICS ---',

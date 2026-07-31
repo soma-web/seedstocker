@@ -1,9 +1,42 @@
 import { BaseScraper } from './BaseScraper.js';
+import { db } from '../db.js';
+import { strains } from '../schema.js';
+import { and, sql } from 'drizzle-orm';
 
 export class CannapotScraper extends BaseScraper {
   constructor(logMessage, scrapeMode = 'price') {
     super('Cannapot', logMessage, scrapeMode);
     this.baseUrl = 'https://www.cannapot.com';
+  }
+
+  async upsertStrain(strainData) {
+    const name = (strainData.name || '').replace(/[’‘\`′]/g, "'").trim();
+    const breeder = (strainData.breeder || '').replace(/[’‘\`′]/g, "'").trim();
+    const cleanedSeedType = this.cleanSeedType(strainData.seedType);
+
+    if (name && breeder && cleanedSeedType) {
+      // Look up existing strain by name + breeder
+      const [existingByNameBreeder] = await db.select()
+        .from(strains)
+        .where(and(
+          sql`LOWER(TRIM(${strains.name})) = LOWER(TRIM(${name}))`,
+          sql`LOWER(TRIM(${strains.breeder})) = LOWER(TRIM(${breeder}))`
+        ))
+        .limit(1);
+
+      if (existingByNameBreeder) {
+        const existingSeedType = this.cleanSeedType(existingByNameBreeder.seedType);
+        // If DB strain has an explicit seedType (e.g. 'feminized') that conflicts with incoming seedType (e.g. 'regular')
+        if (existingSeedType && existingSeedType !== cleanedSeedType) {
+          if (this.scrapeMode === 'price') {
+            this.log('info', `[price mode] Skipping Cannapot offer for seedType "${cleanedSeedType}" on "${name}" (${breeder}) — DB strain is "${existingSeedType}" (${existingByNameBreeder.id}).`);
+            return null;
+          }
+        }
+      }
+    }
+
+    return super.upsertStrain(strainData);
   }
 
   getHeaders() {
@@ -382,10 +415,10 @@ export class CannapotScraper extends BaseScraper {
       type = 'fast_flowering';
     }
 
-    const explicitSeedType = this.extractSeedType(`${rawTitle} ${summaryText} ${url}`);
+    const explicitSeedType = this.extractSeedType(`${rawTitle} ${url}`) || meta.seedType;
     if (explicitSeedType) {
       seedType = explicitSeedType;
-    } else if (lowerText.includes('regular') || lowerText.includes('regulär') || lowerText.includes('regulaere')) {
+    } else if (/\b(?:regular|regul[äa]r|regulaere)\b/i.test(rawTitle) || url.toLowerCase().includes('/regulaere-samen/')) {
       seedType = 'regular';
     }
 
@@ -490,6 +523,10 @@ export class CannapotScraper extends BaseScraper {
 
     if (isNaN(basePrice)) basePrice = 0;
 
+    const titleMatch = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+    const rawTitle = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, '').trim() : '';
+    const pageSeedType = this.extractSeedType(rawTitle) || 'feminized';
+
     const labelMatches = html.match(/<label\b[^>]*class=["'][^"']*attribsRadioButton[^"']*["'][\s\S]*?<\/label>/gi) || [];
 
     if (labelMatches.length > 0) {
@@ -506,16 +543,17 @@ export class CannapotScraper extends BaseScraper {
           price = parseFloat((basePrice + delta).toFixed(2));
         }
 
+        const offerSeedType = this.extractSeedType(labelText) || pageSeedType;
+
         if (seeds > 0 && price > 0) {
-          offers.push({ seeds, price });
+          offers.push({ seeds, price, seedType: offerSeedType });
         }
       }
     } else if (basePrice > 0) {
-      const titleMatch = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
-      const rawTitle = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, '').trim() : '';
       const seedsMatch = rawTitle.match(/(\d+)\s*(?:stk|samen|seeds|pack)/i);
       const seeds = seedsMatch ? parseInt(seedsMatch[1], 10) : 1;
-      offers.push({ seeds, price: basePrice });
+      const offerSeedType = this.extractSeedType(rawTitle) || pageSeedType;
+      offers.push({ seeds, price: basePrice, seedType: offerSeedType });
     }
 
     return offers;

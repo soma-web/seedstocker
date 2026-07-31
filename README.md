@@ -27,7 +27,7 @@ node server/src/run-url-price-scraper.js --shop="Gas Station Lu"
 ### Nur Angebote aktualisieren, die älter als 24 Stunden sind
 node server/src/run-url-price-scraper.js --max-age-hours=24
 ### Testlauf ohne Datenbankänderungen (Dry Run)
-node server/src/run-url-price-scraper.js --shop="Zamnesia" --dry-run --limit=10
+node server/src/run-url-price-scraper.js --shop="Zamnesia" --dry-run --limit=10  --strain-id "STRAINID"
 
 ### Preis-Varianz-Report exportieren (speichert in server/logs/price_history_variance.txt)
 node server/src/export-price-variance-report.js

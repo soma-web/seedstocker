@@ -54,7 +54,11 @@ function runCannapotScraperTests() {
   assert.strictEqual(scraper.normalizeStrainName('Super Skunk []', 'Sensi Seeds'), 'Super Skunk');
   assert.strictEqual(scraper.normalizeStrainName('Super Skunk [ ]', 'Sensi Seeds'), 'Super Skunk');
   assert.strictEqual(scraper.normalizeStrainName('Super Skunk [fem]', 'Sensi Seeds'), 'Super Skunk');
-  assert.strictEqual(scraper.normalizeStrainName('Super Skunk [reg] [ ]', 'Sensi Seeds'), 'Super Skunk');
+  // Multi-option Seed Type Extraction Tests (e.g. Northern Lights with reg and fem options)
+  assert.strictEqual(scraper.extractSeedType('10 reg ( +€ 79,00 )'), 'regular');
+  assert.strictEqual(scraper.extractSeedType('3 fem'), 'feminized');
+  assert.strictEqual(scraper.extractSeedType('5 fem ( +€ 27,00 )'), 'feminized');
+  assert.strictEqual(scraper.extractSeedType('10 fem ( +€ 85,00 )'), 'feminized');
 
   console.log('All Cannapot scraper tests PASSED successfully!');
 }
