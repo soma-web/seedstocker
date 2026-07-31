@@ -1,5 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { BaseSQLiteDatabase } from 'drizzle-orm/sqlite-core/db';
+import { SQLiteSyncDialect } from 'drizzle-orm/sqlite-core/dialect';
+import { BetterSQLiteSession } from 'drizzle-orm/better-sqlite3/session';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -60,5 +62,13 @@ sqlite.prepare = function(sql) {
   return stmt;
 };
 
-export const db = drizzle(sqlite);
+function createDrizzleNodeSqlite(client) {
+  const dialect = new SQLiteSyncDialect();
+  const session = new BetterSQLiteSession(client, dialect, undefined, {});
+  const db = new BaseSQLiteDatabase('sync', dialect, session, undefined);
+  db.$client = client;
+  return db;
+}
+
+export const db = createDrizzleNodeSqlite(sqlite);
 export { sqlite };
