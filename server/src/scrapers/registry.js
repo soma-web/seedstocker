@@ -8,6 +8,7 @@ import { DutchPassionScraper } from './DutchPassionScraper.js';
 import { BarneysFarmScraper } from './BarneysFarmScraper.js';
 import { CannapotScraper } from './CannapotScraper.js';
 import { HumboldtSeedCompanyScraper } from './HumboldtSeedCompanyScraper.js';
+import { OaseedsScraper } from './OaseedsScraper.js';
 
 /**
  * Central scraper registry. Every new shop scraper is added here once,
@@ -84,6 +85,13 @@ export const SCRAPER_REGISTRY = [
     domain: 'humboldtseedcompany.es',
     shopifyJson: false,
     defaultUrl: 'https://humboldtseedcompany.es/de/feminized-seeds/'
+  },
+  {
+    name: 'Oaseeds',
+    ScraperClass: OaseedsScraper,
+    domain: 'oaseeds.com',
+    shopifyJson: false,
+    defaultUrl: 'https://oaseeds.com/en/feminized-seeds'
   }
 ];
 

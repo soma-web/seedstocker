@@ -145,8 +145,9 @@ function parseSeedsCount(text) {
   const sanitized = str.replace(/#\d+/g, '').replace(/\b\d+\s*[\u00d7xX]\s*[A-Za-z]/g, '');
 
   // Regex patterns for seed counts
-  const match = sanitized.match(/(\d+)\+?[\s-]*(?:samen|seeds|stk|stück|stk\.|pk|pack|er)\b/i) ||
+  const match = sanitized.match(/(\d+)\+?[\s-]*(?:samen|seeds|stk|stück|stk\.|er)\b/i) ||
     sanitized.match(/pack(?:ung)?[\s-]*(?:von|of)?[\s-]*(\d+)/i) ||
+    sanitized.match(/(\d+)\+?[\s-]*(?:pk|pack)\b/i) ||
     sanitized.match(/^(\d+)$/);
 
   if (match) {
@@ -315,7 +316,7 @@ async function scrapeUrlPrices(shopName, url, scraperInst = null) {
       }
       if (res.ok) {
         const html = await res.text();
-        const offers = scraperInst.parseOffersFromHtml(html);
+        const offers = await scraperInst.parseOffersFromHtml(html, url);
         if (offers && offers.length > 0) {
           return { isNotFound: false, offers };
         }
@@ -614,7 +615,18 @@ function printSummaryReport(options) {
   console.log(lines.join('\n'));
 }
 
-main().catch(err => {
-  logMessage('error', `Fatal unhandled error in Direct URL Scraper: ${err.stack || err.message}`);
-  process.exit(1);
-});
+export {
+  parseSeedsCount,
+  fetchShopifyProductJson,
+  fetchHtmlJsonLd,
+  scrapeUrlPrices,
+  parseArgs
+};
+
+const isMainModule = process.argv[1] && path.resolve(process.argv[1]) === path.resolve(__filename);
+if (isMainModule) {
+  main().catch(err => {
+    logMessage('error', `Fatal unhandled error in Direct URL Scraper: ${err.stack || err.message}`);
+    process.exit(1);
+  });
+}
