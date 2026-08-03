@@ -138,6 +138,11 @@ const BREEDER_ALIASES = new Map([
   ['growers choice seeds', 'Growers Choice'],
   ['grower choice', 'Growers Choice'],
   ['growserchoice', 'Growers Choice'],
+
+  // Zecret Flavorz
+  ['zecret flavorz', 'Zecret Flavorz'],
+  ['zecretflavorz', 'Zecret Flavorz'],
+  ['zecret flavorz seeds', 'Zecret Flavorz'],
   ['growser choice', 'Growers Choice'],
   ['nirvana', 'Nirvana Seeds'],
   ['nirvana seeds', 'Nirvana Seeds'],

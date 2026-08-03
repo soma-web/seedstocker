@@ -9,6 +9,7 @@ import { BarneysFarmScraper } from './BarneysFarmScraper.js';
 import { CannapotScraper } from './CannapotScraper.js';
 import { HumboldtSeedCompanyScraper } from './HumboldtSeedCompanyScraper.js';
 import { OaseedsScraper } from './OaseedsScraper.js';
+import { ZecretFlavorzScraper } from './ZecretFlavorzScraper.js';
 
 /**
  * Central scraper registry. Every new shop scraper is added here once,
@@ -92,6 +93,13 @@ export const SCRAPER_REGISTRY = [
     domain: 'oaseeds.com',
     shopifyJson: false,
     defaultUrl: 'https://oaseeds.com/en/feminized-seeds'
+  },
+  {
+    name: 'Zecret Flavorz',
+    ScraperClass: ZecretFlavorzScraper,
+    domain: 'zecretflavorz.com',
+    shopifyJson: false,
+    defaultUrl: 'https://zecretflavorz.com/zecretshop/'
   }
 ];
 
