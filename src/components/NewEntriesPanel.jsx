@@ -47,6 +47,7 @@ export default function NewEntriesPanel({
 
   // Selection for bulk actions
   const [selectedIds, setSelectedIds] = useState([]);
+  const [actionError, setActionError] = useState(null);
 
   // Merge modal state
   const [mergeTargetEntry, setMergeTargetEntry] = useState(null);
@@ -145,15 +146,21 @@ export default function NewEntriesPanel({
     if (idList.length === 0) return;
 
     setActionLoading(true);
+    setActionError(null);
     try {
       const res = await apiPost('/api/new-entries/approve', { ids: idList });
       if (res.success) {
         fetchEntries();
         setSelectedIds([]);
         if (onRefreshData) onRefreshData();
+        if (res.warnings && res.warnings.length > 0) {
+          setActionError(`Warnung: ${res.warnings.join(' | ')}`);
+        }
+      } else if (res.error) {
+        setActionError(res.error);
       }
     } catch (err) {
-      alert(`Fehler beim Freigeben: ${err.message}`);
+      setActionError(`Fehler beim Freigeben: ${err.message}`);
     } finally {
       setActionLoading(false);
     }
@@ -164,6 +171,7 @@ export default function NewEntriesPanel({
     if (idList.length === 0) return;
 
     setActionLoading(true);
+    setActionError(null);
     try {
       const res = await apiPost('/api/new-entries/reject', { ids: idList });
       if (res.success) {
@@ -171,7 +179,7 @@ export default function NewEntriesPanel({
         setSelectedIds([]);
       }
     } catch (err) {
-      alert(`Fehler beim Ablehnen: ${err.message}`);
+      setActionError(`Fehler beim Ablehnen: ${err.message}`);
     } finally {
       setActionLoading(false);
     }
@@ -181,6 +189,7 @@ export default function NewEntriesPanel({
     if (!mergeTargetEntry || !selectedMergeStrainId) return;
 
     setActionLoading(true);
+    setActionError(null);
     try {
       const res = await apiPost('/api/new-entries/merge', {
         id: mergeTargetEntry.id,
@@ -191,9 +200,11 @@ export default function NewEntriesPanel({
         setSelectedMergeStrainId('');
         fetchEntries();
         if (onRefreshData) onRefreshData();
+      } else if (res.error) {
+        setActionError(res.error);
       }
     } catch (err) {
-      alert(`Fehler beim Zuordnen: ${err.message}`);
+      setActionError(`Fehler beim Zuordnen: ${err.message}`);
     } finally {
       setActionLoading(false);
     }
@@ -302,6 +313,26 @@ export default function NewEntriesPanel({
             </button>
           </div>
         </div>
+
+        {/* Action Error / Warning Banner */}
+        {actionError && (
+          <div className="mb-5 p-4 rounded-2xl bg-red-950/80 border-2 border-red-500 text-red-200 text-sm font-semibold flex items-center justify-between shadow-2xl shadow-red-900/50 backdrop-blur-md animate-in fade-in slide-in-from-top-2">
+            <div className="flex items-center gap-3">
+              <ShieldAlert className="w-6 h-6 text-red-400 shrink-0" />
+              <div>
+                <div className="text-red-400 font-bold uppercase text-xs tracking-wider">Kritischer Import-Fehler</div>
+                <div className="mt-0.5 text-slate-100">{actionError}</div>
+              </div>
+            </div>
+            <button 
+              onClick={() => setActionError(null)}
+              className="p-1.5 hover:bg-red-900/50 rounded-xl text-red-400 hover:text-red-200 transition-colors"
+              title="Schließen"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        )}
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">

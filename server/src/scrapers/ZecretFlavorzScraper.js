@@ -405,16 +405,18 @@ export class ZecretFlavorzScraper extends BaseScraper {
 
         // Description handling
         if (product.description) {
-          await this.saveShopDescription(strainId, product.description);
+          try {
+            await this.upsertShopDescription(strainId, this.shopName, product.description);
+          } catch (descErr) {}
         }
 
-        // Upsert offers & price history
+        // Insert offers & price history
         for (const offer of product.offers) {
-          await this.upsertOffer({
+          await this.insertOffer({
             strainId,
+            url: product.url,
             seeds: offer.seeds,
             price: offer.price,
-            url: product.url,
             availability: offer.availability
           });
         }
