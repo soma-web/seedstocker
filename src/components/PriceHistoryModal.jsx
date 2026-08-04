@@ -21,7 +21,11 @@ export default function PriceHistoryModal({
     'Sensi Seeds': { stroke: '#10b981' },
     'Dutch Passion': { stroke: '#f59e0b' },
     "Barney's Farm": { stroke: '#eab308' },
-    'Cannapot': { stroke: '#10b981' }
+    'Cannapot': { stroke: '#8b5cf6' },
+    'Humboldt Seed Company EU': { stroke: '#ec4899' },
+    'Oaseeds': { stroke: '#3b82f6' },
+    'Zecret Flavorz': { stroke: '#6366f1' },
+    'Mephisto Genetics': { stroke: '#10b981' }
   };
   const defaultColors = { stroke: '#94a3b8' };
 

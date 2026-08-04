@@ -73,6 +73,10 @@ export default function StrainFilters({
             <option value="Dutch Passion">Dutch Passion</option>
             <option value="Barney's Farm">Barney's Farm</option>
             <option value="Cannapot">Cannapot</option>
+            <option value="Humboldt Seed Company EU">Humboldt Seed Company EU</option>
+            <option value="Oaseeds">Oaseeds</option>
+            <option value="Zecret Flavorz">Zecret Flavorz</option>
+            <option value="Mephisto Genetics">Mephisto Genetics</option>
           </select>
         </div>
 

@@ -10,6 +10,7 @@ import { CannapotScraper } from './CannapotScraper.js';
 import { HumboldtSeedCompanyScraper } from './HumboldtSeedCompanyScraper.js';
 import { OaseedsScraper } from './OaseedsScraper.js';
 import { ZecretFlavorzScraper } from './ZecretFlavorzScraper.js';
+import { MephistoGeneticsScraper } from './MephistoGeneticsScraper.js';
 
 /**
  * Central scraper registry. Every new shop scraper is added here once,
@@ -100,6 +101,13 @@ export const SCRAPER_REGISTRY = [
     domain: 'zecretflavorz.com',
     shopifyJson: false,
     defaultUrl: 'https://zecretflavorz.com/zecretshop/'
+  },
+  {
+    name: 'Mephisto Genetics',
+    ScraperClass: MephistoGeneticsScraper,
+    domain: 'mephistogenetics.com',
+    shopifyJson: true,
+    defaultUrl: 'https://mephistogenetics.com/products.json'
   }
 ];
 

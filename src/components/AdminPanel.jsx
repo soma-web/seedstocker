@@ -31,7 +31,10 @@ const DEFAULT_SHOPS = [
   'Dutch Passion',
   "Barney's Farm",
   'Cannapot',
-  'Humboldt Seed Company EU'
+  'Humboldt Seed Company EU',
+  'Oaseeds',
+  'Zecret Flavorz',
+  'Mephisto Genetics'
 ];
 
 export default function AdminPanel({
