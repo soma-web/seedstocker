@@ -13,6 +13,19 @@ export class ZamnesiaScraper extends BaseScraper {
     super('Zamnesia', logMessage, scrapeMode);
   }
 
+  normalizeStrainName(title, breeder) {
+    if (!title) return '';
+    let name = this.decodeHtmlEntities(title);
+    name = super.normalizeStrainName(name, breeder || 'Zamnesia Seeds');
+    if (name) {
+      name = name
+        .replace(/\s+(?:femini?[sz]ie?rt|feminized|regulär|regular)\s*$/i, '')
+        .replace(/\s*\(\s*(?:femini?[sz]ie?rt|feminized|regulär|regular)\s*\)\s*$/i, '')
+        .trim();
+    }
+    return name;
+  }
+
   parseArgs(argsStr) {
     const args = [];
     let current = '';

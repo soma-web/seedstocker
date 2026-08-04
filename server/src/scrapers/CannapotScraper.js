@@ -15,7 +15,21 @@ export class CannapotScraper extends BaseScraper {
     const cleanedSeedType = this.cleanSeedType(strainData.seedType);
 
     if (name && breeder && cleanedSeedType) {
-      // Look up existing strain by name + breeder
+      // 1. Look up exact strain by name + breeder + seedType first
+      const [existingExact] = await db.select()
+        .from(strains)
+        .where(and(
+          sql`LOWER(TRIM(${strains.name})) = LOWER(TRIM(${name}))`,
+          sql`LOWER(TRIM(${strains.breeder})) = LOWER(TRIM(${breeder}))`,
+          sql`LOWER(TRIM(${strains.seedType})) = LOWER(TRIM(${cleanedSeedType}))`
+        ))
+        .limit(1);
+
+      if (existingExact) {
+        return existingExact.id;
+      }
+
+      // 2. Look up existing strain by name + breeder
       const [existingByNameBreeder] = await db.select()
         .from(strains)
         .where(and(
@@ -25,14 +39,7 @@ export class CannapotScraper extends BaseScraper {
         .limit(1);
 
       if (existingByNameBreeder) {
-        const existingSeedType = this.cleanSeedType(existingByNameBreeder.seedType);
-        // If DB strain has an explicit seedType (e.g. 'feminized') that conflicts with incoming seedType (e.g. 'regular')
-        if (existingSeedType && existingSeedType !== cleanedSeedType) {
-          if (this.scrapeMode === 'price') {
-            this.log('info', `[price mode] Skipping Cannapot offer for seedType "${cleanedSeedType}" on "${name}" (${breeder}) — DB strain is "${existingSeedType}" (${existingByNameBreeder.id}).`);
-            return null;
-          }
-        }
+        return existingByNameBreeder.id;
       }
     }
 
@@ -525,7 +532,6 @@ export class CannapotScraper extends BaseScraper {
 
     const titleMatch = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
     const rawTitle = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, '').trim() : '';
-    const pageSeedType = this.extractSeedType(rawTitle) || 'feminized';
 
     const labelMatches = html.match(/<label\b[^>]*class=["'][^"']*attribsRadioButton[^"']*["'][\s\S]*?<\/label>/gi) || [];
 
@@ -543,17 +549,14 @@ export class CannapotScraper extends BaseScraper {
           price = parseFloat((basePrice + delta).toFixed(2));
         }
 
-        const offerSeedType = this.extractSeedType(labelText) || pageSeedType;
-
         if (seeds > 0 && price > 0) {
-          offers.push({ seeds, price, seedType: offerSeedType });
+          offers.push({ seeds, price, availability: 'available' });
         }
       }
     } else if (basePrice > 0) {
       const seedsMatch = rawTitle.match(/(\d+)\s*(?:stk|samen|seeds|pack)/i);
       const seeds = seedsMatch ? parseInt(seedsMatch[1], 10) : 1;
-      const offerSeedType = this.extractSeedType(rawTitle) || pageSeedType;
-      offers.push({ seeds, price: basePrice, seedType: offerSeedType });
+      offers.push({ seeds, price: basePrice, availability: 'available' });
     }
 
     return offers;
