@@ -357,7 +357,7 @@ export class BaseScraper {
       .where(and(...strainConditions))
       .limit(1);
 
-    // Fallback: if seedType condition was included and no match was found, retry by name + breeder alone
+    // Fallback 1: if seedType condition was included and no match was found, retry by name + breeder alone
     if (!existing && cleanedSeedType) {
       [existing] = await db.select()
         .from(strains)
@@ -366,6 +366,26 @@ export class BaseScraper {
           sql`LOWER(TRIM(${strains.breeder})) = LOWER(TRIM(${breeder}))`
         ))
         .limit(1);
+    }
+
+    // Fallback 2: try matching with " FF" or " Fast Flowering" or " Fast Version" suffix in DB strain name
+    if (!existing) {
+      const candidates = [
+        `${name} FF`,
+        `${name} Fast Flowering`,
+        `${name} Fast Version`,
+        `${name} Fast`
+      ];
+      for (const cand of candidates) {
+        [existing] = await db.select()
+          .from(strains)
+          .where(and(
+            sql`LOWER(TRIM(${strains.name})) = LOWER(TRIM(${cand}))`,
+            sql`LOWER(TRIM(${strains.breeder})) = LOWER(TRIM(${breeder}))`
+          ))
+          .limit(1);
+        if (existing) break;
+      }
     }
 
     if (existing) {

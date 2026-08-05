@@ -22,9 +22,29 @@ export default function StrainFilters({
   setMaxFloweringFilter,
   selectedLetter,
   setSelectedLetter,
-  breeders = []
+  breeders = [],
+  shops = []
 }) {
   const letters = ['All', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''), '#'];
+  
+  const DEFAULT_SHOPS = [
+    "Barney's Farm",
+    'Cannapot',
+    'Dutch Passion',
+    'Gas Station Co. Seeds',
+    'Gas Station LU',
+    'Hans Brainfood',
+    'House of Seeds',
+    'Humboldt Seed Company EU',
+    'Linda Seeds',
+    'Mephisto Genetics',
+    'Oaseeds',
+    'Sensi Seeds',
+    'Zamnesia',
+    'Zecret Flavorz'
+  ];
+
+  const shopList = shops.length > 0 ? shops : DEFAULT_SHOPS;
 
   return (
     <div className="glass-panel rounded-2xl p-5 mb-8 flex flex-col gap-5">
@@ -64,19 +84,9 @@ export default function StrainFilters({
             className="w-full h-12 px-4 bg-slate-950 border border-slate-900 rounded-xl text-slate-100 focus:outline-none focus:border-emerald-500/50 transition-colors text-sm"
           >
             <option value="">All Shops</option>
-            <option value="Zamnesia">Zamnesia</option>
-            <option value="House of Seeds">House of Seeds</option>
-            <option value="Hans Brainfood">Hans Brainfood</option>
-            <option value="Gas Station Co. Seeds">Gas Station Co. Seeds</option>
-            <option value="Gas Station LU">Gas Station LU</option>
-            <option value="Sensi Seeds">Sensi Seeds</option>
-            <option value="Dutch Passion">Dutch Passion</option>
-            <option value="Barney's Farm">Barney's Farm</option>
-            <option value="Cannapot">Cannapot</option>
-            <option value="Humboldt Seed Company EU">Humboldt Seed Company EU</option>
-            <option value="Oaseeds">Oaseeds</option>
-            <option value="Zecret Flavorz">Zecret Flavorz</option>
-            <option value="Mephisto Genetics">Mephisto Genetics</option>
+            {shopList.map(s => (
+              <option key={s} value={s}>{s}</option>
+            ))}
           </select>
         </div>
 

@@ -25,6 +25,7 @@ import NewEntriesPanel from './components/NewEntriesPanel';
 export default function App() {
   const [strains, setStrains] = useState([]);
   const [breeders, setBreeders] = useState([]);
+  const [shops, setShops] = useState([]);
   const [search, setSearch] = useState('');
   const [selectedBreeder, setSelectedBreeder] = useState('');
   const [selectedShop, setSelectedShop] = useState('');
@@ -115,13 +116,15 @@ export default function App() {
       if (typeFilter) q.set('type', typeFilter);
       if (seedTypeFilter) q.set('seedType', seedTypeFilter);
 
-      const [strainsData, breedersData] = await Promise.all([
+      const [strainsData, breedersData, shopsData] = await Promise.all([
         apiGet(`/api/strains?${q.toString()}`),
-        apiGet('/api/breeders')
+        apiGet('/api/breeders'),
+        apiGet('/api/shops')
       ]);
 
       setStrains(strainsData);
       setBreeders(breedersData);
+      setShops(shopsData);
     } catch (err) {
       console.error('Error fetching data:', err);
     } finally {
@@ -710,6 +713,7 @@ export default function App() {
             selectedLetter={selectedLetter}
             setSelectedLetter={setSelectedLetter}
             breeders={breeders}
+            shops={shops}
           />
 
           <StrainList

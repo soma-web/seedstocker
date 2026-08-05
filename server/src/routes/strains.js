@@ -596,5 +596,19 @@ export default async function strainRoutes(app) {
       reply.status(500).send({ error: err.message });
     }
   });
+
+  app.get('/api/shops', async (req, reply) => {
+    try {
+      const rows = sqlite.prepare(`
+        SELECT DISTINCT shop 
+        FROM scraped_offers 
+        WHERE shop IS NOT NULL 
+        ORDER BY shop ASC
+      `).all();
+      return rows.map(r => r.shop);
+    } catch (err) {
+      reply.status(500).send({ error: err.message });
+    }
+  });
 }
 

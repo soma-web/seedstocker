@@ -11,6 +11,8 @@ import { HumboldtSeedCompanyScraper } from './HumboldtSeedCompanyScraper.js';
 import { OaseedsScraper } from './OaseedsScraper.js';
 import { ZecretFlavorzScraper } from './ZecretFlavorzScraper.js';
 import { MephistoGeneticsScraper } from './MephistoGeneticsScraper.js';
+import { LindaSeedsScraper } from './LindaSeedsScraper.js';
+
 
 /**
  * Central scraper registry. Every new shop scraper is added here once,
@@ -108,6 +110,13 @@ export const SCRAPER_REGISTRY = [
     domain: 'mephistogenetics.com',
     shopifyJson: true,
     defaultUrl: 'https://mephistogenetics.com/products.json'
+  },
+  {
+    name: 'Linda Seeds',
+    ScraperClass: LindaSeedsScraper,
+    domain: 'linda-seeds.com',
+    shopifyJson: false,
+    defaultUrl: 'https://www.linda-seeds.com/de/feminisierte-hanfsamen-kaufen'
   }
 ];
 

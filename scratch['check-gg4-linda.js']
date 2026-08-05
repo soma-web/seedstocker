@@ -1,0 +1,10 @@
+import { sqlite } from '../server/src/db.js';
+
+const offer = sqlite.prepare(`
+  SELECT o.*, s.id as strain_id, s.name as strain_name, s.breeder, s.seed_type, s.strain_type
+  FROM scraped_offers o
+  JOIN strains s ON o.strain_id = s.id
+  WHERE o.url LIKE '%sherbet%' OR o.url LIKE '%gg4%'
+`).all();
+
+console.log('Scraped Offer & Strain:', offer);

@@ -225,7 +225,7 @@ async function fetchShopifyProductJson(url, scraperInst = null) {
 }
 
 // Parse HTML Schema.org JSON-LD for non-Shopify sites
-async function fetchHtmlJsonLd(url) {
+async function fetchHtmlJsonLd(url, scraperInst = null) {
   try {
     const encodedUrl = encodeURI(url);
     const res = await fetch(encodedUrl, {
@@ -247,6 +247,13 @@ async function fetchHtmlJsonLd(url) {
     const jsonLdMatches = [...html.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
 
     const offers = [];
+    const getSeeds = (txt, sku) => {
+      if (scraperInst && typeof scraperInst.parseSeedCount === 'function') {
+        const c = scraperInst.parseSeedCount(txt, sku);
+        if (c !== null) return c;
+      }
+      return parseSeedsCount(`${txt || ''} ${sku || ''}`);
+    };
 
     for (const m of jsonLdMatches) {
       try {
@@ -258,7 +265,29 @@ async function fetchHtmlJsonLd(url) {
           if (!item) continue;
           const type = item['@type'];
           if (type === 'Product' || type === 'ProductGroup' || type === 'IndividualProduct') {
-            const rawOffers = Array.isArray(item.offers) ? item.offers : (item.offers ? [item.offers] : []);
+            let rawOffers = [];
+
+            if (type === 'ProductGroup' && Array.isArray(item.hasVariant)) {
+              for (const variant of item.hasVariant) {
+                const offerObj = variant.offers ? (Array.isArray(variant.offers) ? variant.offers[0] : variant.offers) : variant;
+                rawOffers.push({
+                  name: variant.name || offerObj?.name || item.name,
+                  sku: variant.sku || offerObj?.sku || item.sku,
+                  price: offerObj?.price || variant.price,
+                  availability: offerObj?.availability || variant.availability
+                });
+              }
+            } else {
+              const list = Array.isArray(item.offers) ? item.offers : (item.offers ? [item.offers] : []);
+              for (const o of list) {
+                rawOffers.push({
+                  name: o.name || item.name,
+                  sku: o.sku || item.sku,
+                  price: o.price,
+                  availability: o.availability
+                });
+              }
+            }
 
             for (const offer of rawOffers) {
               if (!offer) continue;
@@ -270,8 +299,7 @@ async function fetchHtmlJsonLd(url) {
               const availability = (availStr.includes('instock') || availStr.includes('in_stock')) ? 'available' :
                 (availStr.includes('outofstock') || availStr.includes('out_of_stock')) ? 'out_of_stock' : 'available';
 
-              const textToSearch = `${offer.name || ''} ${item.name || ''} ${offer.description || ''}`;
-              const seeds = parseSeedsCount(textToSearch);
+              const seeds = getSeeds(offer.name, offer.sku);
 
               offers.push({
                 seeds,
@@ -292,18 +320,7 @@ async function fetchHtmlJsonLd(url) {
 
 // Scrape prices for a single URL
 async function scrapeUrlPrices(shopName, url, scraperInst = null) {
-  // Check if shop is registered as Shopify shop or URL path looks like Shopify
-  const registryEntry = getScraperByName(shopName) || getScraperByDomain(url);
-  const isShopify = registryEntry?.shopifyJson || url.includes('/products/');
-
-  if (isShopify) {
-    const shopifyResult = await fetchShopifyProductJson(url, scraperInst);
-    if (shopifyResult && (shopifyResult.variants?.length > 0 || shopifyResult.isNotFound)) {
-      return shopifyResult;
-    }
-  }
-
-  // Try custom parser method on shop's scraper instance if available
+  // 1. Try custom parser method on shop's scraper instance if available
   if (scraperInst && typeof scraperInst.parseOffersFromHtml === 'function') {
     try {
       const headers = typeof scraperInst.getHeaders === 'function' ? scraperInst.getHeaders() : {
@@ -324,10 +341,24 @@ async function scrapeUrlPrices(shopName, url, scraperInst = null) {
     } catch (err) { }
   }
 
-  // Fallback / standard HTML JSON-LD parsing
-  const htmlResult = await fetchHtmlJsonLd(url);
-  if (htmlResult) {
+  // 2. Try standard HTML JSON-LD parsing (captures ProductGroup hasVariant & exact availability)
+  const htmlResult = await fetchHtmlJsonLd(url, scraperInst);
+  if (htmlResult && htmlResult.offers && htmlResult.offers.length > 0) {
     return htmlResult;
+  }
+  if (htmlResult && htmlResult.isNotFound) {
+    return htmlResult;
+  }
+
+  // 3. Fallback to Shopify .json endpoint if HTML/JSON-LD didn't yield offers
+  const registryEntry = getScraperByName(shopName) || getScraperByDomain(url);
+  const isShopify = registryEntry?.shopifyJson || url.includes('/products/');
+
+  if (isShopify) {
+    const shopifyResult = await fetchShopifyProductJson(url, scraperInst);
+    if (shopifyResult && (shopifyResult.variants?.length > 0 || shopifyResult.isNotFound)) {
+      return shopifyResult;
+    }
   }
 
   return { isNotFound: false, variants: [], offers: [] };

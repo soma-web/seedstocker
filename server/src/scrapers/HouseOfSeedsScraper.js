@@ -63,7 +63,56 @@ export class HouseOfSeedsScraper extends ShopifyScraper {
   async parseOffersFromHtml(html, url) {
     const offers = [];
 
-    // 1. Try Shopify Analytics / product meta object
+    // 1. Try JSON-LD Product/ProductGroup schema first (most reliable for availability & pack sizes)
+    const jsonLdRe = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+    let m;
+    while ((m = jsonLdRe.exec(html)) !== null) {
+      try {
+        const parsed = JSON.parse(m[1]);
+        const items = Array.isArray(parsed) ? parsed : (parsed['@graph'] || [parsed]);
+        for (const item of items) {
+          if (!item) continue;
+          if (item['@type'] === 'Product' || item['@type'] === 'ProductGroup') {
+            let rawVariants = [];
+            if (item['@type'] === 'ProductGroup' && Array.isArray(item.hasVariant)) {
+              for (const variant of item.hasVariant) {
+                const offerObj = variant.offers ? (Array.isArray(variant.offers) ? variant.offers[0] : variant.offers) : variant;
+                rawVariants.push({
+                  name: variant.name || offerObj?.name || item.name,
+                  sku: variant.sku || offerObj?.sku || item.sku,
+                  price: offerObj?.price,
+                  availability: offerObj?.availability
+                });
+              }
+            } else {
+              const rawOffers = Array.isArray(item.offers) ? item.offers : (item.offers ? [item.offers] : []);
+              for (const o of rawOffers) {
+                rawVariants.push({
+                  name: o.name || item.name,
+                  sku: o.sku || item.sku,
+                  price: o.price,
+                  availability: o.availability
+                });
+              }
+            }
+
+            for (const v of rawVariants) {
+              const price = parseFloat(v.price);
+              if (isNaN(price) || price <= 0) continue;
+              const seeds = this.parseSeedCount(v.name, v.sku) || 1;
+              const availStr = String(v.availability || '').toLowerCase();
+              const availability = (availStr.includes('instock') || availStr.includes('in_stock')) ? 'available' :
+                (availStr.includes('outofstock') || availStr.includes('out_of_stock')) ? 'out_of_stock' : 'available';
+
+              offers.push({ seeds, price, availability });
+            }
+            if (offers.length > 0) return offers;
+          }
+        }
+      } catch {}
+    }
+
+    // 2. Fallback to Shopify Analytics / product meta object
     const metaMatch = html.match(/var meta = (\{[\s\S]*?\});/i);
     if (metaMatch) {
       try {
@@ -74,33 +123,13 @@ export class HouseOfSeedsScraper extends ShopifyScraper {
             const price = parseFloat(v.price) / 100; // price in cents
             if (isNaN(price) || price <= 0) continue;
             const seeds = this.parseSeedCount(v.name || v.public_title || v.title, v.sku) || 1;
+            const availStr = String(v.available !== undefined ? v.available : '').toLowerCase();
+            const availability = v.available === false || availStr === 'false' ? 'out_of_stock' : 'available';
             offers.push({
               seeds,
               price,
-              availability: 'available'
+              availability
             });
-          }
-          if (offers.length > 0) return offers;
-        }
-      } catch {}
-    }
-
-    // 2. Try JSON-LD Product schema
-    const jsonLdRe = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
-    let m;
-    while ((m = jsonLdRe.exec(html)) !== null) {
-      try {
-        const parsed = JSON.parse(m[1]);
-        if (parsed && (parsed['@type'] === 'Product' || parsed['@type'] === 'ProductGroup')) {
-          const rawOffers = Array.isArray(parsed.offers) ? parsed.offers : (parsed.offers ? [parsed.offers] : []);
-          for (const o of rawOffers) {
-            const price = parseFloat(o.price);
-            if (isNaN(price) || price <= 0) continue;
-            const sku = o.sku || parsed.sku || '';
-            const seeds = this.parseSeedCount(o.name || parsed.name, sku) || 1;
-            const availStr = String(o.availability || '').toLowerCase();
-            const availability = (availStr.includes('instock') || availStr.includes('in_stock')) ? 'available' : 'out_of_stock';
-            offers.push({ seeds, price, availability });
           }
           if (offers.length > 0) return offers;
         }

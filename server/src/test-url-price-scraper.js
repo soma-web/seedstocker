@@ -6,6 +6,7 @@ import {
   scrapeUrlPrices,
   parseArgs
 } from './run-url-price-scraper.js';
+import { HouseOfSeedsScraper } from './scrapers/HouseOfSeedsScraper.js';
 
 async function runUrlPriceScraperTests() {
   console.log('Running URL Price Scraper Unit Tests...');
@@ -263,6 +264,66 @@ async function runUrlPriceScraperTests() {
     assert.strictEqual(graphData.offers[0].seeds, 5);
     assert.strictEqual(graphData.offers[0].price, 35.0);
     assert.strictEqual(graphData.offers[0].availability, 'available');
+
+
+    // ==========================================
+    // 6b. fetchHtmlJsonLd ProductGroup hasVariant out_of_stock Test
+    // ==========================================
+    console.log('  Testing fetchHtmlJsonLd ProductGroup hasVariant & out_of_stock parsing...');
+
+    const productGroupJsonLdHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <script type="application/ld+json">
+            {
+              "@context": "http://schema.org/",
+              "@type": "ProductGroup",
+              "name": "Zangria S1",
+              "hasVariant": [
+                {
+                  "@type": "Product",
+                  "name": "Zangria S1 - 6",
+                  "sku": "WZT-ZS1-6",
+                  "offers": {
+                    "@type": "Offer",
+                    "price": "212.50",
+                    "availability": "http://schema.org/OutOfStock"
+                  }
+                },
+                {
+                  "@type": "Product",
+                  "name": "Zangria S1 - 3",
+                  "sku": "WZT-ZS1-3",
+                  "offers": {
+                    "@type": "Offer",
+                    "price": "125.00",
+                    "availability": "http://schema.org/InStock"
+                  }
+                }
+              ]
+            }
+          </script>
+        </head>
+      </html>
+    `;
+
+    globalThis.fetch = async () => ({
+      ok: true,
+      status: 200,
+      text: async () => productGroupJsonLdHtml
+    });
+
+    const hosScraper = new HouseOfSeedsScraper(() => {}, 'price');
+    const pgData = await fetchHtmlJsonLd('https://example-shop.com/products/zangria-s1', hosScraper);
+    assert.ok(pgData);
+    assert.strictEqual(pgData.offers.length, 2);
+    assert.strictEqual(pgData.offers[0].seeds, 6);
+    assert.strictEqual(pgData.offers[0].price, 212.5);
+    assert.strictEqual(pgData.offers[0].availability, 'out_of_stock');
+    assert.strictEqual(pgData.offers[1].seeds, 3);
+    assert.strictEqual(pgData.offers[1].price, 125.0);
+    assert.strictEqual(pgData.offers[1].availability, 'available');
 
 
     // ==========================================
